@@ -1,0 +1,11 @@
+version: "3.9"
+
+services:
+  legal-swarm:
+    build:
+      context: ..
+      dockerfile: deploy/Dockerfile
+    volumes:
+      - ../logs:/app/logs
+    environment:
+      - ENV=production
