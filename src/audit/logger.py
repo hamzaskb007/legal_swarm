@@ -32,3 +32,9 @@ class AuditLogger:
                 if line:
                     entries.append(AuditLogEntry.model_validate_json(line))
         return entries
+    
+    def read_by_jurisdiction(self, jurisdiction_code: str) -> list[AuditLogEntry]:
+        return [e for e in self.read_all() if e.jurisdiction_code == jurisdiction_code]
+
+    def read_by_event_type(self, event_type: AuditEventType) -> list[AuditLogEntry]:
+        return [e for e in self.read_all() if e.event_type == event_type]
