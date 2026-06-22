@@ -3,7 +3,7 @@ from src.schema.schema import CitationRecord, SourceAuthority, SourceGovernanceR
 
 
 class SourceGovernanceManager:
-    def __init__(self):
+    def __init__(self) -> None:
         self._primary: list[CitationRecord] = []
         self._secondary: list[CitationRecord] = []
         self._tertiary: list[CitationRecord] = []
