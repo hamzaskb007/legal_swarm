@@ -11,7 +11,6 @@ from src.schema.schema import (
     ConfidenceLevel,
     ConfidenceScore,
     RegulatoryEntry,
-    ValidationStatus,
 )
 from src.validation.validators import ValidationEngine
 

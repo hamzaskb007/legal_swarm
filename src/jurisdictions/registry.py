@@ -21,11 +21,9 @@ from src.jurisdictions.tier1.jersey import JerseyBuilder
 from src.jurisdictions.tier1.delaware import DelawareBuilder
 from src.schema.schema import (
     AuditEventType,
-    ContradictionRecord,
     CrossJurisdictionComparison,
     JurisdictionComparisonField,
     RegulatoryEntry,
-    ValidationStatus,
 )
 from src.validation.validators import ValidationEngine
 
