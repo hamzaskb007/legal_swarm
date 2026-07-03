@@ -282,6 +282,151 @@ class RegulatoryFiling(BaseModel):
     format_required: str | None = None
 
 
+# ---------------------------------------------------------------------------
+# Licensing Requirements
+# ---------------------------------------------------------------------------
+
+class LicensingRequirement(BaseModel):
+    """A specific licence required to operate a fund or management entity."""
+
+    licence_type: str = Field(..., description="Name of the licence required, e.g. 'SIBL Licence', 'RFMC Licence'")
+    issuing_authority: str = Field(..., description="Regulatory body that issues the licence")
+    applies_to: str = Field(..., description="Who needs it: 'Fund', 'Manager', or 'Both'")
+    statutory_reference: str | None = None
+    notes: str | None = None
+
+
+# ---------------------------------------------------------------------------
+# Substance Requirements
+# ---------------------------------------------------------------------------
+
+class SubstanceRequirement(BaseModel):
+    """Local substance / economic presence rules."""
+
+    local_office_required: bool
+    local_directors_required: bool
+    minimum_local_directors: int | None = None
+    local_staff_required: bool
+    minimum_local_staff: int | None = None
+    notes: str | None = None
+
+
+# ---------------------------------------------------------------------------
+# Regulatory Timelines
+# ---------------------------------------------------------------------------
+
+class RegulatoryTimeline(BaseModel):
+    """Expected processing timeline for a regulatory process."""
+
+    process_name: str = Field(..., description="e.g. 'Fund Registration', 'Manager Licensing'")
+    minimum_days: int | None = None
+    maximum_days: int | None = None
+    typical_days: int | None = None
+    notes: str | None = None
+
+
+# ---------------------------------------------------------------------------
+# Regulatory Costs
+# ---------------------------------------------------------------------------
+
+class RegulatoryCost(BaseModel):
+    """A cost or fee imposed by the regulator or service providers."""
+
+    cost_type: str = Field(..., description="e.g. 'Formation Fee', 'Annual Regulator Fee', 'Audit Fee'")
+    amount: Decimal | None = None
+    currency: str = Field(..., min_length=3, max_length=3, description="ISO 4217 currency code")
+    amount_usd_equivalent: Decimal | None = None
+    frequency: str = Field(..., description="e.g. 'One-time', 'Annual'")
+    notes: str | None = None
+
+
+# ---------------------------------------------------------------------------
+# Penalty Exposures
+# ---------------------------------------------------------------------------
+
+class PenaltyExposure(BaseModel):
+    """Penalties and sanctions for regulatory breaches."""
+
+    breach_type: str = Field(..., description="e.g. 'Late Filing', 'AML Breach', 'Unauthorised Activity'")
+    maximum_fine_usd: Decimal | None = None
+    criminal_liability: bool = False
+    licence_revocation_possible: bool = False
+    notes: str | None = None
+
+
+# ---------------------------------------------------------------------------
+# Wind-Down Procedures
+# ---------------------------------------------------------------------------
+
+class WindDownProcedure(BaseModel):
+    """Rules and timelines for winding down a fund."""
+
+    voluntary_liquidation_available: bool = True
+    typical_duration_days: int | None = None
+    regulator_approval_required: bool = True
+    creditor_protection_period_days: int | None = None
+    notes: str | None = None
+
+
+# ---------------------------------------------------------------------------
+# Fund Manager Requirements
+# ---------------------------------------------------------------------------
+
+class FundManagerRequirement(BaseModel):
+    """Requirements for the fund manager entity."""
+
+    local_manager_required: bool = True
+    minimum_aum_for_full_licence_usd: Decimal | None = None
+    fit_and_proper_required: bool = True
+    experience_years_required: int | None = None
+    notes: str | None = None
+
+
+# ---------------------------------------------------------------------------
+# Marketing Restrictions
+# ---------------------------------------------------------------------------
+
+class MarketingRestriction(BaseModel):
+    """Rules governing who and where fund shares may be marketed."""
+
+    target_investor_type: str = Field(..., description="e.g. 'Retail', 'Professional', 'Accredited'")
+    permitted_jurisdictions: list[str] = Field(default_factory=list, description="ISO 3166-1 alpha-2 codes or ['Global']")
+    restricted_jurisdictions: list[str] = Field(default_factory=list)
+    pre_marketing_allowed: bool = False
+    notes: str | None = None
+
+
+# ---------------------------------------------------------------------------
+# Beneficial Ownership Rules
+# ---------------------------------------------------------------------------
+
+class BeneficialOwnershipRule(BaseModel):
+    """Disclosure and register requirements for beneficial owners."""
+
+    register_required: bool = True
+    register_public: bool = False
+    threshold_percentage: Decimal | None = Field(None, description="Ownership percentage triggering disclosure")
+    filing_authority: str | None = None
+    notes: str | None = None
+
+
+# ---------------------------------------------------------------------------
+# Record Retention Policies
+# ---------------------------------------------------------------------------
+
+class RecordRetentionPolicy(BaseModel):
+    """Mandatory record-keeping periods."""
+
+    minimum_retention_years: int = Field(..., ge=1)
+    applies_to: str = Field(..., description="e.g. 'All Fund Records', 'AML Records', 'Transaction Records'")
+    statutory_reference: str | None = None
+    notes: str | None = None
+
+
+# ---------------------------------------------------------------------------
+# Core Regulatory Entry — Master Canonical Schema
+# ---------------------------------------------------------------------------
+
 class RegulatoryEntry(BaseModel):
     """
     Master canonical regulatory record for a single jurisdiction.
@@ -305,6 +450,36 @@ class RegulatoryEntry(BaseModel):
 
     # Filing obligations
     filing_obligations: list[RegulatoryFiling] = Field(default_factory=list)
+
+    # Licensing
+    licensing_requirements: list[LicensingRequirement] | None = None
+
+    # Substance
+    substance_requirements: SubstanceRequirement | None = None
+
+    # Regulatory timelines
+    regulatory_timelines: list[RegulatoryTimeline] | None = None
+
+    # Regulatory costs
+    regulatory_costs: list[RegulatoryCost] | None = None
+
+    # Penalties
+    penalty_exposure: list[PenaltyExposure] | None = None
+
+    # Wind-down
+    wind_down_procedure: WindDownProcedure | None = None
+
+    # Fund manager requirements
+    fund_manager_requirements: FundManagerRequirement | None = None
+
+    # Marketing restrictions
+    marketing_restrictions: list[MarketingRestriction] | None = None
+
+    # Beneficial ownership
+    beneficial_ownership_rules: BeneficialOwnershipRule | None = None
+
+    # Record retention
+    record_retention_policies: list[RecordRetentionPolicy] | None = None
 
     # Taxation summary
     tax_summary: str | None = Field(None, description="High-level tax treatment narrative")
