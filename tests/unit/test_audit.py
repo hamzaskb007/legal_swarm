@@ -1,7 +1,6 @@
 """Unit tests for audit logger."""
 
 import pytest
-from pathlib import Path
 from src.audit.logger import AuditLogger
 from src.schema.schema import AuditEventType
 

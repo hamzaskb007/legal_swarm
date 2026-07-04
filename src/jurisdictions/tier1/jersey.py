@@ -38,37 +38,49 @@ class JerseyBuilder(JurisdictionBuilder):
             source_name="Collective Investment Funds (Jersey) Law 1988",
             source_url=None,
             authority=SourceAuthority.PRIMARY,
+            authority_level=2,
             publication_date=datetime(1988, 1, 1),
             section_reference="Articles 2–15 – Certification of Funds",
             reliability_score=0.95,
             raw_excerpt=None,
+            regulatory_relevance_tag="Fund Registration",
+            last_verified_timestamp=datetime.utcnow(),
         ))
         manager.add_citation(CitationRecord(
             source_name="Alternative Investment Funds (Jersey) Regulations 2012",
             source_url=None,
             authority=SourceAuthority.PRIMARY,
+            authority_level=2,
             publication_date=datetime(2012, 1, 1),
             section_reference="Parts 2–5 – Authorisation and Registration",
             reliability_score=0.95,
             raw_excerpt=None,
+            regulatory_relevance_tag="Fund Registration",
+            last_verified_timestamp=datetime.utcnow(),
         ))
         manager.add_citation(CitationRecord(
             source_name="Jersey Financial Services Commission",
             source_url="https://www.jerseyfsc.org",
             authority=SourceAuthority.PRIMARY,
+            authority_level=1,
             publication_date=datetime(2024, 1, 1),
             section_reference="Funds Handbook 2024 – Chapters 1–6",
             reliability_score=0.90,
             raw_excerpt=None,
+            regulatory_relevance_tag="Fund Registration",
+            last_verified_timestamp=datetime.utcnow(),
         ))
         manager.add_citation(CitationRecord(
             source_name="Ogier – Jersey Fund Formation Guide",
             source_url="https://www.ogier.com",
             authority=SourceAuthority.SECONDARY,
+            authority_level=4,
             publication_date=datetime(2024, 6, 1),
             section_reference="Fund Types and Regulatory Requirements",
             reliability_score=0.80,
             raw_excerpt=None,
+            regulatory_relevance_tag="Fund Structure",
+            last_verified_timestamp=datetime.utcnow(),
         ))
 
         governance = manager.build()

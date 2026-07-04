@@ -112,7 +112,20 @@ class TestRegistryAudit:
     def test_all_entries_audit_logged(self, tmp_path):
         log_path = tmp_path / "audit.jsonl"
         registry = JurisdictionRegistry(audit_log_path=log_path)
-        entries = registry.get_all()
+        registry.get_all()
         log_text = log_path.read_text()
         assert "QUERY" in log_text
         assert "8" in log_text or "ALL_RETURNED" in log_text
+
+    def test_audit_log_path_respected(self, tmp_path):
+        log_path = tmp_path / "custom_audit.jsonl"
+        default_path = Path("logs/audit.jsonl")
+        before_default = default_path.read_text() if default_path.exists() else ""
+        registry = JurisdictionRegistry(audit_log_path=log_path)
+        _ = registry.get_all()
+        custom_logs = log_path.read_text()
+        assert "QUERY" in custom_logs
+        assert "ALL_RETURNED" in custom_logs
+        after_default = default_path.read_text() if default_path.exists() else ""
+        new_default_lines = len(after_default.splitlines()) - len(before_default.splitlines())
+        assert new_default_lines == 0, "Audit log leaked to default path"

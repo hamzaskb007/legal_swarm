@@ -3,22 +3,30 @@
 import pytest
 from decimal import Decimal
 from datetime import datetime
-from pathlib import Path
 
 from src.schema.schema import (
+    BeneficialOwnershipRule,
+    CapitalRequirement,
     CitationRecord,
     ConfidenceLevel,
     ConfidenceScore,
+    FundManagerRequirement,
     FundStructure,
-    CapitalRequirement,
     InvestorRequirements,
     JurisdictionTier,
-    RegulatoryFiling,
+    LicensingRequirement,
+    PenaltyExposure,
+    RecordRetentionPolicy,
+    RegulatoryCost,
     RegulatoryEntry,
+    RegulatoryFiling,
+    RegulatoryTimeline,
     SourceAuthority,
+    SubstanceRequirement,
     AuditEventType,
     VersionRecord,
     ValidationStatus,
+    WindDownProcedure,
 )
 from src.governance.source_governance import SourceGovernanceManager
 from src.validation.validators import ValidationEngine
@@ -35,14 +43,31 @@ def full_entry():
         source_name="UAE SCA",
         source_url="https://sca.gov.ae",
         authority=SourceAuthority.PRIMARY,
+        authority_level=1,
         publication_date=datetime(2024, 1, 1),
         reliability_score=0.95,
+        regulatory_relevance_tag="Fund Registration",
+        last_verified_timestamp=datetime.utcnow(),
+    ))
+    manager.add_citation(CitationRecord(
+        source_name="UAE Federal Law No. 4 of 2000",
+        source_url=None,
+        authority=SourceAuthority.PRIMARY,
+        authority_level=2,
+        publication_date=datetime(2000, 1, 1),
+        section_reference="Article 12",
+        reliability_score=0.95,
+        regulatory_relevance_tag="Capital Requirements",
+        last_verified_timestamp=datetime.utcnow(),
     ))
     manager.add_citation(CitationRecord(
         source_name="Legal Commentary",
         source_url="https://legal.example.com",
         authority=SourceAuthority.SECONDARY,
+        authority_level=4,
         reliability_score=0.75,
+        regulatory_relevance_tag="Tax Framework",
+        last_verified_timestamp=datetime.utcnow(),
     ))
     governance = manager.build()
 
@@ -73,10 +98,32 @@ def full_entry():
                 regulator="SCA",
             )
         ],
+        licensing_requirements=[
+            LicensingRequirement(licence_type="Fund Licence", issuing_authority="SCA", applies_to="Fund"),
+        ],
+        substance_requirements=SubstanceRequirement(
+            local_office_required=True, local_directors_required=True, local_staff_required=True,
+        ),
+        regulatory_timelines=[
+            RegulatoryTimeline(process_name="Fund Registration"),
+        ],
+        regulatory_costs=[
+            RegulatoryCost(cost_type="Formation Fee", currency="USD", frequency="One-time"),
+        ],
+        penalty_exposure=[
+            PenaltyExposure(breach_type="Late Filing"),
+        ],
+        wind_down_procedure=WindDownProcedure(),
+        fund_manager_requirements=FundManagerRequirement(),
+        beneficial_ownership_rules=BeneficialOwnershipRule(),
+        record_retention_policies=[
+            RecordRetentionPolicy(minimum_retention_years=7, applies_to="All Fund Records"),
+        ],
         tax_summary="No corporate tax on fund income.",
         withholding_tax_rate=Decimal("0"),
         aml_kyc_framework="UAE AML Law No. 20 of 2018",
         passporting_available=False,
+        passporting_notes="Not Applicable — no passporting regime exists for this jurisdiction",
         source_governance=governance,
         confidence=ConfidenceScore(
             level=ConfidenceLevel.HIGH,
@@ -121,7 +168,6 @@ class TestFullPipeline:
         assert len(logs) == 1
 
     def test_delta_tracking(self, full_entry):
-        import copy
         new_entry = full_entry.model_copy(
             update={"primary_regulator": "DFSA"}
         )

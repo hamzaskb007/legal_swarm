@@ -11,6 +11,7 @@ from src.schema.schema import (
     ConfidenceLevel,
     ConfidenceScore,
     RegulatoryEntry,
+    ValidationReport,
 )
 from src.validation.validators import ValidationEngine
 
@@ -35,7 +36,7 @@ class JurisdictionBuilder(ABC):
         """
         ...
 
-    def run_pipeline(self, entry: RegulatoryEntry, *, audit_log_path: Path = Path("logs/audit.jsonl")) -> RegulatoryEntry:
+    def run_pipeline(self, entry: RegulatoryEntry, *, audit_log_path: Path = Path("logs/audit.jsonl")) -> tuple[RegulatoryEntry, ValidationReport]:
         scorer = ConfidenceScorer()
         confidence = scorer.score(entry)
         entry = entry.model_copy(update={"confidence": confidence})
@@ -62,7 +63,7 @@ class JurisdictionBuilder(ABC):
             outcome="Pipeline completed",
         )
 
-        return entry
+        return entry, report
 
     @staticmethod
     def _placeholder_confidence() -> ConfidenceScore:

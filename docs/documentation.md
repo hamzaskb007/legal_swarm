@@ -32,11 +32,14 @@ legal-swarm/
 │   │   ├── base.py         #   Abstract jurisdiction builder
 │   │   ├── registry.py     #   Central jurisdiction registry
 │   │   └── tier1/          #   8 Tier 1 regulatory entries
-│   └── agents/             # Reserved for future AI agents
+│   └── agents/             # Specialised jurisdiction agents + orchestrator
+│       ├── base_agent.py   #   Abstract base agent
+│       ├── orchestrator.py #   Agent orchestrator
+│       └── jurisdiction/   #   6 domain-specific agents
 │
 ├── tests/
-│   ├── unit/               # 349 unit tests
-│   └── integration/         # 27 integration tests
+│   ├── unit/               # Unit tests
+│   └── integration/        # Integration tests
 ├── docs/
 ├── deploy/
 ├── main.py
@@ -60,7 +63,7 @@ Contains all Pydantic models used throughout the project.
 ### Core Models
 
 - `RegulatoryEntry` — Master record for a jurisdiction (all fields below)
-- `CitationRecord` — Individual source citation with authority, reliability, URL
+- `CitationRecord` — Individual source citation with authority, reliability, URL, authority_level (1–5), regulatory_relevance_tag, last_verified_timestamp
 - `SourceGovernanceRecord` — Collection of citations sorted by authority tier
 - `ConfidenceScore` — Numeric score (0–1), level (UNVERIFIED / LOW / MEDIUM / HIGH), rationale
 - `ValidationReport` / `ValidationRuleResult` — Per-rule and overall validation status
@@ -73,6 +76,7 @@ Contains all Pydantic models used throughout the project.
 - `VersionRecord` — Semver tracking with author and change summary
 - `ContradictionRecord` — Conflicting field between citations or entries
 - `AuditLogEntry` — Immutable JSONL log entry
+- `NotApplicableReason` — Enum of explicit N/A reasons (NO_TAX, NO_AML_KYC_REQUIRED, NO_PASSPORTING)
 
 ### Regulatory Data Models (added in Tier 1 expansion)
 
@@ -101,16 +105,30 @@ These models are stored as optional fields on `RegulatoryEntry` (e.g. `licensing
 src/validation/validators.py
 ```
 
-Checks whether a regulatory entry contains the required information.
+Checks whether a regulatory entry contains the required information. Returns a validation report showing Passed, Warning, or Failed.
 
-Example checks:
+### Validation Rules
 
-- Primary regulator exists
-- At least one citation
-- Confidence score is valid
-- Filing information is present
-
-Returns a validation report showing Passed, Warning, or Failed.
+| ID | Rule | Status |
+|----|------|--------|
+| VAL_001 | Primary regulator defined | FAILED |
+| VAL_002 | At least one fund structure | WARNING |
+| VAL_003 | Confidence score ≥ threshold | PASSED |
+| VAL_004 | At least one source citation | FAILED |
+| VAL_005 | Filing obligations present | WARNING |
+| VAL_006 | Licensing requirements present | WARNING |
+| VAL_007 | Substance requirements present | WARNING |
+| VAL_008 | Regulatory timelines present | WARNING |
+| VAL_009 | Regulatory costs present | WARNING |
+| VAL_010 | Penalty exposure present | WARNING |
+| VAL_011 | Wind-down procedure present | WARNING |
+| VAL_012 | Fund manager requirements present | WARNING |
+| VAL_013 | Beneficial ownership rules present | WARNING |
+| VAL_014 | Record retention policies present | WARNING |
+| VAL_015 | ≥2 primary citations (SRS §5.3) | FAILED |
+| VAL_016 | Tax Framework citation if tax_summary populated | WARNING |
+| VAL_017 | Capital Requirements citation if capital > 0 | WARNING |
+| VAL_018 | Critical fields not silently None | WARNING |
 
 ---
 
@@ -122,20 +140,22 @@ Returns a validation report showing Passed, Warning, or Failed.
 src/confidence/scorer.py
 ```
 
-Calculates how trustworthy an entry is.
+Calculates how trustworthy an entry is. The score is computed as:
 
-The score depends on:
+```
+final = clamp(
+    base_authority_weight
+    + citation_volume_bonus (max +0.2)
+    - recency_penalty (−0.1 per stale citation >365d)
+    - contradiction_penalty (−0.15 per unresolved)
+    - authority_level_penalty (−0.02 per citation at level 4+)
+    + completeness_bonus (up to +0.1, proportional to populated modules)
+    - refresh_penalty (up to −0.1, proportional to days >180 since update),
+  0.0, 1.0
+)
+```
 
-- Source quality
-- Number of citations
-- Data freshness
-- Existing contradictions
-
-Output includes:
-
-- Numeric score
-- Confidence level
-- Explanation
+Output includes numeric score, confidence level, and a list of contributing factors.
 
 ---
 
@@ -174,6 +194,52 @@ Responsibilities:
 - Remove duplicate sources
 - Classify sources as Primary, Secondary, or Tertiary
 - Calculate overall source reliability
+
+---
+
+## Agent Architecture
+
+**Location**
+
+```
+src/agents/
+├── __init__.py              # create_default_orchestrator factory
+├── base_agent.py            # BaseAgent ABC
+├── orchestrator.py          # Orchestrator (runs agent chain)
+└── jurisdiction/
+    ├── regulatory_authority_agent.py
+    ├── licensing_agent.py
+    ├── capital_requirement_agent.py
+    ├── fund_structure_agent.py
+    ├── tax_framework_agent.py
+    └── compliance_obligation_agent.py
+```
+
+Agents are a validation and enrichment layer that sits **above** the `JurisdictionBuilder`. Each agent has:
+
+- `validate(entry) → bool` — domain-specific check
+- `process(entry) → RegulatoryEntry` — enrichment / transformation
+
+The **Orchestrator** runs agents sequentially. If any agent's `validate()` returns `False`, the orchestrator **blocks** (stops the chain) and logs a `BLOCKED` audit event. Otherwise it logs `ORCHESTRATION_COMPLETE`.
+
+### Agents
+
+| Agent | Validates |
+|-------|-----------|
+| RegulatoryAuthorityAgent | primary_regulator non-empty |
+| LicensingAgent | licensing_requirements populated |
+| CapitalRequirementAgent | min_capital on fund structures |
+| FundStructureAgent | permitted_fund_structures non-empty |
+| TaxFrameworkAgent | tax_summary and withholding_tax_rate present |
+| ComplianceObligationAgent | filing_obligations non-empty and aml_kyc_framework present |
+
+Create a default orchestrator with:
+
+```python
+from src.agents import create_default_orchestrator
+orchestrator = create_default_orchestrator()
+entry, report = orchestrator.run(regulatory_entry)
+```
 
 ---
 
@@ -229,13 +295,16 @@ Source Governance
 Create Regulatory Entry
      │
      ▼
-Validation
-     │
-     ▼
 Confidence Scoring
      │
      ▼
+Validation (18 rules)
+     │
+     ▼
 Contradiction Detection
+     │
+     ▼
+Agent Orchestration (6 agents, blocks on failure)
      │
      ▼
 Audit Logging
@@ -309,9 +378,10 @@ src/jurisdictions/
 Abstract base class that all jurisdiction builders extend. Subclasses must implement `build_entry()` which returns a `RegulatoryEntry` with a placeholder confidence score (UNVERIFIED, 0.0). The `run_pipeline()` method then:
 
 1. **Confidence scoring** — `ConfidenceScorer.score()` computes a deterministic score
-2. **Validation** — `ValidationEngine.validate()` runs VAL_001–VAL_005
+2. **Validation** — `ValidationEngine.validate()` runs all 18 rules
 3. **Contradiction detection** — `CitationContradictionDetector.detect()` checks citation hierarchy
-4. **Audit logging** — `AuditLogger.log()` writes an immutable record to `logs/audit.jsonl`
+4. **Orchestration** — `Orchestrator.run()` runs 6 agents sequentially; blocks on failure
+5. **Audit logging** — `AuditLogger.log()` writes an immutable record to `logs/audit.jsonl`
 
 ## JurisdictionRegistry (registry.py)
 
@@ -365,15 +435,15 @@ SourceGovernanceManager.add_citation() × N
     ↓
 RegulatoryEntry constructed (placeholder confidence: UNVERIFIED, 0.0)
     ↓
-ConfidenceScorer.score(entry) → deterministic score based on:
-    - Base authority weight (PRIMARY=1.0, SECONDARY=0.6, TERTIARY=0.3)
-    - Citation volume bonus (max +0.2)
-    - Recency penalty (−0.1 per stale citation over 365 days)
-    - Contradiction penalty (−0.15 per unresolved contradiction)
+ConfidenceScorer.score(entry) → deterministic score
+    (authority weight + volume bonus − recency − contradiction
+     − authority_level penalty + completeness bonus − refresh penalty)
     ↓
-ValidationEngine.validate(entry) → ValidationReport (5 rules)
+ValidationEngine.validate(entry) → ValidationReport (18 rules)
     ↓
 CitationContradictionDetector.detect(entry) → ContradictionRecord[]
+    ↓
+Orchestrator.run(entry) → 6 agents validate; blocks on failure
     ↓
 AuditLogger.log(event_type=VALIDATION, ...) → immutable audit log
     ↓
@@ -384,20 +454,44 @@ Entry registered in JurisdictionRegistry
 
 # Test Suite
 
-**376 total tests — 349 unit, 27 integration — all passing; mypy strict on 28 source files, zero errors.**
+**All tests passing; mypy strict on source files, zero errors.**
 
 | File | Count | Scope |
 |------|-------|-------|
-| `tests/unit/test_schema.py` | ~10 | Schema model construction and defaults |
-| `tests/unit/test_validators.py` | ~13 | ValidationEngine with all 5 rules |
-| `tests/unit/test_confidence.py` | ~8 | ConfidenceScorer determinism, penalties, clamping |
-| `tests/unit/test_contradiction.py` | ~6 | CitationContradictionDetector, CrossEntryContradictionDetector |
-| `tests/unit/test_governance.py` | ~8 | SourceGovernanceManager (dedup, sorting, reliability) |
-| `tests/unit/test_audit.py` | ~19 | AuditLogger file I/O, filtering, immutability |
-| `tests/unit/test_versioning.py` | ~19 | DeltaTracker field comparison, version bumps |
+| File | Tests | Scope |
+|------|-------|-------|
+| `tests/unit/test_schema.py` | 38 | Schema model construction, defaults, new CitationRecord fields |
+| `tests/unit/test_validators.py` | 47 | ValidationEngine with all 18 rules |
+| `tests/unit/test_confidence.py` | 14 | ConfidenceScorer determinism, penalties, clamping, completeness, refresh |
+| `tests/unit/test_contradiction.py` | 6 | CitationContradictionDetector, CrossEntryContradictionDetector |
+| `tests/unit/test_governance.py` | 8 | SourceGovernanceManager (dedup, sorting, reliability) |
+| `tests/unit/test_audit.py` | 7 | AuditLogger file I/O, filtering, immutability |
+| `tests/unit/test_versioning.py` | 7 | DeltaTracker field comparison, version bumps |
 | `tests/unit/test_jurisdictions.py` | 273 | 24 parametrized tests × 8 builders + 17 spot-checks + pipeline |
-| `tests/integration/test_pipeline.py` | ~13 | End-to-end pipeline flow |
-| `tests/integration/test_registry.py` | ~14 | Registry loading, access, comparison, audit logging |
+| `tests/unit/test_agents.py` | 25 | Agent validate/process, orchestrator chain, blocking, audit |
+| `tests/integration/test_pipeline.py` | 7 | End-to-end pipeline flow |
+| `tests/integration/test_registry.py` | 21 | Registry loading, access, comparison, audit logging |
+
+---
+
+## SRS Compliance Matrix
+
+| SRS Requirement | Coverage | How |
+|-----------------|----------|-----|
+| §5.1.1 Regulator identification | VAL_001 | `HasPrimaryRegulatorRule` |
+| §5.1.2 Multi-source validation | VAL_004, VAL_015 | ≥1 citations, ≥2 primary citations |
+| §5.1.3 Authority tier grading | SourceGovernanceRecord | PRIMARY/SECONDARY/TERTIARY + 1–5 authority_level |
+| §5.1.4 Cross-source contradiction | ContradictionDetector | Citation + cross-entry detection |
+| §5.1.6 Boolean field zero-false rule | Model design | Default `False` / `None` for optional booleans |
+| §5.1.7 Silent null prohibition | VAL_018 | tax_summary, aml_kyc_framework, passporting_notes not None |
+| §5.2.1 Citation-authority alignment | VAL_016, VAL_017 | Tag-based: Tax Framework / Capital Requirements |
+| §5.2.2 Citation density | VAL_015 | ≥2 primary citations per entry |
+| §5.3.1 Confidence formula | ConfidenceScorer | Weighted, bonus, penalty, clamped 0–1 |
+| §5.3.2 Authority level contribution | authority_level_penalty | −0.02 per citation at level 4+ |
+| §5.3.3 Module completeness bonus | completeness_bonus | Up to +0.1 for 11 module fields |
+| §5.3.4 Refresh recency penalty | refresh_penalty | Up to −0.1 for >180 days stale |
+| §6.1 Agent decomposition | 6 agents | RegAuth, Licensing, Capital, Fund, Tax, Compliance |
+| §6.2 Sequential orchestration | Orchestrator | Blocking chain, BLOCKED audit events |
 
 ---
 
@@ -405,16 +499,14 @@ Entry registered in JurisdictionRegistry
 
 Planned features include:
 
-- Multi-agent orchestration
 - Database integration
 - Automatic data refresh
 - User authentication
 - Encryption
-- More validation rules
 - Expanded regulatory datasets (Tier 2, Tier 3 jurisdictions)
 
 ---
 
 # Summary
 
-The foundation layer provides the core building blocks of Legal Swarm. It ensures that regulatory information is stored consistently, validated correctly, scored for reliability, tracked over time, and logged for auditing. The Tier 1 jurisdiction layer extends this foundation with 8 fully populated regulatory entries, each backed by official citations and validated through the complete deterministic pipeline. Each entry includes 10 expanded regulatory data categories (licensing, substance, timelines, costs, penalties, wind-down, manager requirements, marketing restrictions, beneficial ownership, and record retention) populated with real-world jurisdiction-specific values. The full suite of 376 tests ensures correctness across all components.
+The foundation layer provides the core building blocks of Legal Swarm. It ensures that regulatory information is stored consistently, validated correctly, scored for reliability, tracked over time, and logged for auditing. The Tier 1 jurisdiction layer extends this foundation with 8 fully populated regulatory entries, each backed by official citations and validated through the complete deterministic pipeline. Each entry includes 10 expanded regulatory data categories (licensing, substance, timelines, costs, penalties, wind-down, manager requirements, marketing restrictions, beneficial ownership, and record retention) populated with real-world jurisdiction-specific values. The agent layer adds 6 domain-specific agents and an orchestrator for sequential validation with blocking on failure. The full suite of tests ensures correctness across all components.

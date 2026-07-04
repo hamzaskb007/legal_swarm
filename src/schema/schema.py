@@ -56,6 +56,13 @@ class ValidationStatus(str, Enum):
     PENDING = "PENDING"
 
 
+class NotApplicableReason(str, Enum):
+    NO_REGULATORY_REQUIREMENT = "NO_REGULATORY_REQUIREMENT"
+    JURISDICTION_EXEMPT        = "JURISDICTION_EXEMPT"
+    NOT_YET_VERIFIED           = "NOT_YET_VERIFIED"
+    OUTSIDE_CURRENT_SCOPE      = "OUTSIDE_CURRENT_SCOPE"
+
+
 class AuditEventType(str, Enum):
     QUERY              = "QUERY"
     VALIDATION         = "VALIDATION"
@@ -77,11 +84,32 @@ class CitationRecord(BaseModel):
     source_name: str = Field(..., min_length=1, description="Name of the source document or publication")
     source_url: str | None = Field(None, description="Direct URL to the source if available")
     authority: SourceAuthority
+    authority_level: int = Field(
+        default=2,
+        ge=1,
+        le=5,
+        description=(
+            "SRS authority level 1-5: "
+            "1=Official regulator website, "
+            "2=Statutory legislation database, "
+            "3=Government gazette, "
+            "4=Recognized legal firm, "
+            "5=Professional advisory firm"
+        ),
+    )
     publication_date: datetime | None = None
     retrieved_at: datetime = Field(default_factory=datetime.utcnow)
     section_reference: str | None = Field(None, description="Section, article, or clause reference within the source")
     reliability_score: float = Field(..., ge=0.0, le=1.0, description="Reliability score between 0 and 1")
     raw_excerpt: str | None = Field(None, description="Verbatim excerpt from source (max 2000 chars)")
+    regulatory_relevance_tag: str | None = Field(
+        None,
+        description="Regulatory area this citation covers e.g. 'Fund Registration', 'AML/CFT', 'Capital Requirements'",
+    )
+    last_verified_timestamp: datetime | None = Field(
+        None,
+        description="Timestamp when this citation was last verified as current and accurate",
+    )
 
     @field_validator("raw_excerpt")
     @classmethod
@@ -113,6 +141,16 @@ class SourceGovernanceRecord(BaseModel):
             raise ValueError("At least one citation is required per regulatory entry")
         return self
 
+    @model_validator(mode="after")
+    def derive_dominant_source(self) -> SourceGovernanceRecord:
+        if self.primary_citations:
+            self.dominant_source = SourceAuthority.PRIMARY
+        elif self.secondary_citations:
+            self.dominant_source = SourceAuthority.SECONDARY
+        elif self.tertiary_citations:
+            self.dominant_source = SourceAuthority.TERTIARY
+        return self
+
 
 # ---------------------------------------------------------------------------
 # Capital & Cost Normalization
@@ -139,12 +177,6 @@ class ConfidenceScore(BaseModel):
     rationale: str = Field(..., min_length=1, description="Explanation of confidence determination")
     contributing_factors: list[str] = Field(default_factory=list)
     reviewed_at: datetime = Field(default_factory=datetime.utcnow)
-
-    @field_validator("level", mode="before")
-    @classmethod
-    def derive_level_from_score(cls, v: Any) -> Any:
-        # Allow explicit override; coercion only when level not set
-        return v
 
 
 # ---------------------------------------------------------------------------
@@ -417,7 +449,7 @@ class BeneficialOwnershipRule(BaseModel):
 class RecordRetentionPolicy(BaseModel):
     """Mandatory record-keeping periods."""
 
-    minimum_retention_years: int = Field(..., ge=1)
+    minimum_retention_years: int = Field(..., ge=1, le=50)
     applies_to: str = Field(..., description="e.g. 'All Fund Records', 'AML Records', 'Transaction Records'")
     statutory_reference: str | None = None
     notes: str | None = None

@@ -38,46 +38,61 @@ class DelawareBuilder(JurisdictionBuilder):
             source_name="Investment Company Act of 1940 (United States)",
             source_url=None,
             authority=SourceAuthority.PRIMARY,
+            authority_level=2,
             publication_date=datetime(1940, 8, 22),
             section_reference="Sections 3(c)(1) and 3(c)(7) – Hedge Fund Exemptions from Registration",
             reliability_score=0.98,
             raw_excerpt=None,
+            regulatory_relevance_tag="Fund Registration",
+            last_verified_timestamp=datetime.utcnow(),
         ))
         manager.add_citation(CitationRecord(
             source_name="Investment Advisers Act of 1940 (United States)",
             source_url=None,
             authority=SourceAuthority.PRIMARY,
+            authority_level=2,
             publication_date=datetime(1940, 8, 22),
             section_reference="Section 203(m) – Private Fund Adviser Exemption",
             reliability_score=0.98,
             raw_excerpt=None,
+            regulatory_relevance_tag="Licensing",
+            last_verified_timestamp=datetime.utcnow(),
         ))
         manager.add_citation(CitationRecord(
             source_name="Delaware Revised Uniform Limited Partnership Act (Title 6, Chapter 17)",
             source_url=None,
             authority=SourceAuthority.PRIMARY,
+            authority_level=2,
             publication_date=datetime(2024, 1, 1),
             section_reference="Chapter 17 – Limited Partnerships Formation and Operation",
             reliability_score=0.97,
             raw_excerpt=None,
+            regulatory_relevance_tag="Fund Structure",
+            last_verified_timestamp=datetime.utcnow(),
         ))
         manager.add_citation(CitationRecord(
             source_name="Securities and Exchange Commission (SEC)",
             source_url="https://www.sec.gov",
             authority=SourceAuthority.PRIMARY,
+            authority_level=1,
             publication_date=datetime(2024, 1, 1),
             section_reference="Investment Adviser Registration and Reporting – Form ADV, Form PF",
             reliability_score=0.92,
             raw_excerpt=None,
+            regulatory_relevance_tag="Licensing",
+            last_verified_timestamp=datetime.utcnow(),
         ))
         manager.add_citation(CitationRecord(
             source_name="Commodity Futures Trading Commission (CFTC)",
             source_url="https://www.cftc.gov",
             authority=SourceAuthority.PRIMARY,
+            authority_level=1,
             publication_date=datetime(2024, 1, 1),
             section_reference="Regulations 4.5, 4.7, 4.13 – Private Fund Exemptions",
             reliability_score=0.90,
             raw_excerpt=None,
+            regulatory_relevance_tag="Licensing",
+            last_verified_timestamp=datetime.utcnow(),
         ))
 
         governance = manager.build()

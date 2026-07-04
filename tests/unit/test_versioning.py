@@ -1,6 +1,5 @@
 """Unit tests for delta tracker."""
 
-import pytest
 from src.versioning.delta_tracker import DeltaTracker, _bump_version
 from src.schema.schema import ChangeType
 from tests.unit.test_schema import make_entry

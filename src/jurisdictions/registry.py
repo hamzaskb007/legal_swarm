@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from collections.abc import Iterator
 from pathlib import Path
 from typing import Any
 
@@ -24,6 +25,7 @@ from src.schema.schema import (
     CrossJurisdictionComparison,
     JurisdictionComparisonField,
     RegulatoryEntry,
+    ValidationReport,
 )
 from src.validation.validators import ValidationEngine
 
@@ -51,17 +53,16 @@ class JurisdictionRegistry:
         self._detector = CitationContradictionDetector()
         self._load_all()
 
-    def _run_pipeline(self, builder: JurisdictionBuilder) -> RegulatoryEntry:
+    def _run_pipeline(self, builder: JurisdictionBuilder) -> tuple[RegulatoryEntry, ValidationReport]:
         entry = builder.build_entry()
-        entry = builder.run_pipeline(entry)
-        return entry
+        entry, report = builder.run_pipeline(entry, audit_log_path=self._audit_logger.log_path)
+        return entry, report
 
     def _load_all(self) -> None:
         for builder_cls in _TIER1_BUILDERS:
             builder = builder_cls()
-            entry = self._run_pipeline(builder)
+            entry, report = self._run_pipeline(builder)
             self._entries[entry.jurisdiction_code] = entry
-            report = self._engine.validate(entry)
             self._validation_reports[entry.jurisdiction_code] = report
 
     def get_entry(self, jurisdiction_code: str) -> RegulatoryEntry:
@@ -155,7 +156,7 @@ class JurisdictionRegistry:
     def __contains__(self, code: str) -> bool:
         return code.upper().strip() in self._entries
 
-    def __iter__(self) -> Any:
+    def __iter__(self) -> Iterator[str]:
         return iter(self._entries)
 
 

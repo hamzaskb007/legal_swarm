@@ -12,18 +12,13 @@ from src.schema.schema import (
     SourceAuthority,
     SourceGovernanceRecord,
     CapitalRequirement,
-    ContradictionRecord,
+    RecordRetentionPolicy,
     ValidationResult,
     ValidationReport,
     ValidationStatus,
-    FieldDelta,
     VersionRecord,
-    ChangeType,
     AuditLogEntry,
     AuditEventType,
-    FundStructure,
-    InvestorRequirements,
-    RegulatoryFiling,
     RegulatoryEntry,
     JurisdictionTier,
 )
@@ -98,6 +93,41 @@ class TestCitationRecord:
         c = make_citation()
         assert c.citation_id is not None
 
+    def test_authority_level_default(self):
+        c = make_citation()
+        assert c.authority_level == 2
+
+    def test_authority_level_custom(self):
+        c = make_citation(authority_level=4)
+        assert c.authority_level == 4
+
+    def test_authority_level_bounds(self):
+        with pytest.raises(Exception):
+            make_citation(authority_level=0)
+        with pytest.raises(Exception):
+            make_citation(authority_level=6)
+
+    def test_regulatory_relevance_tag_default(self):
+        c = make_citation()
+        assert c.regulatory_relevance_tag is None
+
+    def test_regulatory_relevance_tag_custom(self):
+        c = make_citation(regulatory_relevance_tag="Fund Registration")
+        assert c.regulatory_relevance_tag == "Fund Registration"
+
+    def test_regulatory_relevance_tag_accepts_any_string(self):
+        c = make_citation(regulatory_relevance_tag="Some Custom Tag")
+        assert c.regulatory_relevance_tag == "Some Custom Tag"
+
+    def test_last_verified_timestamp_default(self):
+        c = make_citation()
+        assert c.last_verified_timestamp is None
+
+    def test_last_verified_timestamp_custom(self):
+        ts = datetime.utcnow()
+        c = make_citation(last_verified_timestamp=ts)
+        assert c.last_verified_timestamp == ts
+
 
 # ---------------------------------------------------------------------------
 # SourceGovernanceRecord
@@ -119,7 +149,18 @@ class TestSourceGovernanceRecord:
     def test_secondary_only(self):
         c = make_citation(authority=SourceAuthority.SECONDARY)
         g = SourceGovernanceRecord(secondary_citations=[c])
-        assert g.dominant_source == SourceAuthority.PRIMARY  # default field value
+        assert g.dominant_source == SourceAuthority.SECONDARY
+
+    def test_tertiary_only(self):
+        c = make_citation(authority=SourceAuthority.TERTIARY)
+        g = SourceGovernanceRecord(tertiary_citations=[c])
+        assert g.dominant_source == SourceAuthority.TERTIARY
+
+    def test_dominant_source_primary_takes_precedence(self):
+        primary = make_citation(authority=SourceAuthority.PRIMARY)
+        secondary = make_citation(authority=SourceAuthority.SECONDARY)
+        g = SourceGovernanceRecord(primary_citations=[primary], secondary_citations=[secondary])
+        assert g.dominant_source == SourceAuthority.PRIMARY
 
 
 # ---------------------------------------------------------------------------
@@ -266,3 +307,17 @@ class TestRegulatoryEntry:
     def test_schema_version_default(self):
         entry = make_entry()
         assert entry.schema_version == "1.0.0"
+
+
+# ---------------------------------------------------------------------------
+# RecordRetentionPolicy
+# ---------------------------------------------------------------------------
+
+class TestRecordRetentionPolicy:
+    def test_rejects_retention_over_50_years(self):
+        with pytest.raises(Exception):
+            RecordRetentionPolicy(minimum_retention_years=51, applies_to="Test")
+
+    def test_accepts_50_years(self):
+        p = RecordRetentionPolicy(minimum_retention_years=50, applies_to="Test")
+        assert p.minimum_retention_years == 50

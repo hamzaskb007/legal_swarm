@@ -38,37 +38,49 @@ class IrelandBuilder(JurisdictionBuilder):
             source_name="European Communities (Undertakings for Collective Investment in Transferable Securities) Regulations 2011 (S.I. No. 352/2011)",
             source_url=None,
             authority=SourceAuthority.PRIMARY,
+            authority_level=2,
             publication_date=datetime(2011, 7, 1),
             section_reference="UCITS Regulations 2015 (S.I. No. 439/2015) – Authorisation Requirements",
             reliability_score=0.97,
             raw_excerpt=None,
+            regulatory_relevance_tag="Fund Registration",
+            last_verified_timestamp=datetime.utcnow(),
         ))
         manager.add_citation(CitationRecord(
             source_name="European Union (Alternative Investment Fund Managers) Regulations 2013 (S.I. No. 257/2013)",
             source_url=None,
             authority=SourceAuthority.PRIMARY,
+            authority_level=2,
             publication_date=datetime(2013, 7, 22),
             section_reference="AIFMD Regulations 2013 – Fund Manager Authorisation",
             reliability_score=0.97,
             raw_excerpt=None,
+            regulatory_relevance_tag="Licensing",
+            last_verified_timestamp=datetime.utcnow(),
         ))
         manager.add_citation(CitationRecord(
             source_name="Irish Collective Asset-management Vehicles Act 2015",
             source_url=None,
             authority=SourceAuthority.PRIMARY,
+            authority_level=2,
             publication_date=datetime(2015, 12, 14),
             section_reference="Parts 2–4 – ICAV Constitution and Operation",
             reliability_score=0.96,
             raw_excerpt=None,
+            regulatory_relevance_tag="Fund Structure",
+            last_verified_timestamp=datetime.utcnow(),
         ))
         manager.add_citation(CitationRecord(
             source_name="Central Bank of Ireland",
             source_url="https://www.centralbank.ie",
             authority=SourceAuthority.PRIMARY,
+            authority_level=1,
             publication_date=datetime(2024, 1, 1),
             section_reference="Fund Authorisation and Supervision – UCITS and AIF frameworks",
             reliability_score=0.90,
             raw_excerpt=None,
+            regulatory_relevance_tag="Fund Registration",
+            last_verified_timestamp=datetime.utcnow(),
         ))
 
         governance = manager.build()

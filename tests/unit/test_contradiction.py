@@ -1,9 +1,8 @@
 """Unit tests for contradiction detection."""
 
-import pytest
 from src.contradiction.detector import CitationContradictionDetector, CrossEntryContradictionDetector
 from src.schema.schema import SourceAuthority
-from tests.unit.test_schema import make_citation, make_entry, make_governance
+from tests.unit.test_schema import make_citation, make_entry
 from src.schema.schema import SourceGovernanceRecord
 
 

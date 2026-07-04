@@ -2,23 +2,12 @@
 
 import pytest
 from decimal import Decimal
-from datetime import datetime, timedelta
 
 from src.schema.schema import (
     ConfidenceLevel,
     JurisdictionTier,
     SourceAuthority,
     ValidationStatus,
-    LicensingRequirement,
-    SubstanceRequirement,
-    RegulatoryTimeline,
-    RegulatoryCost,
-    PenaltyExposure,
-    WindDownProcedure,
-    FundManagerRequirement,
-    MarketingRestriction,
-    BeneficialOwnershipRule,
-    RecordRetentionPolicy,
 )
 from src.jurisdictions.base import JurisdictionBuilder
 from src.jurisdictions.tier1.cayman_islands import CaymanIslandsBuilder
@@ -248,10 +237,11 @@ class TestJurisdictionPipeline:
 
     def test_pipeline_full_run_via_builder(self, builder):
         entry = builder.build_entry()
-        entry = builder.run_pipeline(entry)
+        entry, report = builder.run_pipeline(entry)
         assert entry.confidence.level != ConfidenceLevel.UNVERIFIED
         assert entry.confidence.score > 0
         assert isinstance(entry.contradictions, list)
+        assert report is not None
 
 
 class TestSpecificJurisdictions:

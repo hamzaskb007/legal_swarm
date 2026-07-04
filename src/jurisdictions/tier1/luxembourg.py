@@ -38,37 +38,49 @@ class LuxembourgBuilder(JurisdictionBuilder):
             source_name="Luxembourg Law of 17 December 2010 on Undertakings for Collective Investment (UCITS)",
             source_url=None,
             authority=SourceAuthority.PRIMARY,
+            authority_level=2,
             publication_date=datetime(2010, 12, 17),
             section_reference="Articles 1–58",
             reliability_score=0.97,
             raw_excerpt=None,
+            regulatory_relevance_tag="Fund Structure",
+            last_verified_timestamp=datetime.utcnow(),
         ))
         manager.add_citation(CitationRecord(
             source_name="Luxembourg Law of 23 July 2016 on Reserved Alternative Investment Funds (RAIF)",
             source_url=None,
             authority=SourceAuthority.PRIMARY,
+            authority_level=2,
             publication_date=datetime(2016, 7, 23),
             section_reference="Articles 1–35",
             reliability_score=0.97,
             raw_excerpt=None,
+            regulatory_relevance_tag="Fund Structure",
+            last_verified_timestamp=datetime.utcnow(),
         ))
         manager.add_citation(CitationRecord(
             source_name="Luxembourg Law of 13 February 2007 on Specialised Investment Funds (SIF)",
             source_url=None,
             authority=SourceAuthority.PRIMARY,
+            authority_level=2,
             publication_date=datetime(2007, 2, 13),
             section_reference="Chapters 1–4",
             reliability_score=0.96,
             raw_excerpt=None,
+            regulatory_relevance_tag="Fund Structure",
+            last_verified_timestamp=datetime.utcnow(),
         ))
         manager.add_citation(CitationRecord(
             source_name="Commission de Surveillance du Secteur Financier (CSSF)",
             source_url="https://www.cssf.lu",
             authority=SourceAuthority.PRIMARY,
+            authority_level=1,
             publication_date=datetime(2024, 4, 1),
             section_reference="Fund Supervision – UCITS, SIF, RAIF frameworks",
             reliability_score=0.90,
             raw_excerpt=None,
+            regulatory_relevance_tag="Fund Registration",
+            last_verified_timestamp=datetime.utcnow(),
         ))
 
         governance = manager.build()
