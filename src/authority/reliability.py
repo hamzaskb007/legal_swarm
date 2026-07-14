@@ -1,11 +1,10 @@
 from __future__ import annotations
 
-from datetime import datetime, timedelta
-from typing import Any
+from datetime import datetime
 
 from pydantic import BaseModel, Field
 
-from src.authority.models import Authority, AuthorityLevel, DocumentType, ParserType
+from src.authority.models import Authority
 
 AUTHORITY_LEVEL_WEIGHTS: dict[int, float] = {
     1: 1.0,
