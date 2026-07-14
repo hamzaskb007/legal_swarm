@@ -1,0 +1,16 @@
+id: sec
+jurisdiction: US
+name: U.S. Securities and Exchange Commission
+level: 1
+authority_type: regulator
+base_url: https://www.sec.gov
+search_url: https://www.sec.gov/search
+legislation_url: https://www.sec.gov/rules
+parser: html
+refresh_interval: 24
+reliability_score: 0.95
+enabled: true
+metadata:
+  country: United States
+  acronym: SEC
+  region: North America

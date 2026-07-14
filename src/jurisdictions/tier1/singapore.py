@@ -3,6 +3,7 @@ from __future__ import annotations
 from datetime import datetime
 from decimal import Decimal
 
+from src.authority.resolver import AuthorityResolver
 from src.governance.source_governance import SourceGovernanceManager
 from src.jurisdictions.base import JurisdictionBuilder
 from src.schema.schema import (
@@ -33,8 +34,12 @@ class SingaporeBuilder(JurisdictionBuilder):
 
     def build_entry(self) -> RegulatoryEntry:
         manager = SourceGovernanceManager()
+        resolver = AuthorityResolver()
+        mas = resolver.get_by_id("mas")
+        acra = resolver.get_by_id("acra")
 
         manager.add_citation(CitationRecord(
+            authority_id="mas",
             source_name="Securities and Futures Act 2001 (Cap. 289, Singapore)",
             source_url=None,
             authority=SourceAuthority.PRIMARY,
@@ -47,6 +52,7 @@ class SingaporeBuilder(JurisdictionBuilder):
             last_verified_timestamp=datetime.utcnow(),
         ))
         manager.add_citation(CitationRecord(
+            authority_id="mas",
             source_name="Variable Capital Companies Act 2018 (Singapore)",
             source_url=None,
             authority=SourceAuthority.PRIMARY,
@@ -59,25 +65,27 @@ class SingaporeBuilder(JurisdictionBuilder):
             last_verified_timestamp=datetime.utcnow(),
         ))
         manager.add_citation(CitationRecord(
-            source_name="Monetary Authority of Singapore",
-            source_url="https://www.mas.gov.sg",
+            authority_id="mas",
+            source_name=mas.name,
+            source_url=mas.base_url,
             authority=SourceAuthority.PRIMARY,
-            authority_level=1,
+            authority_level=mas.level.value,
             publication_date=datetime(2024, 6, 1),
             section_reference="Code on Collective Investment Schemes – Chapters 1–8",
-            reliability_score=0.90,
+            reliability_score=mas.reliability_score,
             raw_excerpt=None,
             regulatory_relevance_tag="Fund Registration",
             last_verified_timestamp=datetime.utcnow(),
         ))
         manager.add_citation(CitationRecord(
-            source_name="Accounting and Corporate Regulatory Authority (ACRA)",
-            source_url="https://www.acra.gov.sg",
+            authority_id="acra",
+            source_name=acra.name,
+            source_url=acra.base_url,
             authority=SourceAuthority.PRIMARY,
-            authority_level=1,
+            authority_level=acra.level.value,
             publication_date=datetime(2024, 9, 1),
             section_reference="VCC Registration Requirements",
-            reliability_score=0.85,
+            reliability_score=acra.reliability_score,
             raw_excerpt=None,
             regulatory_relevance_tag="Fund Registration",
             last_verified_timestamp=datetime.utcnow(),

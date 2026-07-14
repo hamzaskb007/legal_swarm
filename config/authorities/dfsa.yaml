@@ -1,0 +1,16 @@
+id: dfsa
+jurisdiction: AE
+name: Dubai Financial Services Authority
+level: 1
+authority_type: regulator
+base_url: https://www.dfsa.ae
+search_url: https://www.dfsa.ae/search
+legislation_url: https://www.dfsa.ae/legislation
+parser: html
+refresh_interval: 24
+reliability_score: 0.85
+enabled: true
+metadata:
+  country: United Arab Emirates
+  acronym: DFSA
+  region: Middle East

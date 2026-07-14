@@ -81,6 +81,7 @@ class CitationRecord(BaseModel):
     """Single authoritative citation backing a regulatory claim."""
 
     citation_id: UUID = Field(default_factory=uuid4)
+    authority_id: str | None = Field(None, description="Reference to an Authority in the Authority Registry")
     source_name: str = Field(..., min_length=1, description="Name of the source document or publication")
     source_url: str | None = Field(None, description="Direct URL to the source if available")
     authority: SourceAuthority

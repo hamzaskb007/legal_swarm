@@ -1,0 +1,16 @@
+id: central_bank_ireland
+jurisdiction: IE
+name: Central Bank of Ireland
+level: 1
+authority_type: regulator
+base_url: https://www.centralbank.ie
+search_url: https://www.centralbank.ie/search
+legislation_url: https://www.centralbank.ie/regulation/legislation
+parser: html
+refresh_interval: 24
+reliability_score: 0.90
+enabled: true
+metadata:
+  country: Ireland
+  acronym: CBI
+  region: Europe

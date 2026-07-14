@@ -3,6 +3,7 @@ from __future__ import annotations
 from datetime import datetime
 from decimal import Decimal
 
+from src.authority.resolver import AuthorityResolver
 from src.governance.source_governance import SourceGovernanceManager
 from src.jurisdictions.base import JurisdictionBuilder
 from src.schema.schema import (
@@ -33,8 +34,11 @@ class IrelandBuilder(JurisdictionBuilder):
 
     def build_entry(self) -> RegulatoryEntry:
         manager = SourceGovernanceManager()
+        resolver = AuthorityResolver()
+        cbi = resolver.get_by_id("central_bank_ireland")
 
         manager.add_citation(CitationRecord(
+            authority_id="central_bank_ireland",
             source_name="European Communities (Undertakings for Collective Investment in Transferable Securities) Regulations 2011 (S.I. No. 352/2011)",
             source_url=None,
             authority=SourceAuthority.PRIMARY,
@@ -47,6 +51,7 @@ class IrelandBuilder(JurisdictionBuilder):
             last_verified_timestamp=datetime.utcnow(),
         ))
         manager.add_citation(CitationRecord(
+            authority_id="central_bank_ireland",
             source_name="European Union (Alternative Investment Fund Managers) Regulations 2013 (S.I. No. 257/2013)",
             source_url=None,
             authority=SourceAuthority.PRIMARY,
@@ -59,6 +64,7 @@ class IrelandBuilder(JurisdictionBuilder):
             last_verified_timestamp=datetime.utcnow(),
         ))
         manager.add_citation(CitationRecord(
+            authority_id="central_bank_ireland",
             source_name="Irish Collective Asset-management Vehicles Act 2015",
             source_url=None,
             authority=SourceAuthority.PRIMARY,
@@ -71,13 +77,14 @@ class IrelandBuilder(JurisdictionBuilder):
             last_verified_timestamp=datetime.utcnow(),
         ))
         manager.add_citation(CitationRecord(
-            source_name="Central Bank of Ireland",
-            source_url="https://www.centralbank.ie",
+            authority_id="central_bank_ireland",
+            source_name=cbi.name,
+            source_url=cbi.base_url,
             authority=SourceAuthority.PRIMARY,
-            authority_level=1,
+            authority_level=cbi.level.value,
             publication_date=datetime(2024, 1, 1),
             section_reference="Fund Authorisation and Supervision – UCITS and AIF frameworks",
-            reliability_score=0.90,
+            reliability_score=cbi.reliability_score,
             raw_excerpt=None,
             regulatory_relevance_tag="Fund Registration",
             last_verified_timestamp=datetime.utcnow(),

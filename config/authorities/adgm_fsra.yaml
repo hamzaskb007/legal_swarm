@@ -1,0 +1,16 @@
+id: adgm_fsra
+jurisdiction: AE
+name: Abu Dhabi Global Market Financial Services Regulatory Authority
+level: 1
+authority_type: regulator
+base_url: https://www.adgm.com
+search_url: https://www.adgm.com/search
+legislation_url: https://www.adgm.com/legislation
+parser: html
+refresh_interval: 24
+reliability_score: 0.85
+enabled: true
+metadata:
+  country: United Arab Emirates
+  acronym: ADGM FSRA
+  region: Middle East

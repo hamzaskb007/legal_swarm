@@ -3,6 +3,7 @@ from __future__ import annotations
 from datetime import datetime
 from decimal import Decimal
 
+from src.authority.resolver import AuthorityResolver
 from src.governance.source_governance import SourceGovernanceManager
 from src.jurisdictions.base import JurisdictionBuilder
 from src.schema.schema import (
@@ -33,8 +34,12 @@ class DelawareBuilder(JurisdictionBuilder):
 
     def build_entry(self) -> RegulatoryEntry:
         manager = SourceGovernanceManager()
+        resolver = AuthorityResolver()
+        sec = resolver.get_by_id("sec")
+        cftc = resolver.get_by_id("cftc")
 
         manager.add_citation(CitationRecord(
+            authority_id="sec",
             source_name="Investment Company Act of 1940 (United States)",
             source_url=None,
             authority=SourceAuthority.PRIMARY,
@@ -47,6 +52,7 @@ class DelawareBuilder(JurisdictionBuilder):
             last_verified_timestamp=datetime.utcnow(),
         ))
         manager.add_citation(CitationRecord(
+            authority_id="sec",
             source_name="Investment Advisers Act of 1940 (United States)",
             source_url=None,
             authority=SourceAuthority.PRIMARY,
@@ -59,6 +65,7 @@ class DelawareBuilder(JurisdictionBuilder):
             last_verified_timestamp=datetime.utcnow(),
         ))
         manager.add_citation(CitationRecord(
+            authority_id="sec",
             source_name="Delaware Revised Uniform Limited Partnership Act (Title 6, Chapter 17)",
             source_url=None,
             authority=SourceAuthority.PRIMARY,
@@ -71,25 +78,27 @@ class DelawareBuilder(JurisdictionBuilder):
             last_verified_timestamp=datetime.utcnow(),
         ))
         manager.add_citation(CitationRecord(
-            source_name="Securities and Exchange Commission (SEC)",
-            source_url="https://www.sec.gov",
+            authority_id="sec",
+            source_name=sec.name,
+            source_url=sec.base_url,
             authority=SourceAuthority.PRIMARY,
-            authority_level=1,
+            authority_level=sec.level.value,
             publication_date=datetime(2024, 1, 1),
             section_reference="Investment Adviser Registration and Reporting – Form ADV, Form PF",
-            reliability_score=0.92,
+            reliability_score=sec.reliability_score,
             raw_excerpt=None,
             regulatory_relevance_tag="Licensing",
             last_verified_timestamp=datetime.utcnow(),
         ))
         manager.add_citation(CitationRecord(
-            source_name="Commodity Futures Trading Commission (CFTC)",
-            source_url="https://www.cftc.gov",
+            authority_id="cftc",
+            source_name=cftc.name,
+            source_url=cftc.base_url,
             authority=SourceAuthority.PRIMARY,
-            authority_level=1,
+            authority_level=cftc.level.value,
             publication_date=datetime(2024, 1, 1),
             section_reference="Regulations 4.5, 4.7, 4.13 – Private Fund Exemptions",
-            reliability_score=0.90,
+            reliability_score=cftc.reliability_score,
             raw_excerpt=None,
             regulatory_relevance_tag="Licensing",
             last_verified_timestamp=datetime.utcnow(),

@@ -1,0 +1,16 @@
+id: ogier
+jurisdiction: JE
+name: Ogier
+level: 4
+authority_type: legal_firm
+base_url: https://www.ogier.com
+search_url: null
+legislation_url: null
+parser: manual
+refresh_interval: 720
+reliability_score: 0.80
+enabled: true
+metadata:
+  country: Jersey
+  firm_type: offshore_law_firm
+  specialisation: Fund Formation

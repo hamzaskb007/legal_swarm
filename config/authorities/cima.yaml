@@ -1,0 +1,16 @@
+id: cima
+jurisdiction: KY
+name: Cayman Islands Monetary Authority
+level: 1
+authority_type: regulator
+base_url: https://www.cima.ky
+search_url: https://www.cima.ky/search
+legislation_url: https://www.cima.ky/regulatory-framework
+parser: html
+refresh_interval: 24
+reliability_score: 0.90
+enabled: true
+metadata:
+  country: Cayman Islands
+  acronym: CIMA
+  region: Caribbean

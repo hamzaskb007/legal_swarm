@@ -1,0 +1,16 @@
+id: bvi_fsc
+jurisdiction: VG
+name: BVI Financial Services Commission
+level: 1
+authority_type: regulator
+base_url: https://www.bvifsc.vg
+search_url: https://www.bvifsc.vg/search
+legislation_url: https://www.bvifsc.vg/regulated-entities/legislation
+parser: html
+refresh_interval: 24
+reliability_score: 0.90
+enabled: true
+metadata:
+  country: British Virgin Islands
+  acronym: BVI FSC
+  region: Caribbean

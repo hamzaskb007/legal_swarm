@@ -1,0 +1,16 @@
+id: cssf
+jurisdiction: LU
+name: Commission de Surveillance du Secteur Financier
+level: 1
+authority_type: regulator
+base_url: https://www.cssf.lu
+search_url: https://www.cssf.lu/en/search
+legislation_url: https://www.cssf.lu/en/legislation
+parser: html
+refresh_interval: 24
+reliability_score: 0.90
+enabled: true
+metadata:
+  country: Luxembourg
+  acronym: CSSF
+  region: Europe

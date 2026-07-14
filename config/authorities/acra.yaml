@@ -1,0 +1,16 @@
+id: acra
+jurisdiction: SG
+name: Accounting and Corporate Regulatory Authority
+level: 1
+authority_type: regulator
+base_url: https://www.acra.gov.sg
+search_url: https://www.acra.gov.sg/search
+legislation_url: https://www.acra.gov.sg/legislation
+parser: html
+refresh_interval: 24
+reliability_score: 0.85
+enabled: true
+metadata:
+  country: Singapore
+  acronym: ACRA
+  region: Asia

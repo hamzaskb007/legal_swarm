@@ -1,0 +1,16 @@
+id: mas
+jurisdiction: SG
+name: Monetary Authority of Singapore
+level: 1
+authority_type: regulator
+base_url: https://www.mas.gov.sg
+search_url: https://www.mas.gov.sg/search
+legislation_url: https://www.mas.gov.sg/regulation/acts
+parser: html
+refresh_interval: 24
+reliability_score: 0.90
+enabled: true
+metadata:
+  country: Singapore
+  acronym: MAS
+  region: Asia

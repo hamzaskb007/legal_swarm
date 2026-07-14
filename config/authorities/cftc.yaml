@@ -1,0 +1,16 @@
+id: cftc
+jurisdiction: US
+name: U.S. Commodity Futures Trading Commission
+level: 1
+authority_type: regulator
+base_url: https://www.cftc.gov
+search_url: https://www.cftc.gov/search
+legislation_url: https://www.cftc.gov/lawregulation
+parser: html
+refresh_interval: 24
+reliability_score: 0.93
+enabled: true
+metadata:
+  country: United States
+  acronym: CFTC
+  region: North America

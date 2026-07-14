@@ -3,6 +3,7 @@ from __future__ import annotations
 from datetime import datetime
 from decimal import Decimal
 
+from src.authority.resolver import AuthorityResolver
 from src.governance.source_governance import SourceGovernanceManager
 from src.jurisdictions.base import JurisdictionBuilder
 from src.schema.schema import (
@@ -33,8 +34,11 @@ class BviBuilder(JurisdictionBuilder):
 
     def build_entry(self) -> RegulatoryEntry:
         manager = SourceGovernanceManager()
+        resolver = AuthorityResolver()
+        bvi_fsc = resolver.get_by_id("bvi_fsc")
 
         manager.add_citation(CitationRecord(
+            authority_id="bvi_fsc",
             source_name="BVI Securities and Investment Business Act 2010 (SIBA)",
             source_url=None,
             authority=SourceAuthority.PRIMARY,
@@ -47,6 +51,7 @@ class BviBuilder(JurisdictionBuilder):
             last_verified_timestamp=datetime.utcnow(),
         ))
         manager.add_citation(CitationRecord(
+            authority_id="bvi_fsc",
             source_name="BVI Investment Business Regulatory Code 2024",
             source_url=None,
             authority=SourceAuthority.PRIMARY,
@@ -59,6 +64,7 @@ class BviBuilder(JurisdictionBuilder):
             last_verified_timestamp=datetime.utcnow(),
         ))
         manager.add_citation(CitationRecord(
+            authority_id="bvi_fsc",
             source_name="BVI Mutual Funds Regulations 2024",
             source_url=None,
             authority=SourceAuthority.PRIMARY,
@@ -71,13 +77,14 @@ class BviBuilder(JurisdictionBuilder):
             last_verified_timestamp=datetime.utcnow(),
         ))
         manager.add_citation(CitationRecord(
-            source_name="BVI Financial Services Commission",
-            source_url="https://www.bvifsc.vg",
+            authority_id="bvi_fsc",
+            source_name=bvi_fsc.name,
+            source_url=bvi_fsc.base_url,
             authority=SourceAuthority.PRIMARY,
-            authority_level=1,
+            authority_level=bvi_fsc.level.value,
             publication_date=datetime(2024, 5, 1),
             section_reference="Fund Categories and Requirements",
-            reliability_score=0.85,
+            reliability_score=bvi_fsc.reliability_score,
             raw_excerpt=None,
             regulatory_relevance_tag="Fund Registration",
             last_verified_timestamp=datetime.utcnow(),

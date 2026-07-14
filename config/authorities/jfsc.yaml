@@ -1,0 +1,16 @@
+id: jfsc
+jurisdiction: JE
+name: Jersey Financial Services Commission
+level: 1
+authority_type: regulator
+base_url: https://www.jerseyfsc.org
+search_url: https://www.jerseyfsc.org/search
+legislation_url: https://www.jerseyfsc.org/legislation
+parser: html
+refresh_interval: 24
+reliability_score: 0.90
+enabled: true
+metadata:
+  country: Jersey
+  acronym: JFSC
+  region: Europe

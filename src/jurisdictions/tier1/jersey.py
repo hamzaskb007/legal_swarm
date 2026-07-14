@@ -3,6 +3,7 @@ from __future__ import annotations
 from datetime import datetime
 from decimal import Decimal
 
+from src.authority.resolver import AuthorityResolver
 from src.governance.source_governance import SourceGovernanceManager
 from src.jurisdictions.base import JurisdictionBuilder
 from src.schema.schema import (
@@ -33,8 +34,12 @@ class JerseyBuilder(JurisdictionBuilder):
 
     def build_entry(self) -> RegulatoryEntry:
         manager = SourceGovernanceManager()
+        resolver = AuthorityResolver()
+        jfsc = resolver.get_by_id("jfsc")
+        ogier = resolver.get_by_id("ogier")
 
         manager.add_citation(CitationRecord(
+            authority_id="jfsc",
             source_name="Collective Investment Funds (Jersey) Law 1988",
             source_url=None,
             authority=SourceAuthority.PRIMARY,
@@ -47,6 +52,7 @@ class JerseyBuilder(JurisdictionBuilder):
             last_verified_timestamp=datetime.utcnow(),
         ))
         manager.add_citation(CitationRecord(
+            authority_id="jfsc",
             source_name="Alternative Investment Funds (Jersey) Regulations 2012",
             source_url=None,
             authority=SourceAuthority.PRIMARY,
@@ -59,25 +65,27 @@ class JerseyBuilder(JurisdictionBuilder):
             last_verified_timestamp=datetime.utcnow(),
         ))
         manager.add_citation(CitationRecord(
-            source_name="Jersey Financial Services Commission",
-            source_url="https://www.jerseyfsc.org",
+            authority_id="jfsc",
+            source_name=jfsc.name,
+            source_url=jfsc.base_url,
             authority=SourceAuthority.PRIMARY,
-            authority_level=1,
+            authority_level=jfsc.level.value,
             publication_date=datetime(2024, 1, 1),
             section_reference="Funds Handbook 2024 – Chapters 1–6",
-            reliability_score=0.90,
+            reliability_score=jfsc.reliability_score,
             raw_excerpt=None,
             regulatory_relevance_tag="Fund Registration",
             last_verified_timestamp=datetime.utcnow(),
         ))
         manager.add_citation(CitationRecord(
+            authority_id="ogier",
             source_name="Ogier – Jersey Fund Formation Guide",
-            source_url="https://www.ogier.com",
+            source_url=ogier.base_url,
             authority=SourceAuthority.SECONDARY,
-            authority_level=4,
+            authority_level=ogier.level.value,
             publication_date=datetime(2024, 6, 1),
             section_reference="Fund Types and Regulatory Requirements",
-            reliability_score=0.80,
+            reliability_score=ogier.reliability_score,
             raw_excerpt=None,
             regulatory_relevance_tag="Fund Structure",
             last_verified_timestamp=datetime.utcnow(),

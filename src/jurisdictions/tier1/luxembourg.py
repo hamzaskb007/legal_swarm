@@ -3,6 +3,7 @@ from __future__ import annotations
 from datetime import datetime
 from decimal import Decimal
 
+from src.authority.resolver import AuthorityResolver
 from src.governance.source_governance import SourceGovernanceManager
 from src.jurisdictions.base import JurisdictionBuilder
 from src.schema.schema import (
@@ -33,8 +34,11 @@ class LuxembourgBuilder(JurisdictionBuilder):
 
     def build_entry(self) -> RegulatoryEntry:
         manager = SourceGovernanceManager()
+        resolver = AuthorityResolver()
+        cssf = resolver.get_by_id("cssf")
 
         manager.add_citation(CitationRecord(
+            authority_id="cssf",
             source_name="Luxembourg Law of 17 December 2010 on Undertakings for Collective Investment (UCITS)",
             source_url=None,
             authority=SourceAuthority.PRIMARY,
@@ -47,6 +51,7 @@ class LuxembourgBuilder(JurisdictionBuilder):
             last_verified_timestamp=datetime.utcnow(),
         ))
         manager.add_citation(CitationRecord(
+            authority_id="cssf",
             source_name="Luxembourg Law of 23 July 2016 on Reserved Alternative Investment Funds (RAIF)",
             source_url=None,
             authority=SourceAuthority.PRIMARY,
@@ -59,6 +64,7 @@ class LuxembourgBuilder(JurisdictionBuilder):
             last_verified_timestamp=datetime.utcnow(),
         ))
         manager.add_citation(CitationRecord(
+            authority_id="cssf",
             source_name="Luxembourg Law of 13 February 2007 on Specialised Investment Funds (SIF)",
             source_url=None,
             authority=SourceAuthority.PRIMARY,
@@ -71,13 +77,14 @@ class LuxembourgBuilder(JurisdictionBuilder):
             last_verified_timestamp=datetime.utcnow(),
         ))
         manager.add_citation(CitationRecord(
-            source_name="Commission de Surveillance du Secteur Financier (CSSF)",
-            source_url="https://www.cssf.lu",
+            authority_id="cssf",
+            source_name=cssf.name,
+            source_url=cssf.base_url,
             authority=SourceAuthority.PRIMARY,
-            authority_level=1,
+            authority_level=cssf.level.value,
             publication_date=datetime(2024, 4, 1),
             section_reference="Fund Supervision – UCITS, SIF, RAIF frameworks",
-            reliability_score=0.90,
+            reliability_score=cssf.reliability_score,
             raw_excerpt=None,
             regulatory_relevance_tag="Fund Registration",
             last_verified_timestamp=datetime.utcnow(),
