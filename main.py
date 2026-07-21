@@ -12,6 +12,7 @@ from src.jurisdictions.registry import JurisdictionRegistry
 # Part 1 — Single entry demo (UAE from registry)
 # ---------------------------------------------------------------------------
 
+
 def run_single_entry_demo() -> None:
     print("\n=== PART 1: Single entry demo (UAE from registry) ===")
     registry = JurisdictionRegistry()
@@ -26,6 +27,7 @@ def run_single_entry_demo() -> None:
 # ---------------------------------------------------------------------------
 # Part 2 — Full Tier 1 Registry
 # ---------------------------------------------------------------------------
+
 
 def run_tier1_registry() -> None:
     print("\n=== PART 2: Tier 1 Jurisdiction Registry ===")

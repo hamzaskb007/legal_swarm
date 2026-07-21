@@ -69,6 +69,7 @@ def make_entry(**kwargs) -> RegulatoryEntry:
 # CitationRecord
 # ---------------------------------------------------------------------------
 
+
 class TestCitationRecord:
     def test_valid_citation(self):
         c = make_citation()
@@ -133,6 +134,7 @@ class TestCitationRecord:
 # SourceGovernanceRecord
 # ---------------------------------------------------------------------------
 
+
 class TestSourceGovernanceRecord:
     def test_requires_at_least_one_citation(self):
         with pytest.raises(Exception):
@@ -167,6 +169,7 @@ class TestSourceGovernanceRecord:
 # CapitalRequirement
 # ---------------------------------------------------------------------------
 
+
 class TestCapitalRequirement:
     def test_decimal_precision(self):
         cap = CapitalRequirement(
@@ -184,6 +187,7 @@ class TestCapitalRequirement:
 # ---------------------------------------------------------------------------
 # ConfidenceScore
 # ---------------------------------------------------------------------------
+
 
 class TestConfidenceScore:
     def test_valid_score(self):
@@ -206,6 +210,7 @@ class TestConfidenceScore:
 # ---------------------------------------------------------------------------
 # ValidationReport
 # ---------------------------------------------------------------------------
+
 
 class TestValidationReport:
     def make_result(self, status: ValidationStatus) -> ValidationResult:
@@ -259,6 +264,7 @@ class TestValidationReport:
 # AuditLogEntry
 # ---------------------------------------------------------------------------
 
+
 class TestAuditLogEntry:
     def test_frozen_record(self):
         log = AuditLogEntry(
@@ -277,6 +283,7 @@ class TestAuditLogEntry:
 # RegulatoryEntry
 # ---------------------------------------------------------------------------
 
+
 class TestRegulatoryEntry:
     def test_valid_entry(self):
         entry = make_entry()
@@ -288,16 +295,20 @@ class TestRegulatoryEntry:
 
     def test_confidence_threshold_gate_rejects_low_score(self):
         with pytest.raises(Exception):
-            make_entry(confidence=make_confidence(
-                score=0.3,
-                level=ConfidenceLevel.LOW,
-            ))
+            make_entry(
+                confidence=make_confidence(
+                    score=0.3,
+                    level=ConfidenceLevel.LOW,
+                )
+            )
 
     def test_confidence_threshold_gate_allows_unverified(self):
-        entry = make_entry(confidence=make_confidence(
-            score=0.3,
-            level=ConfidenceLevel.UNVERIFIED,
-        ))
+        entry = make_entry(
+            confidence=make_confidence(
+                score=0.3,
+                level=ConfidenceLevel.UNVERIFIED,
+            )
+        )
         assert entry.confidence.level == ConfidenceLevel.UNVERIFIED
 
     def test_entry_id_auto_generated(self):
@@ -312,6 +323,7 @@ class TestRegulatoryEntry:
 # ---------------------------------------------------------------------------
 # RecordRetentionPolicy
 # ---------------------------------------------------------------------------
+
 
 class TestRecordRetentionPolicy:
     def test_rejects_retention_over_50_years(self):

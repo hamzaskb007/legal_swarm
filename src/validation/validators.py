@@ -1,6 +1,9 @@
 from __future__ import annotations
 from src.schema.schema import (
-    RegulatoryEntry, ValidationReport, ValidationResult, ValidationStatus,
+    RegulatoryEntry,
+    ValidationReport,
+    ValidationResult,
+    ValidationStatus,
 )
 
 
@@ -19,13 +22,17 @@ class HasPrimaryRegulatorRule(ValidationRule):
     def check(self, entry: RegulatoryEntry) -> ValidationResult:
         if not entry.primary_regulator.strip():
             return ValidationResult(
-                rule_id=self.rule_id, rule_description=self.rule_description,
-                status=ValidationStatus.FAILED, field_path="primary_regulator",
+                rule_id=self.rule_id,
+                rule_description=self.rule_description,
+                status=ValidationStatus.FAILED,
+                field_path="primary_regulator",
                 message="primary_regulator is empty",
             )
         return ValidationResult(
-            rule_id=self.rule_id, rule_description=self.rule_description,
-            status=ValidationStatus.PASSED, field_path="primary_regulator",
+            rule_id=self.rule_id,
+            rule_description=self.rule_description,
+            status=ValidationStatus.PASSED,
+            field_path="primary_regulator",
         )
 
 
@@ -36,13 +43,17 @@ class HasAtLeastOneFundStructureRule(ValidationRule):
     def check(self, entry: RegulatoryEntry) -> ValidationResult:
         if not entry.permitted_fund_structures:
             return ValidationResult(
-                rule_id=self.rule_id, rule_description=self.rule_description,
-                status=ValidationStatus.WARNING, field_path="permitted_fund_structures",
+                rule_id=self.rule_id,
+                rule_description=self.rule_description,
+                status=ValidationStatus.WARNING,
+                field_path="permitted_fund_structures",
                 message="No fund structures defined; may be incomplete",
             )
         return ValidationResult(
-            rule_id=self.rule_id, rule_description=self.rule_description,
-            status=ValidationStatus.PASSED, field_path="permitted_fund_structures",
+            rule_id=self.rule_id,
+            rule_description=self.rule_description,
+            status=ValidationStatus.PASSED,
+            field_path="permitted_fund_structures",
         )
 
 
@@ -52,15 +63,20 @@ class ConfidenceThresholdRule(ValidationRule):
 
     def check(self, entry: RegulatoryEntry) -> ValidationResult:
         from src.schema.schema import ConfidenceLevel
+
         if entry.confidence.score < 0.4 and entry.confidence.level != ConfidenceLevel.UNVERIFIED:
             return ValidationResult(
-                rule_id=self.rule_id, rule_description=self.rule_description,
-                status=ValidationStatus.FAILED, field_path="confidence.score",
+                rule_id=self.rule_id,
+                rule_description=self.rule_description,
+                status=ValidationStatus.FAILED,
+                field_path="confidence.score",
                 message=f"Score {entry.confidence.score} below minimum threshold of 0.4",
             )
         return ValidationResult(
-            rule_id=self.rule_id, rule_description=self.rule_description,
-            status=ValidationStatus.PASSED, field_path="confidence.score",
+            rule_id=self.rule_id,
+            rule_description=self.rule_description,
+            status=ValidationStatus.PASSED,
+            field_path="confidence.score",
         )
 
 
@@ -71,13 +87,17 @@ class HasSourceCitationsRule(ValidationRule):
     def check(self, entry: RegulatoryEntry) -> ValidationResult:
         if not entry.source_governance.primary_citations:
             return ValidationResult(
-                rule_id=self.rule_id, rule_description=self.rule_description,
-                status=ValidationStatus.FAILED, field_path="source_governance.primary_citations",
+                rule_id=self.rule_id,
+                rule_description=self.rule_description,
+                status=ValidationStatus.FAILED,
+                field_path="source_governance.primary_citations",
                 message="No primary citations found",
             )
         return ValidationResult(
-            rule_id=self.rule_id, rule_description=self.rule_description,
-            status=ValidationStatus.PASSED, field_path="source_governance.primary_citations",
+            rule_id=self.rule_id,
+            rule_description=self.rule_description,
+            status=ValidationStatus.PASSED,
+            field_path="source_governance.primary_citations",
         )
 
 
@@ -88,13 +108,17 @@ class FilingObligationsRule(ValidationRule):
     def check(self, entry: RegulatoryEntry) -> ValidationResult:
         if not entry.filing_obligations:
             return ValidationResult(
-                rule_id=self.rule_id, rule_description=self.rule_description,
-                status=ValidationStatus.WARNING, field_path="filing_obligations",
+                rule_id=self.rule_id,
+                rule_description=self.rule_description,
+                status=ValidationStatus.WARNING,
+                field_path="filing_obligations",
                 message="No filing obligations defined; may be incomplete",
             )
         return ValidationResult(
-            rule_id=self.rule_id, rule_description=self.rule_description,
-            status=ValidationStatus.PASSED, field_path="filing_obligations",
+            rule_id=self.rule_id,
+            rule_description=self.rule_description,
+            status=ValidationStatus.PASSED,
+            field_path="filing_obligations",
         )
 
 
@@ -105,13 +129,17 @@ class LicensingRequirementsRule(ValidationRule):
     def check(self, entry: RegulatoryEntry) -> ValidationResult:
         if not entry.licensing_requirements:
             return ValidationResult(
-                rule_id=self.rule_id, rule_description=self.rule_description,
-                status=ValidationStatus.WARNING, field_path="licensing_requirements",
+                rule_id=self.rule_id,
+                rule_description=self.rule_description,
+                status=ValidationStatus.WARNING,
+                field_path="licensing_requirements",
                 message="licensing_requirements is None or empty",
             )
         return ValidationResult(
-            rule_id=self.rule_id, rule_description=self.rule_description,
-            status=ValidationStatus.PASSED, field_path="licensing_requirements",
+            rule_id=self.rule_id,
+            rule_description=self.rule_description,
+            status=ValidationStatus.PASSED,
+            field_path="licensing_requirements",
         )
 
 
@@ -122,13 +150,17 @@ class SubstanceRequirementsRule(ValidationRule):
     def check(self, entry: RegulatoryEntry) -> ValidationResult:
         if entry.substance_requirements is None:
             return ValidationResult(
-                rule_id=self.rule_id, rule_description=self.rule_description,
-                status=ValidationStatus.WARNING, field_path="substance_requirements",
+                rule_id=self.rule_id,
+                rule_description=self.rule_description,
+                status=ValidationStatus.WARNING,
+                field_path="substance_requirements",
                 message="substance_requirements is None",
             )
         return ValidationResult(
-            rule_id=self.rule_id, rule_description=self.rule_description,
-            status=ValidationStatus.PASSED, field_path="substance_requirements",
+            rule_id=self.rule_id,
+            rule_description=self.rule_description,
+            status=ValidationStatus.PASSED,
+            field_path="substance_requirements",
         )
 
 
@@ -139,13 +171,17 @@ class RegulatoryTimelinesRule(ValidationRule):
     def check(self, entry: RegulatoryEntry) -> ValidationResult:
         if not entry.regulatory_timelines:
             return ValidationResult(
-                rule_id=self.rule_id, rule_description=self.rule_description,
-                status=ValidationStatus.WARNING, field_path="regulatory_timelines",
+                rule_id=self.rule_id,
+                rule_description=self.rule_description,
+                status=ValidationStatus.WARNING,
+                field_path="regulatory_timelines",
                 message="regulatory_timelines is None or empty",
             )
         return ValidationResult(
-            rule_id=self.rule_id, rule_description=self.rule_description,
-            status=ValidationStatus.PASSED, field_path="regulatory_timelines",
+            rule_id=self.rule_id,
+            rule_description=self.rule_description,
+            status=ValidationStatus.PASSED,
+            field_path="regulatory_timelines",
         )
 
 
@@ -156,13 +192,17 @@ class RegulatoryCostsRule(ValidationRule):
     def check(self, entry: RegulatoryEntry) -> ValidationResult:
         if not entry.regulatory_costs:
             return ValidationResult(
-                rule_id=self.rule_id, rule_description=self.rule_description,
-                status=ValidationStatus.WARNING, field_path="regulatory_costs",
+                rule_id=self.rule_id,
+                rule_description=self.rule_description,
+                status=ValidationStatus.WARNING,
+                field_path="regulatory_costs",
                 message="regulatory_costs is None or empty",
             )
         return ValidationResult(
-            rule_id=self.rule_id, rule_description=self.rule_description,
-            status=ValidationStatus.PASSED, field_path="regulatory_costs",
+            rule_id=self.rule_id,
+            rule_description=self.rule_description,
+            status=ValidationStatus.PASSED,
+            field_path="regulatory_costs",
         )
 
 
@@ -173,13 +213,17 @@ class PenaltyExposureRule(ValidationRule):
     def check(self, entry: RegulatoryEntry) -> ValidationResult:
         if not entry.penalty_exposure:
             return ValidationResult(
-                rule_id=self.rule_id, rule_description=self.rule_description,
-                status=ValidationStatus.WARNING, field_path="penalty_exposure",
+                rule_id=self.rule_id,
+                rule_description=self.rule_description,
+                status=ValidationStatus.WARNING,
+                field_path="penalty_exposure",
                 message="penalty_exposure is None or empty",
             )
         return ValidationResult(
-            rule_id=self.rule_id, rule_description=self.rule_description,
-            status=ValidationStatus.PASSED, field_path="penalty_exposure",
+            rule_id=self.rule_id,
+            rule_description=self.rule_description,
+            status=ValidationStatus.PASSED,
+            field_path="penalty_exposure",
         )
 
 
@@ -190,13 +234,17 @@ class WindDownProcedureRule(ValidationRule):
     def check(self, entry: RegulatoryEntry) -> ValidationResult:
         if entry.wind_down_procedure is None:
             return ValidationResult(
-                rule_id=self.rule_id, rule_description=self.rule_description,
-                status=ValidationStatus.WARNING, field_path="wind_down_procedure",
+                rule_id=self.rule_id,
+                rule_description=self.rule_description,
+                status=ValidationStatus.WARNING,
+                field_path="wind_down_procedure",
                 message="wind_down_procedure is None",
             )
         return ValidationResult(
-            rule_id=self.rule_id, rule_description=self.rule_description,
-            status=ValidationStatus.PASSED, field_path="wind_down_procedure",
+            rule_id=self.rule_id,
+            rule_description=self.rule_description,
+            status=ValidationStatus.PASSED,
+            field_path="wind_down_procedure",
         )
 
 
@@ -207,13 +255,17 @@ class FundManagerRequirementsRule(ValidationRule):
     def check(self, entry: RegulatoryEntry) -> ValidationResult:
         if entry.fund_manager_requirements is None:
             return ValidationResult(
-                rule_id=self.rule_id, rule_description=self.rule_description,
-                status=ValidationStatus.WARNING, field_path="fund_manager_requirements",
+                rule_id=self.rule_id,
+                rule_description=self.rule_description,
+                status=ValidationStatus.WARNING,
+                field_path="fund_manager_requirements",
                 message="fund_manager_requirements is None",
             )
         return ValidationResult(
-            rule_id=self.rule_id, rule_description=self.rule_description,
-            status=ValidationStatus.PASSED, field_path="fund_manager_requirements",
+            rule_id=self.rule_id,
+            rule_description=self.rule_description,
+            status=ValidationStatus.PASSED,
+            field_path="fund_manager_requirements",
         )
 
 
@@ -224,13 +276,17 @@ class BeneficialOwnershipRulesRule(ValidationRule):
     def check(self, entry: RegulatoryEntry) -> ValidationResult:
         if entry.beneficial_ownership_rules is None:
             return ValidationResult(
-                rule_id=self.rule_id, rule_description=self.rule_description,
-                status=ValidationStatus.WARNING, field_path="beneficial_ownership_rules",
+                rule_id=self.rule_id,
+                rule_description=self.rule_description,
+                status=ValidationStatus.WARNING,
+                field_path="beneficial_ownership_rules",
                 message="beneficial_ownership_rules is None",
             )
         return ValidationResult(
-            rule_id=self.rule_id, rule_description=self.rule_description,
-            status=ValidationStatus.PASSED, field_path="beneficial_ownership_rules",
+            rule_id=self.rule_id,
+            rule_description=self.rule_description,
+            status=ValidationStatus.PASSED,
+            field_path="beneficial_ownership_rules",
         )
 
 
@@ -241,13 +297,17 @@ class RecordRetentionPoliciesRule(ValidationRule):
     def check(self, entry: RegulatoryEntry) -> ValidationResult:
         if not entry.record_retention_policies:
             return ValidationResult(
-                rule_id=self.rule_id, rule_description=self.rule_description,
-                status=ValidationStatus.WARNING, field_path="record_retention_policies",
+                rule_id=self.rule_id,
+                rule_description=self.rule_description,
+                status=ValidationStatus.WARNING,
+                field_path="record_retention_policies",
                 message="record_retention_policies is None or empty",
             )
         return ValidationResult(
-            rule_id=self.rule_id, rule_description=self.rule_description,
-            status=ValidationStatus.PASSED, field_path="record_retention_policies",
+            rule_id=self.rule_id,
+            rule_description=self.rule_description,
+            status=ValidationStatus.PASSED,
+            field_path="record_retention_policies",
         )
 
 
@@ -259,13 +319,17 @@ class MinimumPrimaryCitationsRule(ValidationRule):
         count = len(entry.source_governance.primary_citations)
         if count < 2:
             return ValidationResult(
-                rule_id=self.rule_id, rule_description=self.rule_description,
-                status=ValidationStatus.FAILED, field_path="source_governance.primary_citations",
+                rule_id=self.rule_id,
+                rule_description=self.rule_description,
+                status=ValidationStatus.FAILED,
+                field_path="source_governance.primary_citations",
                 message="Minimum 2 primary citations required per SRS Section 5.3",
             )
         return ValidationResult(
-            rule_id=self.rule_id, rule_description=self.rule_description,
-            status=ValidationStatus.PASSED, field_path="source_governance.primary_citations",
+            rule_id=self.rule_id,
+            rule_description=self.rule_description,
+            status=ValidationStatus.PASSED,
+            field_path="source_governance.primary_citations",
         )
 
 
@@ -276,24 +340,32 @@ class TaxCitationForTaxSummaryRule(ValidationRule):
     def check(self, entry: RegulatoryEntry) -> ValidationResult:
         if entry.tax_summary is None:
             return ValidationResult(
-                rule_id=self.rule_id, rule_description=self.rule_description,
-                status=ValidationStatus.PASSED, field_path="source_governance",
+                rule_id=self.rule_id,
+                rule_description=self.rule_description,
+                status=ValidationStatus.PASSED,
+                field_path="source_governance",
             )
-        all_citations = (entry.source_governance.primary_citations
-                         + entry.source_governance.secondary_citations
-                         + entry.source_governance.tertiary_citations)
+        all_citations = (
+            entry.source_governance.primary_citations
+            + entry.source_governance.secondary_citations
+            + entry.source_governance.tertiary_citations
+        )
         has_tax_tag = any(
             getattr(c, "regulatory_relevance_tag", None) == "Tax Framework" for c in all_citations
         )
         if not has_tax_tag:
             return ValidationResult(
-                rule_id=self.rule_id, rule_description=self.rule_description,
-                status=ValidationStatus.WARNING, field_path="source_governance",
+                rule_id=self.rule_id,
+                rule_description=self.rule_description,
+                status=ValidationStatus.WARNING,
+                field_path="source_governance",
                 message="Tax summary present but no Tax Framework citation found",
             )
         return ValidationResult(
-            rule_id=self.rule_id, rule_description=self.rule_description,
-            status=ValidationStatus.PASSED, field_path="source_governance",
+            rule_id=self.rule_id,
+            rule_description=self.rule_description,
+            status=ValidationStatus.PASSED,
+            field_path="source_governance",
         )
 
 
@@ -303,29 +375,40 @@ class CapitalCitationForCapitalRequirementsRule(ValidationRule):
 
     def check(self, entry: RegulatoryEntry) -> ValidationResult:
         has_capital = any(
-            fs.min_capital is not None and fs.min_capital.amount is not None and fs.min_capital.amount > 0
+            fs.min_capital is not None
+            and fs.min_capital.amount is not None
+            and fs.min_capital.amount > 0
             for fs in entry.permitted_fund_structures
         )
         if not has_capital:
             return ValidationResult(
-                rule_id=self.rule_id, rule_description=self.rule_description,
-                status=ValidationStatus.PASSED, field_path="source_governance",
+                rule_id=self.rule_id,
+                rule_description=self.rule_description,
+                status=ValidationStatus.PASSED,
+                field_path="source_governance",
             )
-        all_citations = (entry.source_governance.primary_citations
-                         + entry.source_governance.secondary_citations
-                         + entry.source_governance.tertiary_citations)
+        all_citations = (
+            entry.source_governance.primary_citations
+            + entry.source_governance.secondary_citations
+            + entry.source_governance.tertiary_citations
+        )
         has_capital_tag = any(
-            getattr(c, "regulatory_relevance_tag", None) == "Capital Requirements" for c in all_citations
+            getattr(c, "regulatory_relevance_tag", None) == "Capital Requirements"
+            for c in all_citations
         )
         if not has_capital_tag:
             return ValidationResult(
-                rule_id=self.rule_id, rule_description=self.rule_description,
-                status=ValidationStatus.WARNING, field_path="source_governance",
+                rule_id=self.rule_id,
+                rule_description=self.rule_description,
+                status=ValidationStatus.WARNING,
+                field_path="source_governance",
                 message="Capital requirements present but no Capital Requirements citation found",
             )
         return ValidationResult(
-            rule_id=self.rule_id, rule_description=self.rule_description,
-            status=ValidationStatus.PASSED, field_path="source_governance",
+            rule_id=self.rule_id,
+            rule_description=self.rule_description,
+            status=ValidationStatus.PASSED,
+            field_path="source_governance",
         )
 
 
@@ -337,16 +420,22 @@ class SilentNullProhibitionRule(ValidationRule):
         results: list[ValidationResult] = []
         for field_name in ("tax_summary", "aml_kyc_framework", "passporting_notes"):
             if getattr(entry, field_name, None) is None:
-                results.append(ValidationResult(
-                    rule_id=self.rule_id, rule_description=self.rule_description,
-                    status=ValidationStatus.WARNING, field_path=field_name,
-                    message="Field is None — populate or use explicit Not Applicable string",
-                ))
+                results.append(
+                    ValidationResult(
+                        rule_id=self.rule_id,
+                        rule_description=self.rule_description,
+                        status=ValidationStatus.WARNING,
+                        field_path=field_name,
+                        message="Field is None — populate or use explicit Not Applicable string",
+                    )
+                )
         if results:
             return results[0]
         return ValidationResult(
-            rule_id=self.rule_id, rule_description=self.rule_description,
-            status=ValidationStatus.PASSED, field_path="tax_summary",
+            rule_id=self.rule_id,
+            rule_description=self.rule_description,
+            status=ValidationStatus.PASSED,
+            field_path="tax_summary",
         )
 
 

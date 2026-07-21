@@ -57,8 +57,7 @@ class TestJurisdictionRegistry:
     def test_all_entries_pass_validation(self, registry):
         for code in registry:
             report = registry.validation_reports[code]
-            assert report.overall_status != ValidationStatus.FAILED, \
-                f"{code} validation FAILED"
+            assert report.overall_status != ValidationStatus.FAILED, f"{code} validation FAILED"
 
     def test_all_entries_have_confidence_scored(self, registry):
         for entry in registry.get_all():

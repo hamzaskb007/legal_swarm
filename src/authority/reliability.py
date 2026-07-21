@@ -53,7 +53,9 @@ FRESHNESS_WEIGHTS: dict[str, float] = {
 }
 
 
-def _freshness_category(publication_date: datetime | None, reference_date: datetime | None = None) -> str:
+def _freshness_category(
+    publication_date: datetime | None, reference_date: datetime | None = None
+) -> str:
     ref = reference_date or datetime.utcnow()
     if publication_date is None:
         return "moderate"
@@ -78,8 +80,12 @@ class ReliabilityConfig(BaseModel):
     verification_weight: float = 0.10
 
     level_weights: dict[int, float] = Field(default_factory=lambda: dict(AUTHORITY_LEVEL_WEIGHTS))
-    reputation_map: dict[str, float] = Field(default_factory=lambda: dict(AUTHORITY_TYPE_REPUTATION))
-    publication_type_map: dict[str, float] = Field(default_factory=lambda: dict(PUBLICATION_TYPE_WEIGHTS))
+    reputation_map: dict[str, float] = Field(
+        default_factory=lambda: dict(AUTHORITY_TYPE_REPUTATION)
+    )
+    publication_type_map: dict[str, float] = Field(
+        default_factory=lambda: dict(PUBLICATION_TYPE_WEIGHTS)
+    )
     freshness_map: dict[str, float] = Field(default_factory=lambda: dict(FRESHNESS_WEIGHTS))
 
     max_score: float = 1.0
@@ -121,30 +127,51 @@ class ReliabilityScorer:
 
         level_weight = self._config.level_weights.get(authority.level.value, 0.5)
         level_score = level_weight * self._config.level_weight
-        factors.append(f"Authority level {authority.level.value}: {level_weight:.2f} × {self._config.level_weight:.2f} = {level_score:.4f}")
+        factors.append(
+            f"Authority level {authority.level.value}: {level_weight:.2f} × {self._config.level_weight:.2f} = {level_score:.4f}"
+        )
 
         reputation = self._config.reputation_map.get(authority.authority_type, 0.5)
         reputation_score = reputation * self._config.reputation_weight
-        factors.append(f"Authority type '{authority.authority_type}': {reputation:.2f} × {self._config.reputation_weight:.2f} = {reputation_score:.4f}")
+        factors.append(
+            f"Authority type '{authority.authority_type}': {reputation:.2f} × {self._config.reputation_weight:.2f} = {reputation_score:.4f}"
+        )
 
         pub_weight = self._config.publication_type_map.get(document_type or "", 0.7)
         pub_score = pub_weight * self._config.publication_type_weight
-        factors.append(f"Document type '{document_type or 'unknown'}': {pub_weight:.2f} × {self._config.publication_type_weight:.2f} = {pub_score:.4f}")
+        factors.append(
+            f"Document type '{document_type or 'unknown'}': {pub_weight:.2f} × {self._config.publication_type_weight:.2f} = {pub_score:.4f}"
+        )
 
         freshness_cat = _freshness_category(publication_date, ref_date)
         fresh_weight = self._config.freshness_map.get(freshness_cat, 0.7)
         fresh_score = fresh_weight * self._config.freshness_weight
-        factors.append(f"Freshness '{freshness_cat}': {fresh_weight:.2f} × {self._config.freshness_weight:.2f} = {fresh_score:.4f}")
+        factors.append(
+            f"Freshness '{freshness_cat}': {fresh_weight:.2f} × {self._config.freshness_weight:.2f} = {fresh_score:.4f}"
+        )
 
         completeness_items = [has_section_reference, has_excerpt, retrieval_success]
         completeness_ratio = sum(1 for x in completeness_items if x) / len(completeness_items)
         completeness_score = completeness_ratio * self._config.citation_completeness_weight
-        factors.append(f"Completeness ({sum(1 for x in completeness_items if x)}/{len(completeness_items)}): {completeness_ratio:.2f} × {self._config.citation_completeness_weight:.2f} = {completeness_score:.4f}")
+        factors.append(
+            f"Completeness ({sum(1 for x in completeness_items if x)}/{len(completeness_items)}): {completeness_ratio:.2f} × {self._config.citation_completeness_weight:.2f} = {completeness_score:.4f}"
+        )
 
-        verification_score = (1.0 if verification_success else 0.3) * self._config.verification_weight
-        factors.append(f"Verification {'success' if verification_success else 'failure'}: {'1.00' if verification_success else '0.30'} × {self._config.verification_weight:.2f} = {verification_score:.4f}")
+        verification_score = (
+            1.0 if verification_success else 0.3
+        ) * self._config.verification_weight
+        factors.append(
+            f"Verification {'success' if verification_success else 'failure'}: {'1.00' if verification_success else '0.30'} × {self._config.verification_weight:.2f} = {verification_score:.4f}"
+        )
 
-        total = level_score + reputation_score + pub_score + fresh_score + completeness_score + verification_score
+        total = (
+            level_score
+            + reputation_score
+            + pub_score
+            + fresh_score
+            + completeness_score
+            + verification_score
+        )
         final = max(self._config.min_score, min(self._config.max_score, total))
 
         return ReliabilityScore(

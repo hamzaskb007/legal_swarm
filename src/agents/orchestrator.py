@@ -17,7 +17,9 @@ class OrchestrationReport:
 
 
 class Orchestrator:
-    def __init__(self, agents: list[BaseAgent], audit_log_path: Path = Path("logs/audit.jsonl")) -> None:
+    def __init__(
+        self, agents: list[BaseAgent], audit_log_path: Path = Path("logs/audit.jsonl")
+    ) -> None:
         self.agents = agents
         self._logger = AuditLogger(log_path=audit_log_path)
 

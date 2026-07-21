@@ -39,36 +39,42 @@ from src.versioning.delta_tracker import DeltaTracker
 @pytest.fixture
 def full_entry():
     manager = SourceGovernanceManager()
-    manager.add_citation(CitationRecord(
-        source_name="UAE SCA",
-        source_url="https://sca.gov.ae",
-        authority=SourceAuthority.PRIMARY,
-        authority_level=1,
-        publication_date=datetime(2024, 1, 1),
-        reliability_score=0.95,
-        regulatory_relevance_tag="Fund Registration",
-        last_verified_timestamp=datetime.utcnow(),
-    ))
-    manager.add_citation(CitationRecord(
-        source_name="UAE Federal Law No. 4 of 2000",
-        source_url=None,
-        authority=SourceAuthority.PRIMARY,
-        authority_level=2,
-        publication_date=datetime(2000, 1, 1),
-        section_reference="Article 12",
-        reliability_score=0.95,
-        regulatory_relevance_tag="Capital Requirements",
-        last_verified_timestamp=datetime.utcnow(),
-    ))
-    manager.add_citation(CitationRecord(
-        source_name="Legal Commentary",
-        source_url="https://legal.example.com",
-        authority=SourceAuthority.SECONDARY,
-        authority_level=4,
-        reliability_score=0.75,
-        regulatory_relevance_tag="Tax Framework",
-        last_verified_timestamp=datetime.utcnow(),
-    ))
+    manager.add_citation(
+        CitationRecord(
+            source_name="UAE SCA",
+            source_url="https://sca.gov.ae",
+            authority=SourceAuthority.PRIMARY,
+            authority_level=1,
+            publication_date=datetime(2024, 1, 1),
+            reliability_score=0.95,
+            regulatory_relevance_tag="Fund Registration",
+            last_verified_timestamp=datetime.utcnow(),
+        )
+    )
+    manager.add_citation(
+        CitationRecord(
+            source_name="UAE Federal Law No. 4 of 2000",
+            source_url=None,
+            authority=SourceAuthority.PRIMARY,
+            authority_level=2,
+            publication_date=datetime(2000, 1, 1),
+            section_reference="Article 12",
+            reliability_score=0.95,
+            regulatory_relevance_tag="Capital Requirements",
+            last_verified_timestamp=datetime.utcnow(),
+        )
+    )
+    manager.add_citation(
+        CitationRecord(
+            source_name="Legal Commentary",
+            source_url="https://legal.example.com",
+            authority=SourceAuthority.SECONDARY,
+            authority_level=4,
+            reliability_score=0.75,
+            regulatory_relevance_tag="Tax Framework",
+            last_verified_timestamp=datetime.utcnow(),
+        )
+    )
     governance = manager.build()
 
     return RegulatoryEntry(
@@ -99,10 +105,14 @@ def full_entry():
             )
         ],
         licensing_requirements=[
-            LicensingRequirement(licence_type="Fund Licence", issuing_authority="SCA", applies_to="Fund"),
+            LicensingRequirement(
+                licence_type="Fund Licence", issuing_authority="SCA", applies_to="Fund"
+            ),
         ],
         substance_requirements=SubstanceRequirement(
-            local_office_required=True, local_directors_required=True, local_staff_required=True,
+            local_office_required=True,
+            local_directors_required=True,
+            local_staff_required=True,
         ),
         regulatory_timelines=[
             RegulatoryTimeline(process_name="Fund Registration"),
@@ -168,9 +178,7 @@ class TestFullPipeline:
         assert len(logs) == 1
 
     def test_delta_tracking(self, full_entry):
-        new_entry = full_entry.model_copy(
-            update={"primary_regulator": "DFSA"}
-        )
+        new_entry = full_entry.model_copy(update={"primary_regulator": "DFSA"})
         tracker = DeltaTracker(tracked_fields=["primary_regulator"])
         record = tracker.compute_delta(full_entry, new_entry)
         assert len(record.deltas) == 1

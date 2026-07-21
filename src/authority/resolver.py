@@ -67,7 +67,10 @@ class AuthorityResolver:
         return CitationRecord(
             authority_id=authority_id,
             source_name=source_name or authority.name,
-            source_url=source_url or authority.get_endpoint_url("homepage") or authority.base_url or "",
+            source_url=source_url
+            or authority.get_endpoint_url("homepage")
+            or authority.base_url
+            or "",
             authority=authority.to_source_authority(),
             authority_level=authority_level or authority.level.value,
             reliability_score=reliability_score or authority.reliability_score,

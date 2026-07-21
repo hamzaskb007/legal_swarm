@@ -10,7 +10,4 @@ class CapitalRequirementAgent(BaseAgent):
         return entry
 
     def validate(self, entry: RegulatoryEntry) -> bool:
-        return any(
-            fs.min_capital is not None
-            for fs in entry.permitted_fund_structures
-        )
+        return any(fs.min_capital is not None for fs in entry.permitted_fund_structures)

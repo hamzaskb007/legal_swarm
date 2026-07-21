@@ -10,13 +10,22 @@ class AuditLogger:
         self.log_path = log_path
         self.log_path.parent.mkdir(parents=True, exist_ok=True)
 
-    def log(self, event_type: AuditEventType, actor: str,
-            jurisdiction_code: str | None = None, entry_id: UUID | None = None,
-            payload: dict[str, Any] | None = None, outcome: str | None = None) -> AuditLogEntry:
+    def log(
+        self,
+        event_type: AuditEventType,
+        actor: str,
+        jurisdiction_code: str | None = None,
+        entry_id: UUID | None = None,
+        payload: dict[str, Any] | None = None,
+        outcome: str | None = None,
+    ) -> AuditLogEntry:
         record = AuditLogEntry(
-            event_type=event_type, actor=actor,
-            jurisdiction_code=jurisdiction_code, entry_id=entry_id,
-            payload=payload or {}, outcome=outcome,
+            event_type=event_type,
+            actor=actor,
+            jurisdiction_code=jurisdiction_code,
+            entry_id=entry_id,
+            payload=payload or {},
+            outcome=outcome,
         )
         with open(self.log_path, "a", encoding="utf-8") as f:
             f.write(record.model_dump_json() + "\n")
@@ -32,7 +41,7 @@ class AuditLogger:
                 if line:
                     entries.append(AuditLogEntry.model_validate_json(line))
         return entries
-    
+
     def read_by_jurisdiction(self, jurisdiction_code: str) -> list[AuditLogEntry]:
         return [e for e in self.read_all() if e.jurisdiction_code == jurisdiction_code]
 

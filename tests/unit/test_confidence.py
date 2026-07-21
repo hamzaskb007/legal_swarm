@@ -76,14 +76,23 @@ class TestConfidenceScorer:
 
     def test_completeness_bonus_full(self):
         from src.schema.schema import (
-            SubstanceRequirement, RegulatoryTimeline, RegulatoryCost,
-            PenaltyExposure, WindDownProcedure, FundManagerRequirement,
-            MarketingRestriction, BeneficialOwnershipRule, RecordRetentionPolicy,
+            SubstanceRequirement,
+            RegulatoryTimeline,
+            RegulatoryCost,
+            PenaltyExposure,
+            WindDownProcedure,
+            FundManagerRequirement,
+            MarketingRestriction,
+            BeneficialOwnershipRule,
+            RecordRetentionPolicy,
             InvestorRequirements,
         )
+
         entry = make_entry(
             licensing_requirements=[],
-            substance_requirements=SubstanceRequirement(local_office_required=True, local_directors_required=True, local_staff_required=True),
+            substance_requirements=SubstanceRequirement(
+                local_office_required=True, local_directors_required=True, local_staff_required=True
+            ),
             regulatory_timelines=[RegulatoryTimeline(process_name="Test")],
             regulatory_costs=[RegulatoryCost(cost_type="T", currency="USD", frequency="One-time")],
             penalty_exposure=[PenaltyExposure(breach_type="T")],
@@ -91,7 +100,9 @@ class TestConfidenceScorer:
             fund_manager_requirements=FundManagerRequirement(),
             marketing_restrictions=[MarketingRestriction(target_investor_type="T")],
             beneficial_ownership_rules=BeneficialOwnershipRule(),
-            record_retention_policies=[RecordRetentionPolicy(minimum_retention_years=5, applies_to="All")],
+            record_retention_policies=[
+                RecordRetentionPolicy(minimum_retention_years=5, applies_to="All")
+            ],
             investor_requirements=InvestorRequirements(),
         )
         scorer = ConfidenceScorer()
@@ -102,7 +113,12 @@ class TestConfidenceScorer:
 
     def test_completeness_bonus_partial(self):
         from src.schema.schema import SubstanceRequirement
-        entry = make_entry(substance_requirements=SubstanceRequirement(local_office_required=True, local_directors_required=True, local_staff_required=True))
+
+        entry = make_entry(
+            substance_requirements=SubstanceRequirement(
+                local_office_required=True, local_directors_required=True, local_staff_required=True
+            )
+        )
         scorer = ConfidenceScorer()
         result = scorer.score(entry)
         assert any("completeness" in f.lower() for f in result.contributing_factors)

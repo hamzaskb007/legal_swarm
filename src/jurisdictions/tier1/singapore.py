@@ -38,58 +38,66 @@ class SingaporeBuilder(JurisdictionBuilder):
         mas = resolver.get_by_id("mas")
         acra = resolver.get_by_id("acra")
 
-        manager.add_citation(CitationRecord(
-            authority_id="mas",
-            source_name="Securities and Futures Act 2001 (Cap. 289, Singapore)",
-            source_url=None,
-            authority=SourceAuthority.PRIMARY,
-            authority_level=2,
-            publication_date=datetime(2001, 10, 1),
-            section_reference="Division 2 – Collective Investment Schemes, Section 286",
-            reliability_score=0.97,
-            raw_excerpt=None,
-            regulatory_relevance_tag="Fund Structure",
-            last_verified_timestamp=datetime.utcnow(),
-        ))
-        manager.add_citation(CitationRecord(
-            authority_id="mas",
-            source_name="Variable Capital Companies Act 2018 (Singapore)",
-            source_url=None,
-            authority=SourceAuthority.PRIMARY,
-            authority_level=2,
-            publication_date=datetime(2018, 10, 1),
-            section_reference="Parts 4–7 – Registration and Operations",
-            reliability_score=0.96,
-            raw_excerpt=None,
-            regulatory_relevance_tag="Fund Structure",
-            last_verified_timestamp=datetime.utcnow(),
-        ))
-        manager.add_citation(CitationRecord(
-            authority_id="mas",
-            source_name=mas.name,
-            source_url=mas.base_url,
-            authority=SourceAuthority.PRIMARY,
-            authority_level=mas.level.value,
-            publication_date=datetime(2024, 6, 1),
-            section_reference="Code on Collective Investment Schemes – Chapters 1–8",
-            reliability_score=mas.reliability_score,
-            raw_excerpt=None,
-            regulatory_relevance_tag="Fund Registration",
-            last_verified_timestamp=datetime.utcnow(),
-        ))
-        manager.add_citation(CitationRecord(
-            authority_id="acra",
-            source_name=acra.name,
-            source_url=acra.base_url,
-            authority=SourceAuthority.PRIMARY,
-            authority_level=acra.level.value,
-            publication_date=datetime(2024, 9, 1),
-            section_reference="VCC Registration Requirements",
-            reliability_score=acra.reliability_score,
-            raw_excerpt=None,
-            regulatory_relevance_tag="Fund Registration",
-            last_verified_timestamp=datetime.utcnow(),
-        ))
+        manager.add_citation(
+            CitationRecord(
+                authority_id="mas",
+                source_name="Securities and Futures Act 2001 (Cap. 289, Singapore)",
+                source_url=None,
+                authority=SourceAuthority.PRIMARY,
+                authority_level=2,
+                publication_date=datetime(2001, 10, 1),
+                section_reference="Division 2 – Collective Investment Schemes, Section 286",
+                reliability_score=0.97,
+                raw_excerpt=None,
+                regulatory_relevance_tag="Fund Structure",
+                last_verified_timestamp=datetime.utcnow(),
+            )
+        )
+        manager.add_citation(
+            CitationRecord(
+                authority_id="mas",
+                source_name="Variable Capital Companies Act 2018 (Singapore)",
+                source_url=None,
+                authority=SourceAuthority.PRIMARY,
+                authority_level=2,
+                publication_date=datetime(2018, 10, 1),
+                section_reference="Parts 4–7 – Registration and Operations",
+                reliability_score=0.96,
+                raw_excerpt=None,
+                regulatory_relevance_tag="Fund Structure",
+                last_verified_timestamp=datetime.utcnow(),
+            )
+        )
+        manager.add_citation(
+            CitationRecord(
+                authority_id="mas",
+                source_name=mas.name,
+                source_url=mas.base_url,
+                authority=SourceAuthority.PRIMARY,
+                authority_level=mas.level.value,
+                publication_date=datetime(2024, 6, 1),
+                section_reference="Code on Collective Investment Schemes – Chapters 1–8",
+                reliability_score=mas.reliability_score,
+                raw_excerpt=None,
+                regulatory_relevance_tag="Fund Registration",
+                last_verified_timestamp=datetime.utcnow(),
+            )
+        )
+        manager.add_citation(
+            CitationRecord(
+                authority_id="acra",
+                source_name=acra.name,
+                source_url=acra.base_url,
+                authority=SourceAuthority.PRIMARY,
+                authority_level=acra.level.value,
+                publication_date=datetime(2024, 9, 1),
+                section_reference="VCC Registration Requirements",
+                reliability_score=acra.reliability_score,
+                raw_excerpt=None,
+                regulatory_relevance_tag="Fund Registration",
+                last_verified_timestamp=datetime.utcnow(),
+            )
+        )
 
         governance = manager.build()
 

@@ -50,15 +50,20 @@ class AuthorityDiscovery:
             result.rss_url = result.rss_url or a.get_endpoint_url("rss")
             result.api_url = result.api_url or a.get_endpoint_url("api")
             if a.capabilities:
-                result.capabilities = list({c.value if hasattr(c, 'value') else c for c in a.capabilities})
+                result.capabilities = list(
+                    {c.value if hasattr(c, "value") else c for c in a.capabilities}
+                )
             if a.document_types:
-                result.document_types = list({d.value if hasattr(d, 'value') else d for d in a.document_types})
+                result.document_types = list(
+                    {d.value if hasattr(d, "value") else d for d in a.document_types}
+                )
         return result
 
     def discover_rss(self, jurisdiction: str) -> list[Authority]:
         norm = normalize_jurisdiction(jurisdiction)
         return [
-            a for a in self._registry.get_by_jurisdiction(norm)
+            a
+            for a in self._registry.get_by_jurisdiction(norm)
             if a.enabled and a.has_capability(CapabilityType.RSS)
         ]
 

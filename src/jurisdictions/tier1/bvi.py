@@ -37,58 +37,66 @@ class BviBuilder(JurisdictionBuilder):
         resolver = AuthorityResolver()
         bvi_fsc = resolver.get_by_id("bvi_fsc")
 
-        manager.add_citation(CitationRecord(
-            authority_id="bvi_fsc",
-            source_name="BVI Securities and Investment Business Act 2010 (SIBA)",
-            source_url=None,
-            authority=SourceAuthority.PRIMARY,
-            authority_level=2,
-            publication_date=datetime(2010, 1, 1),
-            section_reference="Part III – Recognition of Funds",
-            reliability_score=0.97,
-            raw_excerpt=None,
-            regulatory_relevance_tag="Fund Registration",
-            last_verified_timestamp=datetime.utcnow(),
-        ))
-        manager.add_citation(CitationRecord(
-            authority_id="bvi_fsc",
-            source_name="BVI Investment Business Regulatory Code 2024",
-            source_url=None,
-            authority=SourceAuthority.PRIMARY,
-            authority_level=2,
-            publication_date=datetime(2024, 3, 1),
-            section_reference="Parts 5–8",
-            reliability_score=0.95,
-            raw_excerpt=None,
-            regulatory_relevance_tag="Fund Registration",
-            last_verified_timestamp=datetime.utcnow(),
-        ))
-        manager.add_citation(CitationRecord(
-            authority_id="bvi_fsc",
-            source_name="BVI Mutual Funds Regulations 2024",
-            source_url=None,
-            authority=SourceAuthority.PRIMARY,
-            authority_level=2,
-            publication_date=datetime(2024, 3, 1),
-            section_reference="Regulations 3–18",
-            reliability_score=0.95,
-            raw_excerpt=None,
-            regulatory_relevance_tag="Fund Registration",
-            last_verified_timestamp=datetime.utcnow(),
-        ))
-        manager.add_citation(CitationRecord(
-            authority_id="bvi_fsc",
-            source_name=bvi_fsc.name,
-            source_url=bvi_fsc.base_url,
-            authority=SourceAuthority.PRIMARY,
-            authority_level=bvi_fsc.level.value,
-            publication_date=datetime(2024, 5, 1),
-            section_reference="Fund Categories and Requirements",
-            reliability_score=bvi_fsc.reliability_score,
-            raw_excerpt=None,
-            regulatory_relevance_tag="Fund Registration",
-            last_verified_timestamp=datetime.utcnow(),
-        ))
+        manager.add_citation(
+            CitationRecord(
+                authority_id="bvi_fsc",
+                source_name="BVI Securities and Investment Business Act 2010 (SIBA)",
+                source_url=None,
+                authority=SourceAuthority.PRIMARY,
+                authority_level=2,
+                publication_date=datetime(2010, 1, 1),
+                section_reference="Part III – Recognition of Funds",
+                reliability_score=0.97,
+                raw_excerpt=None,
+                regulatory_relevance_tag="Fund Registration",
+                last_verified_timestamp=datetime.utcnow(),
+            )
+        )
+        manager.add_citation(
+            CitationRecord(
+                authority_id="bvi_fsc",
+                source_name="BVI Investment Business Regulatory Code 2024",
+                source_url=None,
+                authority=SourceAuthority.PRIMARY,
+                authority_level=2,
+                publication_date=datetime(2024, 3, 1),
+                section_reference="Parts 5–8",
+                reliability_score=0.95,
+                raw_excerpt=None,
+                regulatory_relevance_tag="Fund Registration",
+                last_verified_timestamp=datetime.utcnow(),
+            )
+        )
+        manager.add_citation(
+            CitationRecord(
+                authority_id="bvi_fsc",
+                source_name="BVI Mutual Funds Regulations 2024",
+                source_url=None,
+                authority=SourceAuthority.PRIMARY,
+                authority_level=2,
+                publication_date=datetime(2024, 3, 1),
+                section_reference="Regulations 3–18",
+                reliability_score=0.95,
+                raw_excerpt=None,
+                regulatory_relevance_tag="Fund Registration",
+                last_verified_timestamp=datetime.utcnow(),
+            )
+        )
+        manager.add_citation(
+            CitationRecord(
+                authority_id="bvi_fsc",
+                source_name=bvi_fsc.name,
+                source_url=bvi_fsc.base_url,
+                authority=SourceAuthority.PRIMARY,
+                authority_level=bvi_fsc.level.value,
+                publication_date=datetime(2024, 5, 1),
+                section_reference="Fund Categories and Requirements",
+                reliability_score=bvi_fsc.reliability_score,
+                raw_excerpt=None,
+                regulatory_relevance_tag="Fund Registration",
+                last_verified_timestamp=datetime.utcnow(),
+            )
+        )
 
         governance = manager.build()
 
@@ -97,7 +105,10 @@ class BviBuilder(JurisdictionBuilder):
             jurisdiction_name="British Virgin Islands",
             tier=JurisdictionTier.TIER_1,
             primary_regulator="BVI Financial Services Commission (FSC)",
-            secondary_regulators=["BVI International Tax Authority", "BVI Financial Investigation Agency"],
+            secondary_regulators=[
+                "BVI International Tax Authority",
+                "BVI Financial Investigation Agency",
+            ],
             permitted_fund_structures=[
                 FundStructure(
                     structure_type="Incubator Fund",

@@ -15,9 +15,8 @@ from src.authority.models import (
     ParserType,
     Relationship,
     RelationshipType,
-    VersionInfo,
 )
-from src.authority.registry import AuthorityRegistry, HealthDiagnostic
+from src.authority.registry import AuthorityRegistry
 from src.authority.reliability import ReliabilityConfig, ReliabilityScorer
 from src.authority.resolver import AuthorityResolver
 from src.authority.jurisdiction import normalize_jurisdiction
@@ -59,6 +58,7 @@ def _write_yaml(tmpdir: Path, data: dict, filename: str = "test.yaml") -> Path:
 # ---------------------------------------------------------------------------
 # Enums
 # ---------------------------------------------------------------------------
+
 
 class TestAuthorityLevel:
     def test_level_values(self):
@@ -118,6 +118,7 @@ class TestRelationshipType:
 # Authority Model
 # ---------------------------------------------------------------------------
 
+
 class TestAuthorityModel:
     def test_valid_authority(self):
         a = Authority.model_validate(_authority())
@@ -137,7 +138,9 @@ class TestAuthorityModel:
         assert a.hierarchical_id == "custom.id"
 
     def test_endpoints_migrated_from_legacy(self):
-        a = Authority.model_validate(_authority(base_url="https://example.gov", search_url="https://example.gov/search"))
+        a = Authority.model_validate(
+            _authority(base_url="https://example.gov", search_url="https://example.gov/search")
+        )
         urls = {ep.type: ep.url for ep in a.endpoints}
         assert urls["homepage"] == "https://example.gov"
         assert urls["search"] == "https://example.gov/search"
@@ -167,14 +170,16 @@ class TestAuthorityModel:
             Authority.model_validate(_authority(reliability_score=1.5))
 
     def test_get_endpoint_url(self):
-        a = Authority.model_validate(_authority(
-            endpoints=[Endpoint(type="homepage", url="https://example.gov")]
-        ))
+        a = Authority.model_validate(
+            _authority(endpoints=[Endpoint(type="homepage", url="https://example.gov")])
+        )
         assert a.get_endpoint_url("homepage") == "https://example.gov"
         assert a.get_endpoint_url("nonexistent") is None
 
     def test_has_capability(self):
-        a = Authority.model_validate(_authority(capabilities=[CapabilityType.API, CapabilityType.RSS]))
+        a = Authority.model_validate(
+            _authority(capabilities=[CapabilityType.API, CapabilityType.RSS])
+        )
         assert a.has_capability(CapabilityType.API)
         assert a.has_capability("api")
         assert not a.has_capability(CapabilityType.PDF)
@@ -185,14 +190,18 @@ class TestAuthorityModel:
         assert a.version.deprecated is False
 
     def test_relationships(self):
-        a = Authority.model_validate(_authority(
-            relationships=[Relationship(type=RelationshipType.PUBLISHES, target_id="some_doc")]
-        ))
+        a = Authority.model_validate(
+            _authority(
+                relationships=[Relationship(type=RelationshipType.PUBLISHES, target_id="some_doc")]
+            )
+        )
         assert len(a.relationships) == 1
         assert a.relationships[0].type == RelationshipType.PUBLISHES
 
     def test_document_types(self):
-        a = Authority.model_validate(_authority(document_types=[DocumentType.ACT, DocumentType.REGULATION]))
+        a = Authority.model_validate(
+            _authority(document_types=[DocumentType.ACT, DocumentType.REGULATION])
+        )
         assert DocumentType.ACT in a.document_types
 
 
@@ -224,6 +233,7 @@ class TestJurisdictionNormalization:
 # Authority Registry
 # ---------------------------------------------------------------------------
 
+
 class TestAuthorityRegistry:
     def test_load_single(self, tmpdir: Path):
         tmp = Path(tmpdir)
@@ -241,7 +251,11 @@ class TestAuthorityRegistry:
 
     def test_get_by_hierarchical_id(self, tmpdir: Path):
         tmp = Path(tmpdir)
-        _write_yaml(tmp, _authority(id="myreg", jurisdiction="GB", hierarchical_id="authority.gb.myreg"), "reg.yaml")
+        _write_yaml(
+            tmp,
+            _authority(id="myreg", jurisdiction="GB", hierarchical_id="authority.gb.myreg"),
+            "reg.yaml",
+        )
         registry = AuthorityRegistry(yaml_dir=tmp)
         a = registry.get_by_id("authority.gb.myreg")
         assert a.id == "myreg"
@@ -340,8 +354,20 @@ class TestAuthorityRegistry:
 
     def test_duplicate_endpoint_url_rejected(self, tmpdir: Path):
         tmp = Path(tmpdir)
-        _write_yaml(tmp, _authority(id="a", name="A", endpoints=[{"type": "homepage", "url": "https://shared.gov"}]), "a.yaml")
-        _write_yaml(tmp, _authority(id="b", name="B", endpoints=[{"type": "homepage", "url": "https://shared.gov"}]), "b.yaml")
+        _write_yaml(
+            tmp,
+            _authority(
+                id="a", name="A", endpoints=[{"type": "homepage", "url": "https://shared.gov"}]
+            ),
+            "a.yaml",
+        )
+        _write_yaml(
+            tmp,
+            _authority(
+                id="b", name="B", endpoints=[{"type": "homepage", "url": "https://shared.gov"}]
+            ),
+            "b.yaml",
+        )
         with pytest.raises(ValueError, match="Duplicate endpoint URL"):
             AuthorityRegistry(yaml_dir=tmp)
 
@@ -365,7 +391,15 @@ class TestAuthorityRegistry:
 
     def test_get_by_endpoint_type(self, tmpdir: Path):
         tmp = Path(tmpdir)
-        _write_yaml(tmp, _authority(id="has_api", name="API Source", endpoints=[{"type": "api", "url": "https://api.gov"}]), "a.yaml")
+        _write_yaml(
+            tmp,
+            _authority(
+                id="has_api",
+                name="API Source",
+                endpoints=[{"type": "api", "url": "https://api.gov"}],
+            ),
+            "a.yaml",
+        )
         _write_yaml(tmp, _authority(id="no_api", name="No API"), "b.yaml")
         registry = AuthorityRegistry(yaml_dir=tmp)
         found = registry.get_by_endpoint_type("api")
@@ -391,7 +425,20 @@ class TestRegistryHealth:
     def test_detects_deprecated(self, tmpdir: Path):
         tmp = Path(tmpdir)
         _write_yaml(tmp, _authority(id="active", name="Active"), "a.yaml")
-        _write_yaml(tmp, _authority(id="old", name="Old", version={"version": "0.9.0", "deprecated": True, "created": "2020-01-01T00:00:00", "updated": "2020-01-01T00:00:00"}), "b.yaml")
+        _write_yaml(
+            tmp,
+            _authority(
+                id="old",
+                name="Old",
+                version={
+                    "version": "0.9.0",
+                    "deprecated": True,
+                    "created": "2020-01-01T00:00:00",
+                    "updated": "2020-01-01T00:00:00",
+                },
+            ),
+            "b.yaml",
+        )
         registry = AuthorityRegistry(yaml_dir=tmp)
         diag = registry.health()
         assert "old" in diag.deprecated_authorities
@@ -407,6 +454,7 @@ class TestRegistryHealth:
 # ---------------------------------------------------------------------------
 # Authority Resolver
 # ---------------------------------------------------------------------------
+
 
 class TestAuthorityResolver:
     def test_get_primary_authority(self, tmpdir: Path):
@@ -462,7 +510,11 @@ class TestAuthorityResolver:
 
     def test_get_endpoint(self, tmpdir: Path):
         tmp = Path(tmpdir)
-        _write_yaml(tmp, _authority(id="ep_test", endpoints=[{"type": "api", "url": "https://api.example.gov"}]), "reg.yaml")
+        _write_yaml(
+            tmp,
+            _authority(id="ep_test", endpoints=[{"type": "api", "url": "https://api.example.gov"}]),
+            "reg.yaml",
+        )
         registry = AuthorityRegistry(yaml_dir=tmp)
         resolver = AuthorityResolver(registry)
         assert resolver.get_endpoint("ep_test", "api") == "https://api.example.gov"
@@ -513,6 +565,7 @@ class TestAuthorityResolver:
 # Authority Discovery
 # ---------------------------------------------------------------------------
 
+
 class TestAuthorityDiscovery:
     def test_discover_primary(self, tmpdir: Path):
         tmp = Path(tmpdir)
@@ -526,7 +579,15 @@ class TestAuthorityDiscovery:
 
     def test_discover_legislation(self, tmpdir: Path):
         tmp = Path(tmpdir)
-        _write_yaml(tmp, _authority(id="has_leg", name="Has Leg", endpoints=[{"type": "legislation", "url": "https://law.gov"}]), "a.yaml")
+        _write_yaml(
+            tmp,
+            _authority(
+                id="has_leg",
+                name="Has Leg",
+                endpoints=[{"type": "legislation", "url": "https://law.gov"}],
+            ),
+            "a.yaml",
+        )
         _write_yaml(tmp, _authority(id="no_leg", name="No Leg"), "b.yaml")
         registry = AuthorityRegistry(yaml_dir=tmp)
         discovery = AuthorityDiscovery(registry)
@@ -536,7 +597,18 @@ class TestAuthorityDiscovery:
 
     def test_discover_search(self, tmpdir: Path):
         tmp = Path(tmpdir)
-        _write_yaml(tmp, _authority(id="s", name="S", endpoints=[{"type": "homepage", "url": "https://home.gov"}, {"type": "search", "url": "https://search.gov"}]), "a.yaml")
+        _write_yaml(
+            tmp,
+            _authority(
+                id="s",
+                name="S",
+                endpoints=[
+                    {"type": "homepage", "url": "https://home.gov"},
+                    {"type": "search", "url": "https://search.gov"},
+                ],
+            ),
+            "a.yaml",
+        )
         registry = AuthorityRegistry(yaml_dir=tmp)
         discovery = AuthorityDiscovery(registry)
         result = discovery.discover_search("XX")
@@ -565,7 +637,9 @@ class TestAuthorityDiscovery:
 
     def test_discover_by_capability(self, tmpdir: Path):
         tmp = Path(tmpdir)
-        _write_yaml(tmp, _authority(id="api_src", name="API Source", capabilities=["api"]), "a.yaml")
+        _write_yaml(
+            tmp, _authority(id="api_src", name="API Source", capabilities=["api"]), "a.yaml"
+        )
         _write_yaml(tmp, _authority(id="no_api", name="No API"), "b.yaml")
         registry = AuthorityRegistry(yaml_dir=tmp)
         discovery = AuthorityDiscovery(registry)
@@ -577,11 +651,14 @@ class TestAuthorityDiscovery:
 # Reliability Scorer
 # ---------------------------------------------------------------------------
 
+
 class TestReliabilityScorer:
     def test_score_with_base_authority(self):
         config = ReliabilityConfig()
         scorer = ReliabilityScorer(config)
-        authority = Authority.model_validate(_authority(level=1, authority_type="regulator", reliability_score=0.95))
+        authority = Authority.model_validate(
+            _authority(level=1, authority_type="regulator", reliability_score=0.95)
+        )
         result = scorer.score(authority)
         assert 0.0 <= result.score <= 1.0
         assert len(result.contributing_factors) >= 5
@@ -600,6 +677,7 @@ class TestReliabilityScorer:
         scorer = ReliabilityScorer(config)
         authority = Authority.model_validate(_authority())
         from datetime import datetime, timedelta
+
         fresh = scorer.score(authority, publication_date=datetime.utcnow())
         stale = scorer.score(authority, publication_date=datetime.utcnow() - timedelta(days=2000))
         assert fresh.freshness_score >= stale.freshness_score
@@ -649,6 +727,7 @@ class TestReliabilityScorer:
 # Health Checks
 # ---------------------------------------------------------------------------
 
+
 class TestHealthChecks:
     def test_health_check_healthy(self, tmpdir: Path):
         tmp = Path(tmpdir)
@@ -660,7 +739,20 @@ class TestHealthChecks:
 
     def test_deprecated_in_report(self, tmpdir: Path):
         tmp = Path(tmpdir)
-        _write_yaml(tmp, _authority(id="dep", name="Dep", version={"version": "0.5.0", "deprecated": True, "created": "2020-01-01T00:00:00", "updated": "2020-01-01T00:00:00"}), "a.yaml")
+        _write_yaml(
+            tmp,
+            _authority(
+                id="dep",
+                name="Dep",
+                version={
+                    "version": "0.5.0",
+                    "deprecated": True,
+                    "created": "2020-01-01T00:00:00",
+                    "updated": "2020-01-01T00:00:00",
+                },
+            ),
+            "a.yaml",
+        )
         registry = AuthorityRegistry(yaml_dir=tmp)
         diag = registry.health()
         assert "dep" in diag.deprecated_authorities

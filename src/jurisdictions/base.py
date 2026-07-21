@@ -36,7 +36,9 @@ class JurisdictionBuilder(ABC):
         """
         ...
 
-    def run_pipeline(self, entry: RegulatoryEntry, *, audit_log_path: Path = Path("logs/audit.jsonl")) -> tuple[RegulatoryEntry, ValidationReport]:
+    def run_pipeline(
+        self, entry: RegulatoryEntry, *, audit_log_path: Path = Path("logs/audit.jsonl")
+    ) -> tuple[RegulatoryEntry, ValidationReport]:
         scorer = ConfidenceScorer()
         confidence = scorer.score(entry)
         entry = entry.model_copy(update={"confidence": confidence})

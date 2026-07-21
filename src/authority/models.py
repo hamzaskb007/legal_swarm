@@ -13,6 +13,7 @@ from src.schema.schema import SourceAuthority
 # Enumerations
 # ---------------------------------------------------------------------------
 
+
 class AuthorityLevel(IntEnum):
     LEVEL_1 = 1
     LEVEL_2 = 2
@@ -93,6 +94,7 @@ class CapabilityType(StrEnum):
 # Sub-models
 # ---------------------------------------------------------------------------
 
+
 class Endpoint(BaseModel):
     type: str
     url: str
@@ -117,6 +119,7 @@ class VersionInfo(BaseModel):
 # ---------------------------------------------------------------------------
 # Main Authority Model
 # ---------------------------------------------------------------------------
+
 
 class Authority(BaseModel):
     id: str
@@ -151,7 +154,9 @@ class Authority(BaseModel):
         if isinstance(data, dict):
             if data.get("hierarchical_id") is None:
                 if not data.get("id", "").startswith("authority."):
-                    data["hierarchical_id"] = f"authority.{data.get('jurisdiction', 'unknown').lower()}.{data['id']}"
+                    data["hierarchical_id"] = (
+                        f"authority.{data.get('jurisdiction', 'unknown').lower()}.{data['id']}"
+                    )
                 else:
                     data["hierarchical_id"] = data["id"]
             if not data.get("endpoints"):
@@ -185,4 +190,6 @@ class Authority(BaseModel):
     def has_capability(self, capability: str | CapabilityType) -> bool:
         if isinstance(capability, CapabilityType):
             capability = capability.value
-        return capability in {c.value if isinstance(c, CapabilityType) else c for c in self.capabilities}
+        return capability in {
+            c.value if isinstance(c, CapabilityType) else c for c in self.capabilities
+        }

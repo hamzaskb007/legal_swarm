@@ -10,4 +10,6 @@ class RegulatoryAuthorityAgent(BaseAgent):
         return entry
 
     def validate(self, entry: RegulatoryEntry) -> bool:
-        return bool(entry.primary_regulator and entry.primary_regulator.strip()) and isinstance(entry.secondary_regulators, list)
+        return bool(entry.primary_regulator and entry.primary_regulator.strip()) and isinstance(
+            entry.secondary_regulators, list
+        )

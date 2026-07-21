@@ -38,71 +38,81 @@ class UaeBuilder(JurisdictionBuilder):
         sca = resolver.get_by_id("sca")
         dfsa = resolver.get_by_id("dfsa")
 
-        manager.add_citation(CitationRecord(
-            authority_id="sca",
-            source_name="UAE Federal Law No. 4 of 2000 on the Emirates Securities and Commodities Authority",
-            source_url=None,
-            authority=SourceAuthority.PRIMARY,
-            authority_level=2,
-            publication_date=datetime(2000, 1, 1),
-            section_reference="Article 12 – Fund Registration Requirements",
-            reliability_score=0.95,
-            raw_excerpt=None,
-            regulatory_relevance_tag="Fund Registration",
-            last_verified_timestamp=datetime.utcnow(),
-        ))
-        manager.add_citation(CitationRecord(
-            authority_id="dfsa",
-            source_name="DIFC Collective Investment Law (DIFC Law No. 2 of 2010)",
-            source_url=None,
-            authority=SourceAuthority.PRIMARY,
-            authority_level=2,
-            publication_date=datetime(2010, 1, 1),
-            section_reference="CIFR Module – Chapters 1–8",
-            reliability_score=0.96,
-            raw_excerpt=None,
-            regulatory_relevance_tag="Fund Structure",
-            last_verified_timestamp=datetime.utcnow(),
-        ))
-        manager.add_citation(CitationRecord(
-            authority_id="adgm_fsra",
-            source_name="ADGM Collective Investment Rules 2024",
-            source_url=None,
-            authority=SourceAuthority.PRIMARY,
-            authority_level=2,
-            publication_date=datetime(2024, 4, 1),
-            section_reference="Parts 2–6 – Fund Authorisation and Registration",
-            reliability_score=0.96,
-            raw_excerpt=None,
-            regulatory_relevance_tag="Fund Registration",
-            last_verified_timestamp=datetime.utcnow(),
-        ))
-        manager.add_citation(CitationRecord(
-            authority_id="sca",
-            source_name=sca.name,
-            source_url=sca.base_url,
-            authority=SourceAuthority.PRIMARY,
-            authority_level=sca.level.value,
-            publication_date=datetime(2024, 1, 15),
-            section_reference="Fund Regulations – Public and Private Fund Requirements",
-            reliability_score=sca.reliability_score,
-            raw_excerpt=None,
-            regulatory_relevance_tag="Fund Registration",
-            last_verified_timestamp=datetime.utcnow(),
-        ))
-        manager.add_citation(CitationRecord(
-            authority_id="dfsa",
-            source_name=dfsa.name,
-            source_url=dfsa.base_url,
-            authority=SourceAuthority.PRIMARY,
-            authority_level=dfsa.level.value,
-            publication_date=datetime(2024, 6, 1),
-            section_reference="Collective Investment Fund Rules – DIFC",
-            reliability_score=dfsa.reliability_score,
-            raw_excerpt=None,
-            regulatory_relevance_tag="Fund Structure",
-            last_verified_timestamp=datetime.utcnow(),
-        ))
+        manager.add_citation(
+            CitationRecord(
+                authority_id="sca",
+                source_name="UAE Federal Law No. 4 of 2000 on the Emirates Securities and Commodities Authority",
+                source_url=None,
+                authority=SourceAuthority.PRIMARY,
+                authority_level=2,
+                publication_date=datetime(2000, 1, 1),
+                section_reference="Article 12 – Fund Registration Requirements",
+                reliability_score=0.95,
+                raw_excerpt=None,
+                regulatory_relevance_tag="Fund Registration",
+                last_verified_timestamp=datetime.utcnow(),
+            )
+        )
+        manager.add_citation(
+            CitationRecord(
+                authority_id="dfsa",
+                source_name="DIFC Collective Investment Law (DIFC Law No. 2 of 2010)",
+                source_url=None,
+                authority=SourceAuthority.PRIMARY,
+                authority_level=2,
+                publication_date=datetime(2010, 1, 1),
+                section_reference="CIFR Module – Chapters 1–8",
+                reliability_score=0.96,
+                raw_excerpt=None,
+                regulatory_relevance_tag="Fund Structure",
+                last_verified_timestamp=datetime.utcnow(),
+            )
+        )
+        manager.add_citation(
+            CitationRecord(
+                authority_id="adgm_fsra",
+                source_name="ADGM Collective Investment Rules 2024",
+                source_url=None,
+                authority=SourceAuthority.PRIMARY,
+                authority_level=2,
+                publication_date=datetime(2024, 4, 1),
+                section_reference="Parts 2–6 – Fund Authorisation and Registration",
+                reliability_score=0.96,
+                raw_excerpt=None,
+                regulatory_relevance_tag="Fund Registration",
+                last_verified_timestamp=datetime.utcnow(),
+            )
+        )
+        manager.add_citation(
+            CitationRecord(
+                authority_id="sca",
+                source_name=sca.name,
+                source_url=sca.base_url,
+                authority=SourceAuthority.PRIMARY,
+                authority_level=sca.level.value,
+                publication_date=datetime(2024, 1, 15),
+                section_reference="Fund Regulations – Public and Private Fund Requirements",
+                reliability_score=sca.reliability_score,
+                raw_excerpt=None,
+                regulatory_relevance_tag="Fund Registration",
+                last_verified_timestamp=datetime.utcnow(),
+            )
+        )
+        manager.add_citation(
+            CitationRecord(
+                authority_id="dfsa",
+                source_name=dfsa.name,
+                source_url=dfsa.base_url,
+                authority=SourceAuthority.PRIMARY,
+                authority_level=dfsa.level.value,
+                publication_date=datetime(2024, 6, 1),
+                section_reference="Collective Investment Fund Rules – DIFC",
+                reliability_score=dfsa.reliability_score,
+                raw_excerpt=None,
+                regulatory_relevance_tag="Fund Structure",
+                last_verified_timestamp=datetime.utcnow(),
+            )
+        )
 
         governance = manager.build()
 

@@ -23,66 +23,72 @@ from pydantic import BaseModel, Field, field_validator, model_validator
 # Enumerations
 # ---------------------------------------------------------------------------
 
+
 class ConfidenceLevel(str, Enum):
-    HIGH   = "HIGH"
+    HIGH = "HIGH"
     MEDIUM = "MEDIUM"
-    LOW    = "LOW"
+    LOW = "LOW"
     UNVERIFIED = "UNVERIFIED"
 
 
 class JurisdictionTier(str, Enum):
-    TIER_1 = "TIER_1"   # Primary execution baseline
+    TIER_1 = "TIER_1"  # Primary execution baseline
     TIER_2 = "TIER_2"
     TIER_3 = "TIER_3"
 
 
 class SourceAuthority(str, Enum):
-    PRIMARY    = "PRIMARY"    # Official government / regulator publication
-    SECONDARY  = "SECONDARY"  # Recognized legal commentary / analysis
-    TERTIARY   = "TERTIARY"   # General reference
+    PRIMARY = "PRIMARY"  # Official government / regulator publication
+    SECONDARY = "SECONDARY"  # Recognized legal commentary / analysis
+    TERTIARY = "TERTIARY"  # General reference
 
 
 class ChangeType(str, Enum):
-    ADDED    = "ADDED"
+    ADDED = "ADDED"
     MODIFIED = "MODIFIED"
-    REMOVED  = "REMOVED"
+    REMOVED = "REMOVED"
     UNCHANGED = "UNCHANGED"
 
 
 class ValidationStatus(str, Enum):
-    PASSED  = "PASSED"
-    FAILED  = "FAILED"
+    PASSED = "PASSED"
+    FAILED = "FAILED"
     WARNING = "WARNING"
     PENDING = "PENDING"
 
 
 class NotApplicableReason(str, Enum):
     NO_REGULATORY_REQUIREMENT = "NO_REGULATORY_REQUIREMENT"
-    JURISDICTION_EXEMPT        = "JURISDICTION_EXEMPT"
-    NOT_YET_VERIFIED           = "NOT_YET_VERIFIED"
-    OUTSIDE_CURRENT_SCOPE      = "OUTSIDE_CURRENT_SCOPE"
+    JURISDICTION_EXEMPT = "JURISDICTION_EXEMPT"
+    NOT_YET_VERIFIED = "NOT_YET_VERIFIED"
+    OUTSIDE_CURRENT_SCOPE = "OUTSIDE_CURRENT_SCOPE"
 
 
 class AuditEventType(str, Enum):
-    QUERY              = "QUERY"
-    VALIDATION         = "VALIDATION"
-    CONTRADICTION      = "CONTRADICTION"
+    QUERY = "QUERY"
+    VALIDATION = "VALIDATION"
+    CONTRADICTION = "CONTRADICTION"
     CONFIDENCE_DECISION = "CONFIDENCE_DECISION"
-    SCHEMA_UPDATE      = "SCHEMA_UPDATE"
-    SOURCE_INGESTION   = "SOURCE_INGESTION"
-    DELTA_DETECTED     = "DELTA_DETECTED"
+    SCHEMA_UPDATE = "SCHEMA_UPDATE"
+    SOURCE_INGESTION = "SOURCE_INGESTION"
+    DELTA_DETECTED = "DELTA_DETECTED"
 
 
 # ---------------------------------------------------------------------------
 # Source Governance
 # ---------------------------------------------------------------------------
 
+
 class CitationRecord(BaseModel):
     """Single authoritative citation backing a regulatory claim."""
 
     citation_id: UUID = Field(default_factory=uuid4)
-    authority_id: str | None = Field(None, description="Reference to an Authority in the Authority Registry")
-    source_name: str = Field(..., min_length=1, description="Name of the source document or publication")
+    authority_id: str | None = Field(
+        None, description="Reference to an Authority in the Authority Registry"
+    )
+    source_name: str = Field(
+        ..., min_length=1, description="Name of the source document or publication"
+    )
     source_url: str | None = Field(None, description="Direct URL to the source if available")
     authority: SourceAuthority
     authority_level: int = Field(
@@ -100,9 +106,15 @@ class CitationRecord(BaseModel):
     )
     publication_date: datetime | None = None
     retrieved_at: datetime = Field(default_factory=datetime.utcnow)
-    section_reference: str | None = Field(None, description="Section, article, or clause reference within the source")
-    reliability_score: float = Field(..., ge=0.0, le=1.0, description="Reliability score between 0 and 1")
-    raw_excerpt: str | None = Field(None, description="Verbatim excerpt from source (max 2000 chars)")
+    section_reference: str | None = Field(
+        None, description="Section, article, or clause reference within the source"
+    )
+    reliability_score: float = Field(
+        ..., ge=0.0, le=1.0, description="Reliability score between 0 and 1"
+    )
+    raw_excerpt: str | None = Field(
+        None, description="Verbatim excerpt from source (max 2000 chars)"
+    )
     regulatory_relevance_tag: str | None = Field(
         None,
         description="Regulatory area this citation covers e.g. 'Fund Registration', 'AML/CFT', 'Capital Requirements'",
@@ -127,8 +139,7 @@ class SourceGovernanceRecord(BaseModel):
     secondary_citations: list[CitationRecord] = Field(default_factory=list)
     tertiary_citations: list[CitationRecord] = Field(default_factory=list)
     dominant_source: SourceAuthority = Field(
-        default=SourceAuthority.PRIMARY,
-        description="Highest-authority source tier present"
+        default=SourceAuthority.PRIMARY, description="Highest-authority source tier present"
     )
 
     @model_validator(mode="after")
@@ -157,18 +168,24 @@ class SourceGovernanceRecord(BaseModel):
 # Capital & Cost Normalization
 # ---------------------------------------------------------------------------
 
+
 class CapitalRequirement(BaseModel):
     """Normalized capital / cost figure across jurisdictions."""
 
     amount: Decimal | None = Field(None, description="Numeric amount in normalized currency")
     currency: str = Field("USD", min_length=3, max_length=3, description="ISO 4217 currency code")
-    amount_usd_equivalent: Decimal | None = Field(None, description="USD equivalent at time of ingestion")
-    notes: str | None = Field(None, description="Qualitative notes where numeric normalization is not possible")
+    amount_usd_equivalent: Decimal | None = Field(
+        None, description="USD equivalent at time of ingestion"
+    )
+    notes: str | None = Field(
+        None, description="Qualitative notes where numeric normalization is not possible"
+    )
 
 
 # ---------------------------------------------------------------------------
 # Confidence Scoring
 # ---------------------------------------------------------------------------
+
 
 class ConfidenceScore(BaseModel):
     """Structured confidence assessment for a regulatory data point."""
@@ -184,23 +201,30 @@ class ConfidenceScore(BaseModel):
 # Contradiction Detection
 # ---------------------------------------------------------------------------
 
+
 class ContradictionRecord(BaseModel):
     """Records a detected contradiction between regulatory data points."""
 
     contradiction_id: UUID = Field(default_factory=uuid4)
     detected_at: datetime = Field(default_factory=datetime.utcnow)
-    field_path: str = Field(..., description="Dot-notation path to the contradicting field, e.g. 'fund_structures.min_capital'")
+    field_path: str = Field(
+        ...,
+        description="Dot-notation path to the contradicting field, e.g. 'fund_structures.min_capital'",
+    )
     source_a: CitationRecord
     source_b: CitationRecord
     value_a: str = Field(..., description="Value from source A (serialized as string)")
     value_b: str = Field(..., description="Value from source B (serialized as string)")
-    resolution: str | None = Field(None, description="Resolution note if contradiction was resolved")
+    resolution: str | None = Field(
+        None, description="Resolution note if contradiction was resolved"
+    )
     resolved: bool = False
 
 
 # ---------------------------------------------------------------------------
 # Validation Framework
 # ---------------------------------------------------------------------------
+
 
 class ValidationResult(BaseModel):
     """Result of a single validation check against the schema."""
@@ -242,6 +266,7 @@ class ValidationReport(BaseModel):
 # Versioning & Delta Tracking
 # ---------------------------------------------------------------------------
 
+
 class FieldDelta(BaseModel):
     """Records a change to a single field between versions."""
 
@@ -266,16 +291,21 @@ class VersionRecord(BaseModel):
 # Audit Logging
 # ---------------------------------------------------------------------------
 
+
 class AuditLogEntry(BaseModel):
     """Immutable audit log record. Must never be modified after creation."""
 
     log_id: UUID = Field(default_factory=uuid4)
     event_type: AuditEventType
     timestamp: datetime = Field(default_factory=datetime.utcnow)
-    actor: str = Field(..., description="Agent ID, user ID, or system process that triggered the event")
+    actor: str = Field(
+        ..., description="Agent ID, user ID, or system process that triggered the event"
+    )
     jurisdiction_code: str | None = None
     entry_id: UUID | None = None
-    payload: dict[str, Any] = Field(default_factory=dict, description="Event-specific structured data")
+    payload: dict[str, Any] = Field(
+        default_factory=dict, description="Event-specific structured data"
+    )
     outcome: str | None = None
 
     model_config = {"frozen": True}  # Enforce immutability at model level
@@ -285,10 +315,13 @@ class AuditLogEntry(BaseModel):
 # Core Regulatory Entry — Master Canonical Schema
 # ---------------------------------------------------------------------------
 
+
 class FundStructure(BaseModel):
     """Permissible fund structures and associated capital requirements."""
 
-    structure_type: str = Field(..., description="e.g. 'Open-Ended', 'Closed-Ended', 'UCITS', 'AIF'")
+    structure_type: str = Field(
+        ..., description="e.g. 'Open-Ended', 'Closed-Ended', 'UCITS', 'AIF'"
+    )
     is_permitted: bool
     min_capital: CapitalRequirement | None = None
     max_leverage_ratio: float | None = Field(None, ge=0.0)
@@ -300,7 +333,9 @@ class InvestorRequirements(BaseModel):
 
     qualified_investor_required: bool = True
     min_investment_usd: Decimal | None = None
-    residency_restrictions: list[str] = Field(default_factory=list, description="ISO 3166-1 alpha-2 country codes")
+    residency_restrictions: list[str] = Field(
+        default_factory=list, description="ISO 3166-1 alpha-2 country codes"
+    )
     accreditation_standard: str | None = None
     notes: str | None = None
 
@@ -308,7 +343,9 @@ class InvestorRequirements(BaseModel):
 class RegulatoryFiling(BaseModel):
     """Filing and reporting obligations."""
 
-    filing_type: str = Field(..., description="e.g. 'Annual Report', 'AUM Disclosure', 'Risk Report'")
+    filing_type: str = Field(
+        ..., description="e.g. 'Annual Report', 'AUM Disclosure', 'Risk Report'"
+    )
     frequency: str = Field(..., description="e.g. 'Annual', 'Quarterly', 'Monthly'")
     regulator: str
     deadline_description: str | None = None
@@ -319,10 +356,13 @@ class RegulatoryFiling(BaseModel):
 # Licensing Requirements
 # ---------------------------------------------------------------------------
 
+
 class LicensingRequirement(BaseModel):
     """A specific licence required to operate a fund or management entity."""
 
-    licence_type: str = Field(..., description="Name of the licence required, e.g. 'SIBL Licence', 'RFMC Licence'")
+    licence_type: str = Field(
+        ..., description="Name of the licence required, e.g. 'SIBL Licence', 'RFMC Licence'"
+    )
     issuing_authority: str = Field(..., description="Regulatory body that issues the licence")
     applies_to: str = Field(..., description="Who needs it: 'Fund', 'Manager', or 'Both'")
     statutory_reference: str | None = None
@@ -332,6 +372,7 @@ class LicensingRequirement(BaseModel):
 # ---------------------------------------------------------------------------
 # Substance Requirements
 # ---------------------------------------------------------------------------
+
 
 class SubstanceRequirement(BaseModel):
     """Local substance / economic presence rules."""
@@ -348,6 +389,7 @@ class SubstanceRequirement(BaseModel):
 # Regulatory Timelines
 # ---------------------------------------------------------------------------
 
+
 class RegulatoryTimeline(BaseModel):
     """Expected processing timeline for a regulatory process."""
 
@@ -362,10 +404,13 @@ class RegulatoryTimeline(BaseModel):
 # Regulatory Costs
 # ---------------------------------------------------------------------------
 
+
 class RegulatoryCost(BaseModel):
     """A cost or fee imposed by the regulator or service providers."""
 
-    cost_type: str = Field(..., description="e.g. 'Formation Fee', 'Annual Regulator Fee', 'Audit Fee'")
+    cost_type: str = Field(
+        ..., description="e.g. 'Formation Fee', 'Annual Regulator Fee', 'Audit Fee'"
+    )
     amount: Decimal | None = None
     currency: str = Field(..., min_length=3, max_length=3, description="ISO 4217 currency code")
     amount_usd_equivalent: Decimal | None = None
@@ -377,10 +422,13 @@ class RegulatoryCost(BaseModel):
 # Penalty Exposures
 # ---------------------------------------------------------------------------
 
+
 class PenaltyExposure(BaseModel):
     """Penalties and sanctions for regulatory breaches."""
 
-    breach_type: str = Field(..., description="e.g. 'Late Filing', 'AML Breach', 'Unauthorised Activity'")
+    breach_type: str = Field(
+        ..., description="e.g. 'Late Filing', 'AML Breach', 'Unauthorised Activity'"
+    )
     maximum_fine_usd: Decimal | None = None
     criminal_liability: bool = False
     licence_revocation_possible: bool = False
@@ -390,6 +438,7 @@ class PenaltyExposure(BaseModel):
 # ---------------------------------------------------------------------------
 # Wind-Down Procedures
 # ---------------------------------------------------------------------------
+
 
 class WindDownProcedure(BaseModel):
     """Rules and timelines for winding down a fund."""
@@ -405,6 +454,7 @@ class WindDownProcedure(BaseModel):
 # Fund Manager Requirements
 # ---------------------------------------------------------------------------
 
+
 class FundManagerRequirement(BaseModel):
     """Requirements for the fund manager entity."""
 
@@ -419,11 +469,16 @@ class FundManagerRequirement(BaseModel):
 # Marketing Restrictions
 # ---------------------------------------------------------------------------
 
+
 class MarketingRestriction(BaseModel):
     """Rules governing who and where fund shares may be marketed."""
 
-    target_investor_type: str = Field(..., description="e.g. 'Retail', 'Professional', 'Accredited'")
-    permitted_jurisdictions: list[str] = Field(default_factory=list, description="ISO 3166-1 alpha-2 codes or ['Global']")
+    target_investor_type: str = Field(
+        ..., description="e.g. 'Retail', 'Professional', 'Accredited'"
+    )
+    permitted_jurisdictions: list[str] = Field(
+        default_factory=list, description="ISO 3166-1 alpha-2 codes or ['Global']"
+    )
     restricted_jurisdictions: list[str] = Field(default_factory=list)
     pre_marketing_allowed: bool = False
     notes: str | None = None
@@ -433,12 +488,15 @@ class MarketingRestriction(BaseModel):
 # Beneficial Ownership Rules
 # ---------------------------------------------------------------------------
 
+
 class BeneficialOwnershipRule(BaseModel):
     """Disclosure and register requirements for beneficial owners."""
 
     register_required: bool = True
     register_public: bool = False
-    threshold_percentage: Decimal | None = Field(None, description="Ownership percentage triggering disclosure")
+    threshold_percentage: Decimal | None = Field(
+        None, description="Ownership percentage triggering disclosure"
+    )
     filing_authority: str | None = None
     notes: str | None = None
 
@@ -447,11 +505,14 @@ class BeneficialOwnershipRule(BaseModel):
 # Record Retention Policies
 # ---------------------------------------------------------------------------
 
+
 class RecordRetentionPolicy(BaseModel):
     """Mandatory record-keeping periods."""
 
     minimum_retention_years: int = Field(..., ge=1, le=50)
-    applies_to: str = Field(..., description="e.g. 'All Fund Records', 'AML Records', 'Transaction Records'")
+    applies_to: str = Field(
+        ..., description="e.g. 'All Fund Records', 'AML Records', 'Transaction Records'"
+    )
     statutory_reference: str | None = None
     notes: str | None = None
 
@@ -460,6 +521,7 @@ class RecordRetentionPolicy(BaseModel):
 # Core Regulatory Entry — Master Canonical Schema
 # ---------------------------------------------------------------------------
 
+
 class RegulatoryEntry(BaseModel):
     """
     Master canonical regulatory record for a single jurisdiction.
@@ -467,7 +529,9 @@ class RegulatoryEntry(BaseModel):
     """
 
     entry_id: UUID = Field(default_factory=uuid4)
-    jurisdiction_code: str = Field(..., min_length=2, max_length=10, description="ISO 3166-1 or custom jurisdiction code")
+    jurisdiction_code: str = Field(
+        ..., min_length=2, max_length=10, description="ISO 3166-1 or custom jurisdiction code"
+    )
     jurisdiction_name: str = Field(..., min_length=1)
     tier: JurisdictionTier
 
@@ -565,6 +629,7 @@ class RegulatoryEntry(BaseModel):
 # Cross-Jurisdiction Comparison
 # ---------------------------------------------------------------------------
 
+
 class JurisdictionComparisonField(BaseModel):
     """A single normalized field extracted for cross-jurisdiction comparison."""
 
@@ -579,7 +644,9 @@ class CrossJurisdictionComparison(BaseModel):
 
     comparison_id: UUID = Field(default_factory=uuid4)
     generated_at: datetime = Field(default_factory=datetime.utcnow)
-    jurisdictions: list[str] = Field(..., min_length=2, description="Jurisdiction codes being compared")
+    jurisdictions: list[str] = Field(
+        ..., min_length=2, description="Jurisdiction codes being compared"
+    )
     fields_compared: list[str]
     results: list[JurisdictionComparisonField] = Field(default_factory=list)
     contradictions_detected: list[ContradictionRecord] = Field(default_factory=list)

@@ -53,11 +53,13 @@ class TestSourceGovernanceManager:
     def test_average_reliability(self):
         manager = SourceGovernanceManager()
         manager.add_citation(make_citation(reliability_score=0.8))
-        manager.add_citation(make_citation(
-            authority=SourceAuthority.SECONDARY,
-            reliability_score=0.6,
-            source_url="https://other.com"
-        ))
+        manager.add_citation(
+            make_citation(
+                authority=SourceAuthority.SECONDARY,
+                reliability_score=0.6,
+                source_url="https://other.com",
+            )
+        )
         avg = manager.average_reliability()
         assert avg == pytest.approx(0.7)
 

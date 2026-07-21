@@ -4,12 +4,13 @@
 
 | Metric               | Value     |
 |----------------------|-----------|
-| Total test count     | 376       |
-| Unit tests           | 349       |
+| Total test count     | 967       |
+| Unit tests           | 940       |
 | Integration tests    | 27        |
-| Passed               | 376       |
+| Passed               | 967       |
 | Failed               | 0         |
-| Test coverage        | TBD       |
+| Ruff                 | clean     |
+| Mypy                 | clean     |
 
 ## Test Categories
 
@@ -23,6 +24,24 @@
 - **Unit — Audit** (`tests/unit/test_audit.py`): AuditLogger (file I/O, read all/by jurisdiction/by event type, immutability)
 - **Unit — Versioning** (`tests/unit/test_versioning.py`): DeltaTracker, _bump_version
 - **Integration — Pipeline** (`tests/integration/test_pipeline.py`): Full end-to-end pipeline (construction, validation, scoring, contradictions, audit logging, delta tracking, determinism)
+
+### HTTP Infrastructure Tests (62 tests)
+
+- **Unit — Models** (`tests/unit/test_http_client.py`): Request/Response defaults, frozen, text encoding, ok/is_redirect properties
+- **Unit — Exception hierarchy**: All 9 error types inherit from `HttpError`, message preservation
+- **Unit — RetryPolicy**: ExponentialBackoffRetry, NoRetry, retryable codes/exceptions, delay calculation, validation
+- **Unit — Config**: defaults, frozen, custom values, user agent
+- **Unit — UrllibHttpClient**: URL validation (scheme/host), convenience methods (get, head), retry integration, mocked requests (success, error, timeout, redirect, oversized response, retry exhaustion), edge cases (OSError, URL building, size checking)
+
+### Connector Framework Tests (78 tests)
+
+- **Unit — Models** (`tests/unit/test_connectors.py`): ConnectorMetadata, ConnectorCapabilities, ConnectionResult, FetchRequest, FetchResult, ConnectionHealth — defaults, frozen, parser/capability compatibility
+- **Unit — Exception hierarchy**: ConnectorError, ConnectorConfigurationError, UnsupportedConnectorError, ConnectorRegistrationError, ConnectorInitializationError, ConnectionError, CapabilityError
+- **Unit — Connector interface**: abstract instantiation guard, disabled authority rejection, lifecycle, `supports()` dispatch
+- **Unit — Connector Registry**: register/list/unregister, duplicate detection, lookup by parser/capability, validation warnings
+- **Unit — Connector Factory**: create from authority, batch creation, partial failure, best-match scoring, empty registry
+- **Unit — Connector Manager**: get/reuse/shutdown, health collection, statistics, error recording
+- **Unit — Scoring**: named constant correctness, deterministic ordering
 
 ### Tier 1 Jurisdiction Tests (293 tests — new)
 
@@ -104,6 +123,67 @@
 - `TestRegistryAudit` (2 tests):
   - All entries are audit logged on construction
 
+### HTML Connector Tests (55 tests)
+
+- **HtmlContentExtractor** (10): content extraction, excluded tag stripping, whitespace normalization, empty input, reset, nested excluded tags, heading/list extraction
+- **HtmlMetadataExtractor** (14): title, canonical URL, meta description/keywords/language, publication date, OG properties, link discovery (skip anchor/javascript)
+- **HtmlParser** (7): full document parsing, empty/whitespace error, invalid HTML grace, metadata propagation
+- **HTMLConnector lifecycle** (7): metadata, capabilities, connect, close, health states, HTTP configuration
+- **HTMLConnector fetch** (9): without HTTP, success, MIME rejection, empty content, HTTP errors, timeout, fetch_document
+- **MIME validation** (7): supported types, charset, rejection of PDF/JSON, empty string
+- **Exception hierarchy** (1): inheritance
+
+### RSS Connector Tests (92 tests)
+
+- **Date parsing** (10): RSS RFC 2822, Atom ISO 8601, None/empty/invalid, timezone
+- **Content sanitization** (9): script/style/iframe stripping, paragraph preservation
+- **Safe XML parsing** (4): valid/malformed XML, bytes, empty
+- **Feed type detection** (4): RSS/Atom detection, unsupported versions, unknown root
+- **RSS 2.0 parsing** (13): full feed, metadata, dates, empty, minimal, content:encoded, script stripping, limits
+- **Atom parsing** (5): full feed, metadata, missing links, empty, minimal
+- **Parser errors** (4): malformed XML, empty, invalid format, namespace rejection
+- **Document conversion** (8): frozen, UUID, authority_id, content type, document type, retrieved_at, serialization, limits
+- **MIME support** (4): supported/unsupported types, charset, case
+- **Connector lifecycle** (7): metadata, capabilities, connect, close, health states
+- **Connector fetch** (8): without HTTP, RSS/Atom success, MIME rejection, empty, HTTP errors, timeout, oversized
+- **Fetch documents** (2): success, failure
+- **MIME validation** (8): all 4 supported types, charset, rejection of HTML/JSON, empty
+- **Exception hierarchy** (5): inheritance, message preservation
+- **Config** (3): defaults, custom, frozen
+
+### PDF Connector Tests (46 tests)
+
+- **Date parsing** (5): PDF date format, UTC, offset, None/empty/invalid
+- **Valid PDF parsing** (4): full document, metadata, multi-page, content extraction
+- **PDF errors** (5): encrypted, corrupted, empty, empty bytes, oversized, too many pages, text limit
+- **Document conversion** (5): frozen, UUID, serialization roundtrip
+- **Connector lifecycle** (7): metadata, capabilities, connect, close, health states
+- **Connector fetch** (7): without HTTP, success, MIME rejection, empty body, HTTP errors, timeout
+- **Fetch document** (2): success, failure
+- **MIME validation** (5): supported, charset, rejection of HTML/JSON/RSS, empty
+- **Exception hierarchy** (3): inheritance, message preservation
+- **Config** (3): defaults, custom, frozen
+
+### REST API Connector Tests (102 tests — new)
+
+- **JSON path extraction** (8): simple/nested/deeply nested, missing/null, non-dict, empty path, list access
+- **Item extraction** (6): root list, root dict, nested items path, missing path, non-list, scalar
+- **Timestamp parsing** (9): UTC Zulu, offset, milliseconds, None/empty/invalid, non-string, non-UTC offset
+- **Valid JSON parsing** (7): single object, array, wrapped array, unmapped, bytes, source URL fallback
+- **Missing field handling** (3): optional fields, None values, empty strings
+- **Parser errors** (7): malformed JSON, empty/whitespace body, null JSON, empty array, unsupported content type
+- **Single document** (3): success, empty array, with content type
+- **Document conversion** (6): frozen, UUID, authority_id, retrieved_at, serialization, default type
+- **MIME support** (4): supported/unsupported, charset, case
+- **Config** (7): ApiConfig defaults/custom/frozen, ApiFieldMapping has_mappings
+- **Pagination strategies** (8): all 4 strategy defaults, params for page/offset/cursor/next-link
+- **Connector lifecycle** (7): metadata, capabilities, connect, close, health states
+- **Connector fetch** (13): without HTTP, JSON/array success, MIME rejection, empty body, HTTP error/timeout, 401/403/429/5xx, params, headers, invalid JSON
+- **Paginated fetch** (3): page number, next-link, cursor
+- **Fetch documents** (2): success, failure
+- **MIME validation** (5): JSON, charset, rejection of HTML/XML/PDF, empty
+- **Exception hierarchy** (3): inheritance, message preservation
+
 ## Running Tests
 
 ```bash
@@ -115,6 +195,11 @@ python3 -m pytest --cov=src --cov-report=term-missing
 
 # Run specific test file
 python3 -m pytest tests/unit/test_jurisdictions.py
+python3 -m pytest tests/unit/test_api_connector.py
+python3 -m pytest tests/unit/test_rss_connector.py
+python3 -m pytest tests/unit/test_pdf_connector.py
+python3 -m pytest tests/unit/test_connectors.py
+python3 -m pytest tests/unit/test_http_client.py
 
 # Run specific test class
 python3 -m pytest tests/integration/test_registry.py
@@ -122,4 +207,4 @@ python3 -m pytest tests/integration/test_registry.py
 
 ## CI Status
 
-All 376 tests pass. CI configuration in `.github/workflows/ci.yml` runs the full suite on each push.
+All **967 tests pass**. Ruff and mypy are clean. CI configuration in `.github/workflows/ci.yml` runs the full suite on each push.

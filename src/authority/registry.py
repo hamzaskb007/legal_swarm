@@ -122,13 +122,21 @@ class AuthorityRegistry:
         return None
 
     def get_by_endpoint_type(self, endpoint_type: str) -> list[Authority]:
-        return [a for a in self._authorities.values() if a.get_endpoint_url(endpoint_type) is not None]
+        return [
+            a for a in self._authorities.values() if a.get_endpoint_url(endpoint_type) is not None
+        ]
 
     def get_by_document_type(self, doc_type: str | DocumentType) -> list[Authority]:
         dt = doc_type.value if isinstance(doc_type, DocumentType) else doc_type
-        return [a for a in self._authorities.values() if dt in [d.value if hasattr(d, 'value') else d for d in a.document_types]]
+        return [
+            a
+            for a in self._authorities.values()
+            if dt in [d.value if hasattr(d, "value") else d for d in a.document_types]
+        ]
 
-    def get_relationship_targets(self, authority_id: str, rel_type: str | None = None) -> list[Authority]:
+    def get_relationship_targets(
+        self, authority_id: str, rel_type: str | None = None
+    ) -> list[Authority]:
         auth = self.get_by_id(authority_id)
         targets: list[Authority] = []
         for rel in auth.relationships:
@@ -144,7 +152,20 @@ class AuthorityRegistry:
         all_ids: list[str] = []
         all_urls: list[str] = []
         authority_ids = set(self._authorities.keys())
-        known_endpoint_types = {"homepage", "legislation", "rules", "guidance", "api", "rss", "search", "filings", "enforcement", "news", "consultation", "forms"}
+        known_endpoint_types = {
+            "homepage",
+            "legislation",
+            "rules",
+            "guidance",
+            "api",
+            "rss",
+            "search",
+            "filings",
+            "enforcement",
+            "news",
+            "consultation",
+            "forms",
+        }
         valid_capabilities = {c.value for c in CapabilityType}
 
         for a in self._authorities.values():
@@ -167,18 +188,27 @@ class AuthorityRegistry:
 
             for rel in a.relationships:
                 if rel.target_id not in authority_ids:
-                    diag.orphan_relationships.append(f"{a.id} -> {rel.target_id} ({rel.type.value})")
+                    diag.orphan_relationships.append(
+                        f"{a.id} -> {rel.target_id} ({rel.type.value})"
+                    )
 
             if not a.metadata:
                 diag.missing_metadata.append(a.id)
 
             for cap in a.capabilities:
-                cap_val = cap.value if hasattr(cap, 'value') else cap
+                cap_val = cap.value if hasattr(cap, "value") else cap
                 if cap_val not in valid_capabilities:
                     diag.invalid_capabilities.append(f"{a.id}:{cap_val}")
 
-        if any([diag.duplicate_ids, diag.duplicate_urls, diag.orphan_relationships,
-                diag.invalid_endpoint_types, diag.invalid_capabilities]):
+        if any(
+            [
+                diag.duplicate_ids,
+                diag.duplicate_urls,
+                diag.orphan_relationships,
+                diag.invalid_endpoint_types,
+                diag.invalid_capabilities,
+            ]
+        ):
             diag.healthy = False
 
         diag.total_authorities = len(self._authorities)

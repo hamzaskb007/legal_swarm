@@ -38,58 +38,66 @@ class CaymanIslandsBuilder(JurisdictionBuilder):
         cima = resolver.get_by_id("cima")
         walkers = resolver.get_by_id("walkers")
 
-        manager.add_citation(CitationRecord(
-            authority_id="cima",
-            source_name="Cayman Islands Mutual Funds Act (2021 Revision)",
-            source_url=None,
-            authority=SourceAuthority.PRIMARY,
-            authority_level=2,
-            publication_date=datetime(2021, 1, 1),
-            section_reference="Part I, Sections 4–6 – Registration Requirements",
-            reliability_score=0.97,
-            raw_excerpt=None,
-            regulatory_relevance_tag="Fund Registration",
-            last_verified_timestamp=datetime.utcnow(),
-        ))
-        manager.add_citation(CitationRecord(
-            authority_id="cima",
-            source_name="Cayman Islands Private Funds Act (2021 Revision)",
-            source_url=None,
-            authority=SourceAuthority.PRIMARY,
-            authority_level=2,
-            publication_date=datetime(2021, 1, 1),
-            section_reference="Part II, Section 8 – Registration of Private Funds",
-            reliability_score=0.97,
-            raw_excerpt=None,
-            regulatory_relevance_tag="Fund Registration",
-            last_verified_timestamp=datetime.utcnow(),
-        ))
-        manager.add_citation(CitationRecord(
-            authority_id="cima",
-            source_name=cima.name,
-            source_url=cima.base_url,
-            authority=SourceAuthority.PRIMARY,
-            authority_level=cima.level.value,
-            publication_date=datetime(2024, 3, 1),
-            section_reference="Regulatory Handbook – Chapter 2, Fund Registration",
-            reliability_score=cima.reliability_score,
-            raw_excerpt=None,
-            regulatory_relevance_tag="Fund Registration",
-            last_verified_timestamp=datetime.utcnow(),
-        ))
-        manager.add_citation(CitationRecord(
-            authority_id="walkers",
-            source_name="Walkers Global – Cayman Islands Fund Formation Guide",
-            source_url=walkers.base_url,
-            authority=SourceAuthority.SECONDARY,
-            authority_level=walkers.level.value,
-            publication_date=datetime(2024, 6, 15),
-            section_reference="Fund Structures Overview",
-            reliability_score=walkers.reliability_score,
-            raw_excerpt=None,
-            regulatory_relevance_tag="Fund Structure",
-            last_verified_timestamp=datetime.utcnow(),
-        ))
+        manager.add_citation(
+            CitationRecord(
+                authority_id="cima",
+                source_name="Cayman Islands Mutual Funds Act (2021 Revision)",
+                source_url=None,
+                authority=SourceAuthority.PRIMARY,
+                authority_level=2,
+                publication_date=datetime(2021, 1, 1),
+                section_reference="Part I, Sections 4–6 – Registration Requirements",
+                reliability_score=0.97,
+                raw_excerpt=None,
+                regulatory_relevance_tag="Fund Registration",
+                last_verified_timestamp=datetime.utcnow(),
+            )
+        )
+        manager.add_citation(
+            CitationRecord(
+                authority_id="cima",
+                source_name="Cayman Islands Private Funds Act (2021 Revision)",
+                source_url=None,
+                authority=SourceAuthority.PRIMARY,
+                authority_level=2,
+                publication_date=datetime(2021, 1, 1),
+                section_reference="Part II, Section 8 – Registration of Private Funds",
+                reliability_score=0.97,
+                raw_excerpt=None,
+                regulatory_relevance_tag="Fund Registration",
+                last_verified_timestamp=datetime.utcnow(),
+            )
+        )
+        manager.add_citation(
+            CitationRecord(
+                authority_id="cima",
+                source_name=cima.name,
+                source_url=cima.base_url,
+                authority=SourceAuthority.PRIMARY,
+                authority_level=cima.level.value,
+                publication_date=datetime(2024, 3, 1),
+                section_reference="Regulatory Handbook – Chapter 2, Fund Registration",
+                reliability_score=cima.reliability_score,
+                raw_excerpt=None,
+                regulatory_relevance_tag="Fund Registration",
+                last_verified_timestamp=datetime.utcnow(),
+            )
+        )
+        manager.add_citation(
+            CitationRecord(
+                authority_id="walkers",
+                source_name="Walkers Global – Cayman Islands Fund Formation Guide",
+                source_url=walkers.base_url,
+                authority=SourceAuthority.SECONDARY,
+                authority_level=walkers.level.value,
+                publication_date=datetime(2024, 6, 15),
+                section_reference="Fund Structures Overview",
+                reliability_score=walkers.reliability_score,
+                raw_excerpt=None,
+                regulatory_relevance_tag="Fund Structure",
+                last_verified_timestamp=datetime.utcnow(),
+            )
+        )
 
         governance = manager.build()
 

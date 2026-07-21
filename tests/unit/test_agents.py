@@ -48,9 +48,13 @@ class TestRegulatoryAuthorityAgent:
 class TestLicensingAgent:
     def test_validate_passes_with_licensing(self) -> None:
         agent = LicensingAgent()
-        entry = make_entry(licensing_requirements=[
-            LicensingRequirement(licence_type="Test", issuing_authority="SCA", applies_to="Fund")
-        ])
+        entry = make_entry(
+            licensing_requirements=[
+                LicensingRequirement(
+                    licence_type="Test", issuing_authority="SCA", applies_to="Fund"
+                )
+            ]
+        )
         assert agent.validate(entry) is True
 
     def test_validate_fails_when_none(self) -> None:
@@ -66,17 +70,23 @@ class TestLicensingAgent:
 
 class TestCapitalRequirementAgent:
     def _fund_structure(self, **kwargs: object) -> FundStructure:
-        defaults: dict[str, object] = dict(structure_type="Test", is_permitted=True, max_leverage_ratio=None)
+        defaults: dict[str, object] = dict(
+            structure_type="Test", is_permitted=True, max_leverage_ratio=None
+        )
         defaults.update(kwargs)
         return FundStructure(**defaults)  # type: ignore[arg-type]
 
     def test_validate_passes_with_capital(self) -> None:
         agent = CapitalRequirementAgent()
-        entry = make_entry(permitted_fund_structures=[
-            self._fund_structure(
-                min_capital=CapitalRequirement(amount=None, currency="USD", amount_usd_equivalent=None, notes=None),
-            )
-        ])
+        entry = make_entry(
+            permitted_fund_structures=[
+                self._fund_structure(
+                    min_capital=CapitalRequirement(
+                        amount=None, currency="USD", amount_usd_equivalent=None, notes=None
+                    ),
+                )
+            ]
+        )
         assert agent.validate(entry) is True
 
     def test_validate_fails_no_capital(self) -> None:
@@ -92,7 +102,9 @@ class TestCapitalRequirementAgent:
 
 class TestFundStructureAgent:
     def _fund_structure(self, **kwargs: object) -> FundStructure:
-        defaults: dict[str, object] = dict(structure_type="Test", is_permitted=True, max_leverage_ratio=None)
+        defaults: dict[str, object] = dict(
+            structure_type="Test", is_permitted=True, max_leverage_ratio=None
+        )
         defaults.update(kwargs)
         return FundStructure(**defaults)  # type: ignore[arg-type]
 
@@ -124,7 +136,9 @@ class TestTaxFrameworkAgent:
 class TestComplianceObligationAgent:
     def _entry(self, **kwargs: object) -> RegulatoryEntry:
         defaults: dict[str, object] = dict(
-            filing_obligations=[RegulatoryFiling(filing_type="AR", frequency="Annual", regulator="SCA")],
+            filing_obligations=[
+                RegulatoryFiling(filing_type="AR", frequency="Annual", regulator="SCA")
+            ],
             aml_kyc_framework="AML Law",
         )
         defaults.update(kwargs)
@@ -153,19 +167,28 @@ class TestOrchestrator:
             primary_regulator="SCA",
             secondary_regulators=["DFSA"],
             licensing_requirements=[
-                LicensingRequirement(licence_type="Test", issuing_authority="SCA", applies_to="Fund")
+                LicensingRequirement(
+                    licence_type="Test", issuing_authority="SCA", applies_to="Fund"
+                )
             ],
             permitted_fund_structures=[
                 FundStructure(
                     structure_type="Test",
                     is_permitted=True,
                     max_leverage_ratio=None,
-                    min_capital=CapitalRequirement(amount=Decimal("1000"), currency="USD", amount_usd_equivalent=None, notes=None),
+                    min_capital=CapitalRequirement(
+                        amount=Decimal("1000"),
+                        currency="USD",
+                        amount_usd_equivalent=None,
+                        notes=None,
+                    ),
                 )
             ],
             tax_summary="No tax",
             withholding_tax_rate=Decimal("0"),
-            filing_obligations=[RegulatoryFiling(filing_type="AR", frequency="Annual", regulator="SCA")],
+            filing_obligations=[
+                RegulatoryFiling(filing_type="AR", frequency="Annual", regulator="SCA")
+            ],
             aml_kyc_framework="AML Law",
         )
 
@@ -180,7 +203,9 @@ class TestOrchestrator:
             ComplianceObligationAgent(),
         ]
 
-    def test_orchestrator_run_all_pass(self, entry: RegulatoryEntry, all_agents: list[BaseAgent], tmp_path: Path) -> None:
+    def test_orchestrator_run_all_pass(
+        self, entry: RegulatoryEntry, all_agents: list[BaseAgent], tmp_path: Path
+    ) -> None:
         orchestrator = Orchestrator(agents=all_agents, audit_log_path=tmp_path / "audit.jsonl")
         _result_entry, report = orchestrator.run(entry)
         assert report.blocked is False
@@ -188,7 +213,9 @@ class TestOrchestrator:
         assert len(report.agents_passed) == 6
         assert len(report.agents_failed) == 0
 
-    def test_orchestrator_blocked_on_failure(self, all_agents: list[BaseAgent], tmp_path: Path) -> None:
+    def test_orchestrator_blocked_on_failure(
+        self, all_agents: list[BaseAgent], tmp_path: Path
+    ) -> None:
         entry = make_entry(primary_regulator="")
         orchestrator = Orchestrator(agents=all_agents, audit_log_path=tmp_path / "audit.jsonl")
         _result_entry, report = orchestrator.run(entry)
@@ -196,7 +223,9 @@ class TestOrchestrator:
         assert len(report.agents_failed) == 1
         assert report.block_reason is not None
 
-    def test_orchestrator_audit_log_on_blocked(self, all_agents: list[BaseAgent], tmp_path: Path) -> None:
+    def test_orchestrator_audit_log_on_blocked(
+        self, all_agents: list[BaseAgent], tmp_path: Path
+    ) -> None:
         entry = make_entry(primary_regulator="")
         log_path = tmp_path / "audit.jsonl"
         orchestrator = Orchestrator(agents=all_agents, audit_log_path=log_path)
@@ -204,7 +233,9 @@ class TestOrchestrator:
         logs = log_path.read_text()
         assert "BLOCKED" in logs
 
-    def test_orchestrator_audit_log_on_success(self, entry: RegulatoryEntry, all_agents: list[BaseAgent], tmp_path: Path) -> None:
+    def test_orchestrator_audit_log_on_success(
+        self, entry: RegulatoryEntry, all_agents: list[BaseAgent], tmp_path: Path
+    ) -> None:
         log_path = tmp_path / "audit.jsonl"
         orchestrator = Orchestrator(agents=all_agents, audit_log_path=log_path)
         orchestrator.run(entry)

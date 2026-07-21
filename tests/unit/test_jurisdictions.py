@@ -66,7 +66,11 @@ class TestJurisdictionBuilders:
         sg = entry.source_governance
         total = len(sg.primary_citations) + len(sg.secondary_citations) + len(sg.tertiary_citations)
         assert total >= 1
-        assert sg.dominant_source in (SourceAuthority.PRIMARY, SourceAuthority.SECONDARY, SourceAuthority.TERTIARY)
+        assert sg.dominant_source in (
+            SourceAuthority.PRIMARY,
+            SourceAuthority.SECONDARY,
+            SourceAuthority.TERTIARY,
+        )
 
     def test_entry_has_primary_citations(self, builder):
         entry = builder.build_entry()
@@ -115,9 +119,10 @@ class TestJurisdictionBuilders:
         # Secondary/tertiary citations must have stable homepage URLs
         for c in sg.secondary_citations + sg.tertiary_citations:
             assert c.source_url is not None, f"{c.source_name} has no URL"
-            assert c.source_url.startswith("https://"), f"{c.source_name} URL not HTTPS: {c.source_url}"
+            assert c.source_url.startswith("https://"), (
+                f"{c.source_name} URL not HTTPS: {c.source_url}"
+            )
             assert c.reliability_score > 0
-
 
     def test_citations_have_dates(self, builder):
         entry = builder.build_entry()
@@ -218,8 +223,9 @@ class TestJurisdictionPipeline:
 
         engine = ValidationEngine()
         report = engine.validate(entry)
-        assert report.overall_status != ValidationStatus.FAILED, \
+        assert report.overall_status != ValidationStatus.FAILED, (
             f"Validation FAILED for {entry.jurisdiction_code}: {[r for r in report.results if r.status == ValidationStatus.FAILED]}"
+        )
 
     def test_pipeline_contradiction_detection(self, builder):
         entry = builder.build_entry()
@@ -247,7 +253,10 @@ class TestJurisdictionPipeline:
 class TestSpecificJurisdictions:
     def test_cayman_cima_regulator(self):
         entry = CaymanIslandsBuilder().build_entry()
-        assert "CIMA" in entry.primary_regulator or "Cayman Islands Monetary Authority" in entry.primary_regulator
+        assert (
+            "CIMA" in entry.primary_regulator
+            or "Cayman Islands Monetary Authority" in entry.primary_regulator
+        )
 
     def test_luxembourg_cssf_regulator(self):
         entry = LuxembourgBuilder().build_entry()
@@ -259,23 +268,38 @@ class TestSpecificJurisdictions:
 
     def test_singapore_mas_regulator(self):
         entry = SingaporeBuilder().build_entry()
-        assert "MAS" in entry.primary_regulator or "Monetary Authority of Singapore" in entry.primary_regulator
+        assert (
+            "MAS" in entry.primary_regulator
+            or "Monetary Authority of Singapore" in entry.primary_regulator
+        )
 
     def test_bvi_fsc_regulator(self):
         entry = BviBuilder().build_entry()
-        assert "FSC" in entry.primary_regulator or "Financial Services Commission" in entry.primary_regulator
+        assert (
+            "FSC" in entry.primary_regulator
+            or "Financial Services Commission" in entry.primary_regulator
+        )
 
     def test_uae_sca_regulator(self):
         entry = UaeBuilder().build_entry()
-        assert "SCA" in entry.primary_regulator or "Securities and Commodities Authority" in entry.primary_regulator
+        assert (
+            "SCA" in entry.primary_regulator
+            or "Securities and Commodities Authority" in entry.primary_regulator
+        )
 
     def test_jersey_jfsc_regulator(self):
         entry = JerseyBuilder().build_entry()
-        assert "JFSC" in entry.primary_regulator or "Jersey Financial Services Commission" in entry.primary_regulator
+        assert (
+            "JFSC" in entry.primary_regulator
+            or "Jersey Financial Services Commission" in entry.primary_regulator
+        )
 
     def test_delaware_sec_regulator(self):
         entry = DelawareBuilder().build_entry()
-        assert "SEC" in entry.primary_regulator or "Securities and Exchange Commission" in entry.primary_regulator
+        assert (
+            "SEC" in entry.primary_regulator
+            or "Securities and Exchange Commission" in entry.primary_regulator
+        )
 
     def test_luxembourg_has_ucits(self):
         entry = LuxembourgBuilder().build_entry()
@@ -298,7 +322,9 @@ class TestSpecificJurisdictions:
     def test_delaware_has_sec_primary_authority(self):
         entry = DelawareBuilder().build_entry()
         src = entry.source_governance.primary_citations
-        sec_citations = [c for c in src if "SEC" in c.source_name or "sec.gov" in (c.source_url or "")]
+        sec_citations = [
+            c for c in src if "SEC" in c.source_name or "sec.gov" in (c.source_url or "")
+        ]
         assert len(sec_citations) >= 1
 
     def test_luxembourg_has_two_year_timeline(self):

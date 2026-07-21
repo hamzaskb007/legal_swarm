@@ -53,7 +53,9 @@ class JurisdictionRegistry:
         self._detector = CitationContradictionDetector()
         self._load_all()
 
-    def _run_pipeline(self, builder: JurisdictionBuilder) -> tuple[RegulatoryEntry, ValidationReport]:
+    def _run_pipeline(
+        self, builder: JurisdictionBuilder
+    ) -> tuple[RegulatoryEntry, ValidationReport]:
         entry = builder.build_entry()
         entry, report = builder.run_pipeline(entry, audit_log_path=self._audit_logger.log_path)
         return entry, report
@@ -102,7 +104,8 @@ class JurisdictionRegistry:
         detector = CrossEntryContradictionDetector(fields=COMPARABLE_FIELDS)
         cross_sources = _pick_citations(entry_a, entry_b)
         contradictions = detector.detect(
-            entry_a, entry_b,
+            entry_a,
+            entry_b,
             source_a=cross_sources["source_a"],
             source_b=cross_sources["source_b"],
         )
@@ -112,19 +115,23 @@ class JurisdictionRegistry:
             val_a = _get_nested(entry_a, field_path)
             val_b = _get_nested(entry_b, field_path)
             if val_a is not None:
-                results.append(JurisdictionComparisonField(
-                    field_name=field_path,
-                    jurisdiction_code=entry_a.jurisdiction_code,
-                    value=str(val_a),
-                    confidence=entry_a.confidence,
-                ))
+                results.append(
+                    JurisdictionComparisonField(
+                        field_name=field_path,
+                        jurisdiction_code=entry_a.jurisdiction_code,
+                        value=str(val_a),
+                        confidence=entry_a.confidence,
+                    )
+                )
             if val_b is not None:
-                results.append(JurisdictionComparisonField(
-                    field_name=field_path,
-                    jurisdiction_code=entry_b.jurisdiction_code,
-                    value=str(val_b),
-                    confidence=entry_b.confidence,
-                ))
+                results.append(
+                    JurisdictionComparisonField(
+                        field_name=field_path,
+                        jurisdiction_code=entry_b.jurisdiction_code,
+                        value=str(val_b),
+                        confidence=entry_b.confidence,
+                    )
+                )
 
         comparison = CrossJurisdictionComparison(
             jurisdictions=[code_a, code_b],
@@ -132,7 +139,7 @@ class JurisdictionRegistry:
             results=results,
             contradictions_detected=contradictions,
             summary=f"Compared {entry_a.jurisdiction_name} vs {entry_b.jurisdiction_name}: "
-                    f"{len(contradictions)} contradiction(s) found",
+            f"{len(contradictions)} contradiction(s) found",
         )
 
         self._audit_logger.log(
@@ -175,6 +182,7 @@ def _get_nested(obj: Any, path: str) -> Any:
 
 def _pick_citations(entry_a: RegulatoryEntry, entry_b: RegulatoryEntry) -> dict[str, Any]:
     """Pick a representative citation from each entry for cross-entry comparison."""
+
     def first_citation(entry: RegulatoryEntry) -> Any:
         sg = entry.source_governance
         if sg.primary_citations:

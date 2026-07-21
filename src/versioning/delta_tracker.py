@@ -3,9 +3,15 @@ from typing import Any
 from src.schema.schema import ChangeType, FieldDelta, RegulatoryEntry, VersionRecord
 
 TRACKED_FIELDS = [
-    "jurisdiction_code", "jurisdiction_name", "tier", "primary_regulator",
-    "secondary_regulators", "passporting_available", "withholding_tax_rate",
-    "tax_summary", "aml_kyc_framework",
+    "jurisdiction_code",
+    "jurisdiction_name",
+    "tier",
+    "primary_regulator",
+    "secondary_regulators",
+    "passporting_available",
+    "withholding_tax_rate",
+    "tax_summary",
+    "aml_kyc_framework",
 ]
 
 
@@ -28,8 +34,13 @@ class DeltaTracker:
     def __init__(self, tracked_fields: list[str] | None = None):
         self.tracked_fields = tracked_fields or TRACKED_FIELDS
 
-    def compute_delta(self, old_entry: RegulatoryEntry, new_entry: RegulatoryEntry,
-                      author: str = "system", change_summary: str | None = None) -> VersionRecord:
+    def compute_delta(
+        self,
+        old_entry: RegulatoryEntry,
+        new_entry: RegulatoryEntry,
+        author: str = "system",
+        change_summary: str | None = None,
+    ) -> VersionRecord:
         deltas: list[FieldDelta] = []
         for field in self.tracked_fields:
             old_val = _get(old_entry, field)
@@ -42,7 +53,9 @@ class DeltaTracker:
                 ct = ChangeType.MODIFIED
             else:
                 continue
-            deltas.append(FieldDelta(field_path=field, change_type=ct, old_value=old_val, new_value=new_val))
+            deltas.append(
+                FieldDelta(field_path=field, change_type=ct, old_value=old_val, new_value=new_val)
+            )
 
         return VersionRecord(
             version_id=_bump_version(old_entry.version.version_id),

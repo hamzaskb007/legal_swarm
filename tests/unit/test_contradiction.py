@@ -1,6 +1,9 @@
 """Unit tests for contradiction detection."""
 
-from src.contradiction.detector import CitationContradictionDetector, CrossEntryContradictionDetector
+from src.contradiction.detector import (
+    CitationContradictionDetector,
+    CrossEntryContradictionDetector,
+)
 from src.schema.schema import SourceAuthority
 from tests.unit.test_schema import make_citation, make_entry
 from src.schema.schema import SourceGovernanceRecord
@@ -29,7 +32,9 @@ class TestCitationContradictionDetector:
     def test_no_primary_returns_empty(self):
         secondary = make_citation(authority=SourceAuthority.SECONDARY, reliability_score=0.9)
         governance = SourceGovernanceRecord(secondary_citations=[secondary])
-        entry = make_entry(source_governance=governance,)
+        entry = make_entry(
+            source_governance=governance,
+        )
         detector = CitationContradictionDetector()
         result = detector.detect(entry)
         assert result == []
