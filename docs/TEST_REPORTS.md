@@ -1,7 +1,8 @@
 # Legal Swarm — Test Suite Report
 
-**Total Tests:** 967
-**Passing:** 967
+**Total Tests:** 1339 (1338 passing, 1 skipped)
+**Passing:** 1338
+**Skipped:** 1
 **Failing:** 0
 **Ruff:** clean
 **Mypy:** clean
@@ -12,11 +13,11 @@
 
 ## Overview
 
-The Legal Swarm test suite covers the foundation layer (83 tests), HTTP infrastructure (62 tests), connector framework (78 tests), Tier 1 jurisdictions (293 tests), HTML connector (55 tests), RSS connector (92 tests), PDF connector (46 tests), and REST API connector (102 tests). All 967 tests pass with zero failures. Ruff and mypy are clean. All tests are fully deterministic with no external dependencies.
+The Legal Swarm test suite covers the foundation layer (91 tests), HTTP infrastructure (62 tests), connector framework (78 tests), Tier 1 jurisdictions (293 tests), HTML connector (55 tests), RSS connector (92 tests), PDF connector (46 tests), REST API connector (102 tests), validation models (140 tests), citation validator (90 tests), governance validator (86 tests), and concurrent/stress tests (8 concurrent + 7 stress). All 1338 tests pass with zero failures. Ruff and mypy are clean. All tests are fully deterministic with no external dependencies.
 
 ---
 
-## Foundation Layer Tests (83 tests)
+## Foundation Layer Tests (91 tests)
 
 ### Schema (25 tests) — 99% coverage
 
@@ -34,9 +35,26 @@ Level mapping assigns HIGH ≥ 0.75, MEDIUM ≥ 0.50, LOW ≥ 0.40, UNVERIFIED <
 
 Intra-entry detector flags secondary/tertiary citations with higher reliability than primary; returns empty list when no primaries exist. Cross-entry detector compares identical entries (empty contradictions), detects field value differences, and stores both conflicting sources.
 
-### Audit Logger (7 tests) — 100% coverage
+### Audit Logger (62 tests, 1 skipped) — 100% coverage
 
-Append-only logging: `log()` creates and appends to file; multiple calls accumulate; `read_all/by_jurisdiction/by_event_type` filter correctly; frozen entries reject mutation.
+```
+Name                    Stmts   Miss  Cover   Missing
+-----------------------------------------------------
+src/audit/__init__.py       0      0   100%
+src/audit/logger.py        44      0   100%
+-----------------------------------------------------
+TOTAL                      44      0   100%
+```
+
+**Test categories:**
+- **Basic functionality** (12 tests): `log()` writes to file, `read_all()` returns entries, append-only, jurisdiction/event-type filtering, empty log, immutability, all fields, ordering, auto-created paths, log ID, timestamp
+- **Corrupted JSON handling** (9 tests): malformed JSON, truncated JSON, partial JSON objects, empty lines, invalid UTF-8, unexpected structures, all corrupted, mixed valid/corrupted, empty paths
+- **Invalid schema / enum values** (8 tests): invalid event type, missing actor, invalid payload type, invalid actor type, invalid timestamp, null event type, unknown fields ignored, wrong case event type
+- **Error paths** (6 tests): missing file, missing file for jurisdiction/event-type reads, read-only directory, unicode actor, serialization failure, read-after-write consistency
+- **Filtering** (5 tests): no match by jurisdiction/event-type, multiple matches, filter after corrupted entries
+- **Concurrent access** (8 tests): concurrent writes, concurrent read+write, concurrent filtering, no duplicate entries, no corruption under concurrent writes, concurrent appends from multiple loggers, repeated concurrent read/write cycles, concurrent reads without exceptions
+- **Stress tests** (7 tests): thousand entries, repeated reads consistency, repeated filtering, large payloads, stress with corruption, default path stress, sustained write/read cycles
+- **Real regulatory data** (7 tests): SEC, MAS, CIMA, CSSF, Central Bank of Ireland, ADGM events, mixed regulatory events
 
 ### Delta Tracker (7 tests) — 88% coverage
 
@@ -216,6 +234,84 @@ Loads all 8 entries; contains expected codes; get_entry normalises case / raises
 
 ---
 
+## Validation Models Tests (140 tests — new)
+
+### ValidationStatus enum (9) — 5 member values, str inheritance, member count, string construction, invalid value rejection
+
+### ValidationSeverity enum (12) — 5 member values, str inheritance, member count, numeric ordering, string construction, invalid value rejection
+
+### ValidationCode enum (15) — all 23 member values, str inheritance, member count, string construction, invalid code rejection
+
+### ValidationIssue (9) — minimal/all-field construction, defaults, frozen, serialization roundtrip, JSON roundtrip, schema generation, mutable default isolation
+
+### ValidationContext (8) — defaults, all-field construction, frozen, serialization roundtrip, JSON roundtrip, schema generation, custom context_type
+
+### ValidationResult (13) — minimal/all-field construction, defaults, frozen, UUID generation, uniqueness, serialization roundtrip, JSON roundtrip, schema generation, timing, metadata
+
+### has_errors (7) — empty, HIGH/CRITICAL is error, INFO/LOW/MEDIUM is not error
+
+### has_warnings (7) — empty, MEDIUM/LOW is warning, INFO/HIGH/CRITICAL is not warning, mixed severities
+
+### severity_counts (4) — empty, single, multiple, string keys
+
+### code_counts (4) — empty, single, multiple, ValidationCode keys
+
+### duration_ms (6) — None for missing/partial timing, positive/zero/negative values
+
+### Exception hierarchy (12) — 5 subclasses inherit ValidationError, catch base, raise/catch each, message preservation, is Exception
+
+### Package imports (10) — all __all__ exports importable
+
+### Edge cases (11) — empty properties, large issue list (100), partial context, empty details, location-only, empty validator name, equality, exclude_unset, dict serialization, context type
+
+---
+
+## Citation Validator Tests (90 tests — new)
+
+### Required Fields (8) — valid citation passes, missing source_name, whitespace source_name, missing source_url, empty source_url, missing authority_id, empty authority_id, multiple missing fields, severity is HIGH
+
+### Authority Validation (8) — registered passes, unknown authority detected, KeyError handled, no registry skips check, disabled authority warning, disabled authority does not cause FAILED, authority details, None authority_id skipped
+
+### Structure Validation (13) — valid URL, missing scheme, unsupported scheme, missing hostname, malformed URL, valid publication date, reliability score out of range (high/low), raw excerpt too long, raw excerpt within limit, authority_level out of range (high/low), authority_level valid
+
+### Duplicate Detection (12) — no duplicates (single/different), duplicate URL, duplicate URL normalized (trailing slash), duplicate citation_id, multiple duplicates, issue details, severity for URL duplicates, status is WARNING, empty/single citation list, duplicate detection context_type, metadata count
+
+### Source Type Validation (6) — PRIMARY/SECONDARY/TERTIARY pass, severity is HIGH, details present, field_path validated
+
+### Citation Consistency (5) — publication before/after/equal to retrieved, no publication date skips check, consistency issue details
+
+### Validation Result Output (13) — SUCCESS/FAILED/WARNING status, issues present, validator name, timestamps, duration, metadata, serialization/JSON roundtrip, context auto/manual, validate_citations list/duplicates/empty
+
+### Exceptions (4) — empty/whitespace validator name raises, valid name ok, default name
+
+### Edge Cases (10) — all None optional fields, all valid optional fields, context reuse, HTTP URL valid, complete valid citation, issue field_path populated, no registry, reliability_score valid, URL None, frozen immutable
+
+### Full Integration (5) — complete valid, complete invalid (multiple issues), all warnings, multiple valid citations, result frozen
+
+---
+
+## Governance Validator Tests (86 tests — new)
+
+### Authority Hierarchy (6) — valid level 1/5, relationship to unknown target detected, relationship to valid target passes, relationship check skipped without registry, multiple invalid relationships, severity/details
+
+### Authority Level Enforcement (6) — levels 1-5 valid, correct SourceAuthority mapping, disabled authority identified
+
+### Secondary Source Referencing (9) — primary citation skipped, secondary with primary passes, orphan secondary detected, orphan tertiary detected, orphan check skipped without registry/unknown/disabled authority, orphan issue details, secondary with other secondaries only
+
+### Citation Density (5) — sufficient passes, insufficient total/primary, zero minimum passes, severity HIGH, details present
+
+### Minimum Evidence (7) — required evidence present, missing primary detected, empty governance detected, no enabled authorities warning, enabled authority satisfies evidence, evidence issue details, severity HIGH
+
+### Duplicate Authority Detection (11) — unique passes, duplicate ID detected, severity LOW, details present, multiple duplicates, skipped single/empty, context type, metadata, None/empty authority_id ignored
+
+### Validation Output (17) — SUCCESS/FAILED/WARNING status, issues present, validator name, timestamps, duration, metadata, serialization/JSON roundtrip, context auto/manual, validate_citations list/empty
+
+### Exceptions (8) — empty/whitespace validator name, valid/default name, negative min thresholds, zero thresholds ok
+
+### Edge Cases (11) — validate without registry, citation without authority_id, mixed governance, full citation list, hierarchy metadata, governance output metadata, frozen immutable, duplicate authority status WARNING, unknown authority skips orphan, order preserved with dups, disabled authority not counted, custom name/thresholds
+
+---
+
 ## Running Tests
 
 ```bash
@@ -225,11 +321,14 @@ python3 -m pytest
 # Run with coverage
 python3 -m pytest --cov=src --cov-report=term-missing
 
-# Run specific connector test file
+# Run specific connector / validation test file
 python3 -m pytest tests/unit/test_api_connector.py -v
 python3 -m pytest tests/unit/test_rss_connector.py -v
 python3 -m pytest tests/unit/test_pdf_connector.py -v
 python3 -m pytest tests/unit/test_html_connector.py -v
+python3 -m pytest tests/unit/test_validation_models.py -v
+python3 -m pytest tests/unit/test_citation_validator.py -v
+python3 -m pytest tests/unit/test_governance_validator.py -v
 
 # Run framework/HTTP tests
 python3 -m pytest tests/unit/test_connectors.py -v
@@ -250,4 +349,4 @@ pip install -e ".[dev]"
 pytest tests/ -v --cov=src
 ```
 
-Expected output: 967 passed, 0 failed, ruff clean, mypy clean.
+Expected output: 1338 passed, 1 skipped, 0 failed, ruff clean, mypy clean.

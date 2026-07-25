@@ -23,8 +23,8 @@ class TestSourceGovernanceManager:
 
     def test_deduplication_by_url(self):
         manager = SourceGovernanceManager()
-        c1 = make_citation(source_url="https://example.com")
-        c2 = make_citation(source_url="https://example.com")
+        c1 = make_citation(source_url="https://www.sec.gov/rules/fund-management")
+        c2 = make_citation(source_url="https://www.sec.gov/rules/fund-management")
         manager.add_citation(c1)
         result = manager.add_citation(c2)
         assert result is False
