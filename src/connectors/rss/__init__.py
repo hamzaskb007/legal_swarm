@@ -15,11 +15,11 @@ __all__ = [
     "FeedTooLargeError",
     "FeedType",
     "InvalidXmlError",
+    "RSSConnector",
+    "RSSParser",
     "RssConfig",
     "RssError",
     "RssParseError",
-    "RSSConnector",
-    "RSSParser",
     "UnsupportedContentTypeError",
     "UnsupportedFeedFormatError",
 ]

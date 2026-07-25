@@ -12,14 +12,14 @@ from src.contradiction.detector import (
     CrossEntryContradictionDetector,
 )
 from src.jurisdictions.base import JurisdictionBuilder
-from src.jurisdictions.tier1.cayman_islands import CaymanIslandsBuilder
-from src.jurisdictions.tier1.luxembourg import LuxembourgBuilder
-from src.jurisdictions.tier1.ireland import IrelandBuilder
-from src.jurisdictions.tier1.singapore import SingaporeBuilder
 from src.jurisdictions.tier1.bvi import BviBuilder
-from src.jurisdictions.tier1.uae import UaeBuilder
-from src.jurisdictions.tier1.jersey import JerseyBuilder
+from src.jurisdictions.tier1.cayman_islands import CaymanIslandsBuilder
 from src.jurisdictions.tier1.delaware import DelawareBuilder
+from src.jurisdictions.tier1.ireland import IrelandBuilder
+from src.jurisdictions.tier1.jersey import JerseyBuilder
+from src.jurisdictions.tier1.luxembourg import LuxembourgBuilder
+from src.jurisdictions.tier1.singapore import SingaporeBuilder
+from src.jurisdictions.tier1.uae import UaeBuilder
 from src.schema.schema import (
     AuditEventType,
     CrossJurisdictionComparison,

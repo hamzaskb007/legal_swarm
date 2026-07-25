@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import json
 import logging
-from datetime import datetime, timezone
+from datetime import datetime, UTC
 from typing import Any, cast
 
 from pydantic import BaseModel, Field
@@ -208,13 +208,13 @@ def _parse_timestamp(value: Any) -> datetime | None:
             dt = datetime.strptime(cleaned, fmt)
             if dt.tzinfo is not None:
                 return dt
-            return dt.replace(tzinfo=timezone.utc)
+            return dt.replace(tzinfo=UTC)
         except ValueError:
             continue
     try:
         dt = datetime.fromisoformat(cleaned)
         if dt.tzinfo is None:
-            dt = dt.replace(tzinfo=timezone.utc)
+            dt = dt.replace(tzinfo=UTC)
         return dt
     except (ValueError, TypeError):
         log.debug("Could not parse timestamp: %s", value)

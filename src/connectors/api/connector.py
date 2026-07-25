@@ -29,11 +29,11 @@ from src.connectors.http.client import HttpClient
 from src.connectors.http.exceptions import HttpError
 from src.connectors.http.models import HttpMethod
 from src.connectors.models import (
-    ConnectorCapabilities,
-    ConnectorMetadata,
     ConnectionHealth,
     ConnectionResult,
     ConnectionStatus,
+    ConnectorCapabilities,
+    ConnectorMetadata,
     Document,
     FetchRequest,
     FetchResult,

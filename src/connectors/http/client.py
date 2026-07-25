@@ -240,7 +240,7 @@ class UrllibHttpClient(HttpClient):
             body = b""
             try:
                 body = e.read()
-            except Exception:
+            except OSError:
                 pass
             resp_url = str(e.url) if e.url else url
 

@@ -434,7 +434,7 @@ class CitationValidator:
                     field_path="source_url",
                     details={"url": url_str},
                 )
-        except Exception as exc:
+        except (ValueError, TypeError, AttributeError) as exc:
             return ValidationIssue(
                 code=ValidationCode.INVALID_FIELD_VALUE,
                 message=f"URL '{url_str}' is malformed: {exc}",
@@ -449,7 +449,7 @@ class CitationValidator:
         try:
             if value.tzinfo is not None:
                 pass
-        except Exception as exc:
+        except (ValueError, TypeError, AttributeError) as exc:
             return ValidationIssue(
                 code=ValidationCode.INVALID_FIELD_VALUE,
                 message=f"{field_path} contains an invalid date: {exc}",

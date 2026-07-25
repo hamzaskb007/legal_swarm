@@ -6,7 +6,6 @@ from src.connectors.http.config import DEFAULT_RETRY_COUNT, DEFAULT_RETRY_DELAY
 from src.connectors.http.exceptions import ConnectionError, TimeoutError
 from src.connectors.http.models import Response
 
-
 RETRYABLE_STATUS_CODES: frozenset[int] = frozenset(
     {
         429,

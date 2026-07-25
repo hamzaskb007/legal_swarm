@@ -17,8 +17,8 @@ from src.authority.resolver import AuthorityResolver
 
 __all__ = [
     "Authority",
-    "AuthorityLevel",
     "AuthorityDiscovery",
+    "AuthorityLevel",
     "AuthorityRegistry",
     "AuthorityResolver",
     "CapabilityType",
@@ -26,7 +26,6 @@ __all__ = [
     "DocumentType",
     "Endpoint",
     "HealthDiagnostic",
-    "normalize_jurisdiction",
     "ParserType",
     "Relationship",
     "RelationshipType",
@@ -34,4 +33,5 @@ __all__ = [
     "ReliabilityScore",
     "ReliabilityScorer",
     "VersionInfo",
+    "normalize_jurisdiction",
 ]

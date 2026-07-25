@@ -11,9 +11,9 @@ from src.connectors.html.parser import HtmlParser
 __all__ = [
     "EmptyContentError",
     "ExtractionError",
+    "HTMLConnector",
     "HtmlError",
     "HtmlParseError",
-    "HTMLConnector",
     "HtmlParser",
     "UnsupportedContentTypeError",
 ]

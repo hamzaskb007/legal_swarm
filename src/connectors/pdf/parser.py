@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import logging
 import re
-from datetime import datetime, timezone, timedelta
+from datetime import datetime, timedelta, timezone, UTC
 from typing import Any
 
 from pydantic import BaseModel
@@ -58,7 +58,7 @@ def _parse_pdf_date(date_str: str | None) -> datetime | None:
                 clean = date_str.strip().rstrip("Z")
                 if clean.startswith("D:"):
                     clean = clean[2:]
-                return datetime.strptime(clean, "%Y%m%d%H%M%S").replace(tzinfo=timezone.utc)
+                return datetime.strptime(clean, "%Y%m%d%H%M%S").replace(tzinfo=UTC)
             return None
         year, month, day, hour, minute, second = map(int, match.groups()[:6])
         dt = datetime(year, month, day, hour, minute, second)
@@ -70,7 +70,7 @@ def _parse_pdf_date(date_str: str | None) -> datetime | None:
             offset = timedelta(hours=sign * tz_hours, minutes=sign * tz_minutes)
             dt = dt.replace(tzinfo=timezone(offset))
         else:
-            dt = dt.replace(tzinfo=timezone.utc)
+            dt = dt.replace(tzinfo=UTC)
         return dt
     except (ValueError, TypeError):
         return None

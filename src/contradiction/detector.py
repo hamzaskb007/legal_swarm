@@ -1,5 +1,7 @@
 from __future__ import annotations
+
 from typing import Any
+
 from src.schema.schema import CitationRecord, ContradictionRecord, RegulatoryEntry
 
 

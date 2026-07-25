@@ -12,14 +12,14 @@ from src.connectors.pdf.exceptions import (
 from src.connectors.pdf.parser import PdfConfig, PDFParser
 
 __all__ = [
+    "PDFConnector",
+    "PDFParser",
     "PdfConfig",
     "PdfCorruptedError",
     "PdfEmptyError",
     "PdfEncryptedError",
     "PdfError",
     "PdfParseError",
-    "PDFConnector",
-    "PDFParser",
     "PdfTooLargeError",
     "PdfTooManyPagesError",
     "UnsupportedContentTypeError",

@@ -5,10 +5,10 @@ from abc import ABC, abstractmethod
 from src.authority.models import Authority, CapabilityType, ParserType
 from src.connectors.exceptions import ConnectorInitializationError
 from src.connectors.models import (
-    ConnectorCapabilities,
-    ConnectorMetadata,
     ConnectionHealth,
     ConnectionResult,
+    ConnectorCapabilities,
+    ConnectorMetadata,
     FetchRequest,
     FetchResult,
 )

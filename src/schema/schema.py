@@ -12,59 +12,58 @@ from __future__ import annotations
 
 from datetime import datetime
 from decimal import Decimal
-from enum import Enum
+from enum import StrEnum
 from typing import Any
 from uuid import UUID, uuid4
 
 from pydantic import BaseModel, Field, field_validator, model_validator
-
 
 # ---------------------------------------------------------------------------
 # Enumerations
 # ---------------------------------------------------------------------------
 
 
-class ConfidenceLevel(str, Enum):
+class ConfidenceLevel(StrEnum):
     HIGH = "HIGH"
     MEDIUM = "MEDIUM"
     LOW = "LOW"
     UNVERIFIED = "UNVERIFIED"
 
 
-class JurisdictionTier(str, Enum):
+class JurisdictionTier(StrEnum):
     TIER_1 = "TIER_1"  # Primary execution baseline
     TIER_2 = "TIER_2"
     TIER_3 = "TIER_3"
 
 
-class SourceAuthority(str, Enum):
+class SourceAuthority(StrEnum):
     PRIMARY = "PRIMARY"  # Official government / regulator publication
     SECONDARY = "SECONDARY"  # Recognized legal commentary / analysis
     TERTIARY = "TERTIARY"  # General reference
 
 
-class ChangeType(str, Enum):
+class ChangeType(StrEnum):
     ADDED = "ADDED"
     MODIFIED = "MODIFIED"
     REMOVED = "REMOVED"
     UNCHANGED = "UNCHANGED"
 
 
-class ValidationStatus(str, Enum):
+class ValidationStatus(StrEnum):
     PASSED = "PASSED"
     FAILED = "FAILED"
     WARNING = "WARNING"
     PENDING = "PENDING"
 
 
-class NotApplicableReason(str, Enum):
+class NotApplicableReason(StrEnum):
     NO_REGULATORY_REQUIREMENT = "NO_REGULATORY_REQUIREMENT"
     JURISDICTION_EXEMPT = "JURISDICTION_EXEMPT"
     NOT_YET_VERIFIED = "NOT_YET_VERIFIED"
     OUTSIDE_CURRENT_SCOPE = "OUTSIDE_CURRENT_SCOPE"
 
 
-class AuditEventType(str, Enum):
+class AuditEventType(StrEnum):
     QUERY = "QUERY"
     VALIDATION = "VALIDATION"
     CONTRADICTION = "CONTRADICTION"

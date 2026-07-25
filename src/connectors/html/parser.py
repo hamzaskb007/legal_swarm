@@ -7,7 +7,6 @@ from typing import Any
 from src.connectors.html.exceptions import HtmlParseError
 from src.connectors.models import Document
 
-
 _CONTENT_TAGS: frozenset[str] = frozenset(
     {
         "p",

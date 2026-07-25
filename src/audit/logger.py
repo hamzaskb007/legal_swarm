@@ -1,9 +1,13 @@
 from __future__ import annotations
 
+import json
 import logging
+from collections.abc import Callable
 from pathlib import Path
-from typing import Any, Callable
+from typing import Any
 from uuid import UUID
+
+from pydantic import ValidationError
 
 from src.schema.schema import AuditEventType, AuditLogEntry
 
@@ -53,7 +57,7 @@ class AuditLogger:
                     entry = self._parse_line(line, line_no)
                     if entry is not None:
                         entries.append(entry)
-                except Exception:
+                except (json.JSONDecodeError, ValidationError):
                     logger.warning("Skipping corrupted audit log entry at line %d", line_no)
         return entries
 

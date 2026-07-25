@@ -1,5 +1,7 @@
 from __future__ import annotations
+
 from typing import Any
+
 from src.schema.schema import ChangeType, FieldDelta, RegulatoryEntry, VersionRecord
 
 TRACKED_FIELDS = [

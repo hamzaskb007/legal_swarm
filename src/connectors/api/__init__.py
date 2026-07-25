@@ -21,6 +21,8 @@ from src.connectors.api.parser import (
 )
 
 __all__ = [
+    "APIConnector",
+    "APIParser",
     "ApiAuthenticationError",
     "ApiConfig",
     "ApiError",
@@ -33,8 +35,6 @@ __all__ = [
     "ApiParseError",
     "ApiRateLimitedError",
     "ApiServerError",
-    "APIConnector",
-    "APIParser",
     "EmptyResponseError",
     "UnsupportedContentTypeError",
     "UnsupportedResponseFormatError",

@@ -8,7 +8,6 @@ from pydantic import BaseModel, Field, model_validator
 
 from src.schema.schema import SourceAuthority
 
-
 # ---------------------------------------------------------------------------
 # Enumerations
 # ---------------------------------------------------------------------------

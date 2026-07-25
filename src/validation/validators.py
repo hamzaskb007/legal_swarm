@@ -1,4 +1,5 @@
 from __future__ import annotations
+
 from src.schema.schema import (
     RegulatoryEntry,
     ValidationReport,

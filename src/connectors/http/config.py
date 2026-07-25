@@ -2,7 +2,6 @@ from __future__ import annotations
 
 from pydantic import BaseModel, Field
 
-
 DEFAULT_USER_AGENT = "LegalSwarm/1.0 (+https://github.com/anomalyco/legal-swarm)"
 DEFAULT_TIMEOUT = 30.0
 DEFAULT_CONNECT_TIMEOUT = 10.0

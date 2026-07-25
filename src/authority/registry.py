@@ -4,7 +4,7 @@ from collections import Counter
 from pathlib import Path
 
 import yaml
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, ValidationError
 
 from src.authority.jurisdiction import normalize_jurisdiction
 from src.authority.models import (
@@ -14,7 +14,6 @@ from src.authority.models import (
     DocumentType,
     VersionInfo,
 )
-
 
 YAML_DIR = Path(__file__).resolve().parent.parent.parent / "config" / "authorities"
 
@@ -55,7 +54,7 @@ class AuthorityRegistry:
                     data = yaml.safe_load(f)
                 authority = Authority.model_validate(data)
                 loaded.append(authority)
-            except Exception as e:
+            except (yaml.YAMLError, ValidationError) as e:
                 raise ValueError(f"Failed to load {path.name}: {e}")
 
         self._validate(loaded)

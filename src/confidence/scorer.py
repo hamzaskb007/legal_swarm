@@ -1,5 +1,7 @@
 from __future__ import annotations
+
 from datetime import datetime, timedelta
+
 from src.schema.schema import ConfidenceLevel, ConfidenceScore, RegulatoryEntry, SourceAuthority
 
 AUTHORITY_WEIGHT = {

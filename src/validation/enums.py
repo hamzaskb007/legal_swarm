@@ -1,9 +1,9 @@
 from __future__ import annotations
 
-from enum import Enum
+from enum import StrEnum
 
 
-class ValidationStatus(str, Enum):
+class ValidationStatus(StrEnum):
     """Execution outcome of a validation process.
 
     Represents the overall result of running a validator, not the
@@ -18,7 +18,7 @@ class ValidationStatus(str, Enum):
     ERROR = "ERROR"
 
 
-class ValidationSeverity(str, Enum):
+class ValidationSeverity(StrEnum):
     """Severity level of a single validation issue.
 
     Independent of ValidationStatus — a FAILED validation may
@@ -50,7 +50,7 @@ _SEVERITY_ORDER: dict[ValidationSeverity, int] = {
 }
 
 
-class ValidationCode(str, Enum):
+class ValidationCode(StrEnum):
     """Central registry of validation issue identifiers.
 
     Every validator in the system emits issues with one of these

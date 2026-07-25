@@ -17,8 +17,8 @@ dependencies = [
 dev = [
     "pytest>=7.0",
     "pytest-cov",
-    "ruff",
-    "mypy",
+    "ruff>=0.15.0,<0.16.0",
+    "mypy>=2.1.0,<3.0.0",
     "types-PyYAML",
 ]
 
@@ -28,6 +28,9 @@ packages = ["src"]
 [tool.ruff]
 line-length = 100
 target-version = "py311"
+
+[tool.ruff.lint]
+ignore = ["DTZ003"]
 
 [tool.mypy]
 python_version = "3.11"
