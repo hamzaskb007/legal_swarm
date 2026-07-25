@@ -57,13 +57,9 @@ class AuthorityGovernanceValidator:
         if not validator_name or not validator_name.strip():
             raise ValidationConfigurationError("validator_name must not be empty")
         if min_citations_per_entry < 0:
-            raise ValidationConfigurationError(
-                "min_citations_per_entry must be >= 0"
-            )
+            raise ValidationConfigurationError("min_citations_per_entry must be >= 0")
         if min_primary_citations < 0:
-            raise ValidationConfigurationError(
-                "min_primary_citations must be >= 0"
-            )
+            raise ValidationConfigurationError("min_primary_citations must be >= 0")
         self._registry = authority_registry
         self._validator_name = validator_name
         self._min_citations_per_entry = min_citations_per_entry
@@ -175,9 +171,7 @@ class AuthorityGovernanceValidator:
         completed_at = datetime.utcnow()
         status = self._compute_status(issues)
 
-        all_authority_ids = [
-            c.authority_id for c in all_citations if c.authority_id
-        ]
+        all_authority_ids = [c.authority_id for c in all_citations if c.authority_id]
 
         return ValidationResult(
             status=status,
@@ -267,9 +261,7 @@ class AuthorityGovernanceValidator:
     # Part 3 — Authority Level Enforcement
     # ------------------------------------------------------------------
 
-    def _check_level_enforcement(
-        self, authority: Authority
-    ) -> list[ValidationIssue]:
+    def _check_level_enforcement(self, authority: Authority) -> list[ValidationIssue]:
         issues: list[ValidationIssue] = []
 
         expected = AUTHORITY_LEVEL_MAP.get(authority.level)
@@ -278,8 +270,7 @@ class AuthorityGovernanceValidator:
                 ValidationIssue(
                     code=ValidationCode.INVALID_AUTHORITY_LEVEL,
                     message=(
-                        f"Authority '{authority.id}' has unrecognised level "
-                        f"{authority.level.value}"
+                        f"Authority '{authority.id}' has unrecognised level {authority.level.value}"
                     ),
                     severity=ValidationSeverity.HIGH,
                     field_path="level",
@@ -318,9 +309,7 @@ class AuthorityGovernanceValidator:
     # Part 4 — Secondary Source Referencing
     # ------------------------------------------------------------------
 
-    def _check_secondary_referencing(
-        self, citation: CitationRecord
-    ) -> list[ValidationIssue]:
+    def _check_secondary_referencing(self, citation: CitationRecord) -> list[ValidationIssue]:
         issues: list[ValidationIssue] = []
 
         if self._registry is None:
@@ -349,8 +338,7 @@ class AuthorityGovernanceValidator:
         same_jurisdiction = self._registry.get_by_jurisdiction(jurisdiction)
 
         has_primary = any(
-            a.enabled
-            and a.level in PRIMARY_LEVELS
+            a.enabled and a.level in PRIMARY_LEVELS
             for a in same_jurisdiction
             if a.id != authority.id
         )
@@ -412,8 +400,7 @@ class AuthorityGovernanceValidator:
                 ValidationIssue(
                     code=ValidationCode.INSUFFICIENT_CITATIONS,
                     message=(
-                        f"Total citations ({total}) below minimum "
-                        f"({self._min_citations_per_entry})"
+                        f"Total citations ({total}) below minimum ({self._min_citations_per_entry})"
                     ),
                     severity=ValidationSeverity.HIGH,
                     field_path="source_governance",
@@ -474,28 +461,19 @@ class AuthorityGovernanceValidator:
                 ValidationIssue(
                     code=ValidationCode.INSUFFICIENT_AUTHORITY_COVERAGE,
                     message=(
-                        "No primary authority citations found; "
-                        "at least one PRIMARY source required"
+                        "No primary authority citations found; at least one PRIMARY source required"
                     ),
                     severity=ValidationSeverity.HIGH,
                     field_path="source_governance.primary_citations",
                     details={
-                        "secondary_count": len(
-                            source_governance.secondary_citations
-                        ),
-                        "tertiary_count": len(
-                            source_governance.tertiary_citations
-                        ),
+                        "secondary_count": len(source_governance.secondary_citations),
+                        "tertiary_count": len(source_governance.tertiary_citations),
                     },
                 )
             )
 
         if self._registry is not None:
-            unique_authority_ids = {
-                c.authority_id
-                for c in all_citations
-                if c.authority_id
-            }
+            unique_authority_ids = {c.authority_id for c in all_citations if c.authority_id}
             enabled_count = 0
             for aid in unique_authority_ids:
                 if aid in self._registry:
@@ -510,10 +488,7 @@ class AuthorityGovernanceValidator:
                 issues.append(
                     ValidationIssue(
                         code=ValidationCode.INSUFFICIENT_AUTHORITY_COVERAGE,
-                        message=(
-                            "No enabled authorities found among citation "
-                            "references"
-                        ),
+                        message=("No enabled authorities found among citation references"),
                         severity=ValidationSeverity.MEDIUM,
                         field_path="source_governance",
                         details={
@@ -577,9 +552,7 @@ class AuthorityGovernanceValidator:
             status=status,
             validator_name=f"{self._validator_name}.duplicates",
             issues=issues,
-            context=context or ValidationContext(
-                context_type="duplicate_authority_detection"
-            ),
+            context=context or ValidationContext(context_type="duplicate_authority_detection"),
             started_at=started_at,
             completed_at=completed_at,
             metadata={"citation_count": len(citations)},
@@ -594,14 +567,8 @@ class AuthorityGovernanceValidator:
         if not issues:
             return ValidationStatus.SUCCESS
         severities = {i.severity for i in issues}
-        if (
-            ValidationSeverity.HIGH in severities
-            or ValidationSeverity.CRITICAL in severities
-        ):
+        if ValidationSeverity.HIGH in severities or ValidationSeverity.CRITICAL in severities:
             return ValidationStatus.FAILED
-        if (
-            ValidationSeverity.MEDIUM in severities
-            or ValidationSeverity.LOW in severities
-        ):
+        if ValidationSeverity.MEDIUM in severities or ValidationSeverity.LOW in severities:
             return ValidationStatus.WARNING
         return ValidationStatus.SUCCESS

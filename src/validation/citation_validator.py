@@ -15,9 +15,7 @@ from src.validation.models import ValidationContext, ValidationIssue, Validation
 
 logger = logging.getLogger(__name__)
 
-VALID_SOURCE_AUTHORITIES: frozenset[str] = frozenset(
-    {m.value for m in SourceAuthority}
-)
+VALID_SOURCE_AUTHORITIES: frozenset[str] = frozenset({m.value for m in SourceAuthority})
 
 
 class CitationValidator:
@@ -187,15 +185,15 @@ class CitationValidator:
         try:
             authority = self._registry.get_by_id(citation.authority_id)
             if not authority.enabled:
-                    issues.append(
-                        ValidationIssue(
-                            code=ValidationCode.AUTHORITY_NOT_ENABLED,
-                            message=f"authority '{citation.authority_id}' is disabled",
-                            severity=ValidationSeverity.MEDIUM,
-                            field_path="authority_id",
-                            details={"authority_id": citation.authority_id},
-                        )
+                issues.append(
+                    ValidationIssue(
+                        code=ValidationCode.AUTHORITY_NOT_ENABLED,
+                        message=f"authority '{citation.authority_id}' is disabled",
+                        severity=ValidationSeverity.MEDIUM,
+                        field_path="authority_id",
+                        details={"authority_id": citation.authority_id},
                     )
+                )
         except KeyError:
             issues.append(
                 ValidationIssue(
@@ -241,18 +239,15 @@ class CitationValidator:
                 )
             )
 
-        if (
-            citation.raw_excerpt is not None
-            and len(citation.raw_excerpt) > 2000
-        ):
-                issues.append(
-                    ValidationIssue(
-                        code=ValidationCode.INVALID_FIELD_VALUE,
-                        message="raw_excerpt exceeds maximum length of 2000 characters",
-                        severity=ValidationSeverity.LOW,
-                        field_path="raw_excerpt",
-                    )
+        if citation.raw_excerpt is not None and len(citation.raw_excerpt) > 2000:
+            issues.append(
+                ValidationIssue(
+                    code=ValidationCode.INVALID_FIELD_VALUE,
+                    message="raw_excerpt exceeds maximum length of 2000 characters",
+                    severity=ValidationSeverity.LOW,
+                    field_path="raw_excerpt",
                 )
+            )
 
         if citation.authority_level < 1 or citation.authority_level > 5:
             issues.append(
@@ -369,18 +364,15 @@ class CitationValidator:
     def _check_consistency(self, citation: CitationRecord) -> list[ValidationIssue]:
         issues: list[ValidationIssue] = []
 
-        if (
-            citation.publication_date is not None
-            and citation.retrieved_at is not None
-        ):
+        if citation.publication_date is not None and citation.retrieved_at is not None:
             delta = citation.retrieved_at - citation.publication_date
             if delta.total_seconds() < 0:
-                    issues.append(
-                        ValidationIssue(
-                            code=ValidationCode.INVALID_FIELD_VALUE,
-                            message="publication_date must not be later than retrieved_at",
-                            severity=ValidationSeverity.MEDIUM,
-                            field_path="publication_date",
+                issues.append(
+                    ValidationIssue(
+                        code=ValidationCode.INVALID_FIELD_VALUE,
+                        message="publication_date must not be later than retrieved_at",
+                        severity=ValidationSeverity.MEDIUM,
+                        field_path="publication_date",
                         details={
                             "publication_date": citation.publication_date.isoformat(),
                             "retrieved_at": citation.retrieved_at.isoformat(),

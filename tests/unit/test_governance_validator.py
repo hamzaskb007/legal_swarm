@@ -148,25 +148,19 @@ class TestAuthorityHierarchy:
         auth = make_mock_authority("auth-1", AuthorityLevel.LEVEL_1)
         validator = make_validator()
         result = validator.validate_authority(auth)
-        hierarchy_issues = [
-            i for i in result.issues if i.code == ValidationCode.HIERARCHY_MISMATCH
-        ]
+        hierarchy_issues = [i for i in result.issues if i.code == ValidationCode.HIERARCHY_MISMATCH]
         assert len(hierarchy_issues) == 0
 
     def test_valid_hierarchy_level_5(self):
         auth = make_mock_authority("auth-5", AuthorityLevel.LEVEL_5)
         validator = make_validator()
         result = validator.validate_authority(auth)
-        hierarchy_issues = [
-            i for i in result.issues if i.code == ValidationCode.HIERARCHY_MISMATCH
-        ]
+        hierarchy_issues = [i for i in result.issues if i.code == ValidationCode.HIERARCHY_MISMATCH]
         assert len(hierarchy_issues) == 0
 
     def test_relationship_to_unknown_target_detected(self):
         rel = Relationship(type=RelationshipType.REFERENCES, target_id="nonexistent")
-        auth = make_mock_authority(
-            "auth-1", AuthorityLevel.LEVEL_1, relationships=[rel]
-        )
+        auth = make_mock_authority("auth-1", AuthorityLevel.LEVEL_1, relationships=[rel])
         registry = make_registry([auth])
         validator = make_validator(registry)
         result = validator.validate_authority(auth)
@@ -179,9 +173,7 @@ class TestAuthorityHierarchy:
     def test_relationship_to_valid_target_passes(self):
         auth2 = make_mock_authority("auth-2", AuthorityLevel.LEVEL_2)
         rel = Relationship(type=RelationshipType.REFERENCES, target_id="auth-2")
-        auth1 = make_mock_authority(
-            "auth-1", AuthorityLevel.LEVEL_1, relationships=[rel]
-        )
+        auth1 = make_mock_authority("auth-1", AuthorityLevel.LEVEL_1, relationships=[rel])
         registry = make_registry([auth1, auth2])
         validator = make_validator(registry)
         result = validator.validate_authority(auth1)
@@ -192,9 +184,7 @@ class TestAuthorityHierarchy:
 
     def test_relationship_check_skipped_without_registry(self):
         rel = Relationship(type=RelationshipType.REFERENCES, target_id="nonexistent")
-        auth = make_mock_authority(
-            "auth-1", AuthorityLevel.LEVEL_1, relationships=[rel]
-        )
+        auth = make_mock_authority("auth-1", AuthorityLevel.LEVEL_1, relationships=[rel])
         validator = make_validator(registry=None)
         result = validator.validate_authority(auth)
         chain_issues = [
@@ -207,9 +197,7 @@ class TestAuthorityHierarchy:
             Relationship(type=RelationshipType.REFERENCES, target_id="missing-1"),
             Relationship(type=RelationshipType.PUBLISHES, target_id="missing-2"),
         ]
-        auth = make_mock_authority(
-            "auth-1", AuthorityLevel.LEVEL_1, relationships=rels
-        )
+        auth = make_mock_authority("auth-1", AuthorityLevel.LEVEL_1, relationships=rels)
         registry = make_registry([auth])
         validator = make_validator(registry)
         result = validator.validate_authority(auth)
@@ -220,9 +208,7 @@ class TestAuthorityHierarchy:
 
     def test_hierarchy_issue_severity_high(self):
         rel = Relationship(type=RelationshipType.REFERENCES, target_id="missing")
-        auth = make_mock_authority(
-            "auth-1", AuthorityLevel.LEVEL_1, relationships=[rel]
-        )
+        auth = make_mock_authority("auth-1", AuthorityLevel.LEVEL_1, relationships=[rel])
         registry = make_registry([auth])
         validator = make_validator(registry)
         result = validator.validate_authority(auth)
@@ -232,9 +218,7 @@ class TestAuthorityHierarchy:
 
     def test_hierarchy_issue_has_details(self):
         rel = Relationship(type=RelationshipType.REFERENCES, target_id="missing")
-        auth = make_mock_authority(
-            "auth-1", AuthorityLevel.LEVEL_1, relationships=[rel]
-        )
+        auth = make_mock_authority("auth-1", AuthorityLevel.LEVEL_1, relationships=[rel])
         registry = make_registry([auth])
         validator = make_validator(registry)
         result = validator.validate_authority(auth)
@@ -258,8 +242,7 @@ class TestAuthorityLevelEnforcement:
         level_issues = [
             i
             for i in result.issues
-            if i.code
-            in (ValidationCode.INVALID_AUTHORITY_LEVEL, ValidationCode.HIERARCHY_MISMATCH)
+            if i.code in (ValidationCode.INVALID_AUTHORITY_LEVEL, ValidationCode.HIERARCHY_MISMATCH)
         ]
         assert len(level_issues) == 0
 
@@ -270,8 +253,7 @@ class TestAuthorityLevelEnforcement:
         level_issues = [
             i
             for i in result.issues
-            if i.code
-            in (ValidationCode.INVALID_AUTHORITY_LEVEL, ValidationCode.HIERARCHY_MISMATCH)
+            if i.code in (ValidationCode.INVALID_AUTHORITY_LEVEL, ValidationCode.HIERARCHY_MISMATCH)
         ]
         assert len(level_issues) == 0
 
@@ -282,8 +264,7 @@ class TestAuthorityLevelEnforcement:
         level_issues = [
             i
             for i in result.issues
-            if i.code
-            in (ValidationCode.INVALID_AUTHORITY_LEVEL, ValidationCode.HIERARCHY_MISMATCH)
+            if i.code in (ValidationCode.INVALID_AUTHORITY_LEVEL, ValidationCode.HIERARCHY_MISMATCH)
         ]
         assert len(level_issues) == 0
 
@@ -294,8 +275,7 @@ class TestAuthorityLevelEnforcement:
         level_issues = [
             i
             for i in result.issues
-            if i.code
-            in (ValidationCode.INVALID_AUTHORITY_LEVEL, ValidationCode.HIERARCHY_MISMATCH)
+            if i.code in (ValidationCode.INVALID_AUTHORITY_LEVEL, ValidationCode.HIERARCHY_MISMATCH)
         ]
         assert len(level_issues) == 0
 
@@ -306,8 +286,7 @@ class TestAuthorityLevelEnforcement:
         level_issues = [
             i
             for i in result.issues
-            if i.code
-            in (ValidationCode.INVALID_AUTHORITY_LEVEL, ValidationCode.HIERARCHY_MISMATCH)
+            if i.code in (ValidationCode.INVALID_AUTHORITY_LEVEL, ValidationCode.HIERARCHY_MISMATCH)
         ]
         assert len(level_issues) == 0
 
@@ -540,9 +519,7 @@ class TestMinimumEvidence:
         validator = make_validator()
         result = validator.validate_governance(governance)
         coverage_issues = [
-            i
-            for i in result.issues
-            if i.code == ValidationCode.INSUFFICIENT_AUTHORITY_COVERAGE
+            i for i in result.issues if i.code == ValidationCode.INSUFFICIENT_AUTHORITY_COVERAGE
         ]
         assert len(coverage_issues) >= 1
 
@@ -550,9 +527,7 @@ class TestMinimumEvidence:
         governance = make_governance_construct()
         validator = make_validator(min_citations=0, min_primary=0)
         result = validator.validate_governance(governance)
-        missing = [
-            i for i in result.issues if i.code == ValidationCode.MISSING_SOURCE_GOVERNANCE
-        ]
+        missing = [i for i in result.issues if i.code == ValidationCode.MISSING_SOURCE_GOVERNANCE]
         assert len(missing) >= 1
 
     def test_no_enabled_authorities_warning(self):
@@ -567,9 +542,7 @@ class TestMinimumEvidence:
         validator = make_validator(registry, min_citations=0, min_primary=0)
         result = validator.validate_governance(governance)
         coverage_issues = [
-            i
-            for i in result.issues
-            if i.code == ValidationCode.INSUFFICIENT_AUTHORITY_COVERAGE
+            i for i in result.issues if i.code == ValidationCode.INSUFFICIENT_AUTHORITY_COVERAGE
         ]
         assert len(coverage_issues) >= 1
 
@@ -585,9 +558,7 @@ class TestMinimumEvidence:
         validator = make_validator(registry, min_citations=0, min_primary=0)
         result = validator.validate_governance(governance)
         coverage_issues = [
-            i
-            for i in result.issues
-            if i.code == ValidationCode.INSUFFICIENT_AUTHORITY_COVERAGE
+            i for i in result.issues if i.code == ValidationCode.INSUFFICIENT_AUTHORITY_COVERAGE
         ]
         assert len(coverage_issues) == 0
 
@@ -596,9 +567,7 @@ class TestMinimumEvidence:
         validator = make_validator()
         result = validator.validate_governance(governance)
         coverage_issues = [
-            i
-            for i in result.issues
-            if i.code == ValidationCode.INSUFFICIENT_AUTHORITY_COVERAGE
+            i for i in result.issues if i.code == ValidationCode.INSUFFICIENT_AUTHORITY_COVERAGE
         ]
         for issue in coverage_issues:
             assert "secondary_count" in issue.details or "unique_authority_ids" in issue.details
@@ -983,9 +952,7 @@ class TestEdgeCases:
         validator = make_validator(registry, min_citations=0, min_primary=0)
         result = validator.validate_governance(governance)
         coverage_issues = [
-            i
-            for i in result.issues
-            if i.code == ValidationCode.INSUFFICIENT_AUTHORITY_COVERAGE
+            i for i in result.issues if i.code == ValidationCode.INSUFFICIENT_AUTHORITY_COVERAGE
         ]
         assert len(coverage_issues) >= 1
 

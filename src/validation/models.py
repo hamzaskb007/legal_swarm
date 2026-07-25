@@ -81,8 +81,7 @@ class ValidationResult(BaseModel, frozen=True):
     def has_warnings(self) -> bool:
         """True when at least one issue has MEDIUM or LOW severity."""
         return any(
-            i.severity in (ValidationSeverity.MEDIUM, ValidationSeverity.LOW)
-            for i in self.issues
+            i.severity in (ValidationSeverity.MEDIUM, ValidationSeverity.LOW) for i in self.issues
         )
 
     @property

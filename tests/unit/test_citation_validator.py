@@ -254,7 +254,6 @@ class TestAuthorityValidation:
         result = validator.validate_citation(c)
         assert result.status == ValidationStatus.WARNING
 
-
     def test_authority_validation_with_details(self):
         registry = make_mock_registry("auth-1")
         registry.__contains__.return_value = False
@@ -581,8 +580,7 @@ class TestCitationConsistency:
         consistency_issues = [
             i
             for i in result.issues
-            if i.code == ValidationCode.INVALID_FIELD_VALUE
-            and i.field_path == "publication_date"
+            if i.code == ValidationCode.INVALID_FIELD_VALUE and i.field_path == "publication_date"
         ]
         assert len(consistency_issues) == 0
 
@@ -599,8 +597,7 @@ class TestCitationConsistency:
         consistency_issues = [
             i
             for i in result.issues
-            if i.code == ValidationCode.INVALID_FIELD_VALUE
-            and i.field_path == "publication_date"
+            if i.code == ValidationCode.INVALID_FIELD_VALUE and i.field_path == "publication_date"
         ]
         assert len(consistency_issues) == 1
         assert consistency_issues[0].severity == ValidationSeverity.MEDIUM
@@ -619,8 +616,7 @@ class TestCitationConsistency:
         consistency_issues = [
             i
             for i in result.issues
-            if i.code == ValidationCode.INVALID_FIELD_VALUE
-            and i.field_path == "publication_date"
+            if i.code == ValidationCode.INVALID_FIELD_VALUE and i.field_path == "publication_date"
         ]
         assert len(consistency_issues) == 0
 
@@ -637,8 +633,7 @@ class TestCitationConsistency:
         consistency_issues = [
             i
             for i in result.issues
-            if i.code == ValidationCode.INVALID_FIELD_VALUE
-            and i.field_path == "publication_date"
+            if i.code == ValidationCode.INVALID_FIELD_VALUE and i.field_path == "publication_date"
         ]
         assert len(consistency_issues) == 0
 
@@ -655,8 +650,7 @@ class TestCitationConsistency:
         consistency_issues = [
             i
             for i in result.issues
-            if i.code == ValidationCode.INVALID_FIELD_VALUE
-            and i.field_path == "publication_date"
+            if i.code == ValidationCode.INVALID_FIELD_VALUE and i.field_path == "publication_date"
         ]
         assert len(consistency_issues) == 1
         assert "publication_date" in consistency_issues[0].details

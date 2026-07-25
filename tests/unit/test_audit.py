@@ -128,28 +128,40 @@ class TestAuditLogger:
 class TestCorruptedJSON:
     def test_malformed_json_skipped(self, tmp_path):
         log_path = tmp_path / "audit.jsonl"
-        log_path.write_text('{"event_type": "VALIDATION", "actor": "sec_agent"}\n{invalid json}\n{"event_type": "QUERY", "actor": "mas_agent"}\n', encoding="utf-8")
+        log_path.write_text(
+            '{"event_type": "VALIDATION", "actor": "sec_agent"}\n{invalid json}\n{"event_type": "QUERY", "actor": "mas_agent"}\n',
+            encoding="utf-8",
+        )
         logger = AuditLogger(log_path=log_path)
         entries = logger.read_all()
         assert len(entries) == 2
 
     def test_truncated_json_skipped(self, tmp_path):
         log_path = tmp_path / "audit.jsonl"
-        log_path.write_text('{"event_type": "VALIDATION", "actor": "sec_agent"}\n{"event_type": "SOURCE_INGESTION", "actor": "cftc', encoding="utf-8")
+        log_path.write_text(
+            '{"event_type": "VALIDATION", "actor": "sec_agent"}\n{"event_type": "SOURCE_INGESTION", "actor": "cftc',
+            encoding="utf-8",
+        )
         logger = AuditLogger(log_path=log_path)
         entries = logger.read_all()
         assert len(entries) == 1
 
     def test_partial_json_object_skipped(self, tmp_path):
         log_path = tmp_path / "audit.jsonl"
-        log_path.write_text('{"event_type": "VALIDATION", "actor": "cima_agent"}\n{"event_type": "QUERY"\n', encoding="utf-8")
+        log_path.write_text(
+            '{"event_type": "VALIDATION", "actor": "cima_agent"}\n{"event_type": "QUERY"\n',
+            encoding="utf-8",
+        )
         logger = AuditLogger(log_path=log_path)
         entries = logger.read_all()
         assert len(entries) == 1
 
     def test_empty_lines_ignored(self, tmp_path):
         log_path = tmp_path / "audit.jsonl"
-        log_path.write_text('\n\n{"event_type": "VALIDATION", "actor": "cssf_agent"}\n\n\n{"event_type": "QUERY", "actor": "centralbank_ie_agent"}\n\n', encoding="utf-8")
+        log_path.write_text(
+            '\n\n{"event_type": "VALIDATION", "actor": "cssf_agent"}\n\n\n{"event_type": "QUERY", "actor": "centralbank_ie_agent"}\n\n',
+            encoding="utf-8",
+        )
         logger = AuditLogger(log_path=log_path)
         entries = logger.read_all()
         assert len(entries) == 2
@@ -157,14 +169,19 @@ class TestCorruptedJSON:
     def test_invalid_utf8_skipped_line(self, tmp_path):
         log_path = tmp_path / "audit.jsonl"
         valid = '{"event_type": "VALIDATION", "actor": "sec_agent"}'
-        log_path.write_bytes(valid.encode("utf-8") + b"\n\x80\x81\x82\n" + valid.encode("utf-8") + b"\n")
+        log_path.write_bytes(
+            valid.encode("utf-8") + b"\n\x80\x81\x82\n" + valid.encode("utf-8") + b"\n"
+        )
         logger = AuditLogger(log_path=log_path)
         entries = logger.read_all()
         assert len(entries) == 2
 
     def test_unexpected_object_structure_skipped(self, tmp_path):
         log_path = tmp_path / "audit.jsonl"
-        log_path.write_text('{"event_type": "VALIDATION", "actor": "sec_agent"}\n["not", "an", "object"]\n{"event_type": "QUERY", "actor": "mas_agent"}\n', encoding="utf-8")
+        log_path.write_text(
+            '{"event_type": "VALIDATION", "actor": "sec_agent"}\n["not", "an", "object"]\n{"event_type": "QUERY", "actor": "mas_agent"}\n',
+            encoding="utf-8",
+        )
         logger = AuditLogger(log_path=log_path)
         entries = logger.read_all()
         assert len(entries) == 2
@@ -896,7 +913,12 @@ class TestRealisticData:
             (AuditEventType.VALIDATION, "mas_scraper", "SG", {"authority": "MAS"}),
             (AuditEventType.CONFIDENCE_DECISION, "scorer", "KY", {"authority": "CIMA"}),
             (AuditEventType.QUERY, "cssf_connector", "LU", {"authority": "CSSF"}),
-            (AuditEventType.DELTA_DETECTED, "tracker", "IE", {"authority": "Central Bank of Ireland"}),
+            (
+                AuditEventType.DELTA_DETECTED,
+                "tracker",
+                "IE",
+                {"authority": "Central Bank of Ireland"},
+            ),
             (AuditEventType.SOURCE_INGESTION, "dfsa_connector", "AE", {"authority": "DFSA"}),
             (AuditEventType.VALIDATION, "adgm_scraper", "AE", {"authority": "ADGM FSRA"}),
             (AuditEventType.SOURCE_INGESTION, "bvi_fsc_connector", "VG", {"authority": "BVI FSC"}),

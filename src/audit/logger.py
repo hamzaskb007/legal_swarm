@@ -45,9 +45,7 @@ class AuditLogger:
                 try:
                     line = raw_line.decode("utf-8").strip()
                 except UnicodeDecodeError:
-                    logger.warning(
-                        "Skipping corrupted audit log entry at line %d", line_no
-                    )
+                    logger.warning("Skipping corrupted audit log entry at line %d", line_no)
                     continue
                 if not line:
                     continue
@@ -56,20 +54,14 @@ class AuditLogger:
                     if entry is not None:
                         entries.append(entry)
                 except Exception:
-                    logger.warning(
-                        "Skipping corrupted audit log entry at line %d", line_no
-                    )
+                    logger.warning("Skipping corrupted audit log entry at line %d", line_no)
         return entries
 
     def read_by_jurisdiction(self, jurisdiction_code: str) -> list[AuditLogEntry]:
-        return self._filter(
-            lambda e: e.jurisdiction_code == jurisdiction_code
-        )
+        return self._filter(lambda e: e.jurisdiction_code == jurisdiction_code)
 
     def read_by_event_type(self, event_type: AuditEventType) -> list[AuditLogEntry]:
-        return self._filter(
-            lambda e: e.event_type == event_type
-        )
+        return self._filter(lambda e: e.event_type == event_type)
 
     # ------------------------------------------------------------------
     # Internal helpers

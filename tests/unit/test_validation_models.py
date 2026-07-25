@@ -1036,14 +1036,17 @@ class TestPackageImports:
             ValidationResultError,
         )
 
-        assert all(e is not None for e in [
-            ValidationConfigurationError,
-            ValidationContextError,
-            ValidationError,
-            ValidationExecutionError,
-            ValidationModelError,
-            ValidationResultError,
-        ])
+        assert all(
+            e is not None
+            for e in [
+                ValidationConfigurationError,
+                ValidationContextError,
+                ValidationError,
+                ValidationExecutionError,
+                ValidationModelError,
+                ValidationResultError,
+            ]
+        )
 
     def test_all_exports_are_in_all(self):
         from src.validation import __all__ as validation_all
