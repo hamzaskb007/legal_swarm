@@ -42,7 +42,7 @@ class DelawareBuilder(JurisdictionBuilder):
             CitationRecord(
                 authority_id="sec",
                 source_name="Investment Company Act of 1940 (United States)",
-                source_url=None,
+                source_url="https://www.sec.gov/about/laws/investment-company-act-1940",
                 authority=SourceAuthority.PRIMARY,
                 authority_level=2,
                 publication_date=datetime(1940, 8, 22),
@@ -57,7 +57,7 @@ class DelawareBuilder(JurisdictionBuilder):
             CitationRecord(
                 authority_id="sec",
                 source_name="Investment Advisers Act of 1940 (United States)",
-                source_url=None,
+                source_url="https://www.sec.gov/about/laws/investment-advisers-act-1940",
                 authority=SourceAuthority.PRIMARY,
                 authority_level=2,
                 publication_date=datetime(1940, 8, 22),
@@ -72,7 +72,7 @@ class DelawareBuilder(JurisdictionBuilder):
             CitationRecord(
                 authority_id="sec",
                 source_name="Delaware Revised Uniform Limited Partnership Act (Title 6, Chapter 17)",
-                source_url=None,
+                source_url="https://delcode.delaware.gov/title6/c017/",
                 authority=SourceAuthority.PRIMARY,
                 authority_level=2,
                 publication_date=datetime(2024, 1, 1),
@@ -83,6 +83,7 @@ class DelawareBuilder(JurisdictionBuilder):
                 last_verified_timestamp=datetime.utcnow(),
             )
         )
+        assert sec.base_url is not None
         manager.add_citation(
             CitationRecord(
                 authority_id="sec",
@@ -98,6 +99,7 @@ class DelawareBuilder(JurisdictionBuilder):
                 last_verified_timestamp=datetime.utcnow(),
             )
         )
+        assert cftc.base_url is not None
         manager.add_citation(
             CitationRecord(
                 authority_id="cftc",
@@ -110,6 +112,36 @@ class DelawareBuilder(JurisdictionBuilder):
                 reliability_score=cftc.reliability_score,
                 raw_excerpt=None,
                 regulatory_relevance_tag="Licensing",
+                last_verified_timestamp=datetime.utcnow(),
+            )
+        )
+        manager.add_citation(
+            CitationRecord(
+                authority_id="sec",
+                source_name="Investment Company Act of 1940 (United States)",
+                source_url="https://www.sec.gov/about/laws/investment-company-act-1940",
+                authority=SourceAuthority.PRIMARY,
+                authority_level=2,
+                publication_date=datetime(1940, 8, 22),
+                section_reference="Sections 3(c)(1) and 3(c)(7) – Capital requirements for registered investment companies",
+                reliability_score=0.98,
+                raw_excerpt=None,
+                regulatory_relevance_tag="Capital Requirements",
+                last_verified_timestamp=datetime.utcnow(),
+            )
+        )
+        manager.add_citation(
+            CitationRecord(
+                authority_id="sec",
+                source_name="U.S. Securities and Exchange Commission – Fund Tax Framework",
+                source_url=sec.base_url,
+                authority=SourceAuthority.PRIMARY,
+                authority_level=sec.level.value,
+                publication_date=datetime(2024, 1, 1),
+                section_reference="Tax considerations for registered and exempt investment companies including RIC qualification",
+                reliability_score=sec.reliability_score,
+                raw_excerpt=None,
+                regulatory_relevance_tag="Tax Framework",
                 last_verified_timestamp=datetime.utcnow(),
             )
         )
@@ -415,6 +447,9 @@ class DelawareBuilder(JurisdictionBuilder):
             aml_kyc_framework="Bank Secrecy Act (BSA); USA PATRIOT Act; FINRA AML Rules; SEC AML compliance requirements for registered advisers",
             passporting_available=False,
             passporting_notes="No passporting; SEC-registered advisers can market to accredited investors across all US states under Regulation D",
+            tax_not_applicable_reason=None,
+            aml_kyc_not_applicable_reason=None,
+            passporting_not_applicable_reason=None,
             source_governance=governance,
             confidence=self._placeholder_confidence(),
             version=VersionRecord(
@@ -423,4 +458,5 @@ class DelawareBuilder(JurisdictionBuilder):
                 change_summary="Initial Delaware (US) regulatory entry",
             ),
         )
+        self._check_citation_tag_coverage(entry)
         return entry

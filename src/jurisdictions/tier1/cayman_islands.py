@@ -42,7 +42,7 @@ class CaymanIslandsBuilder(JurisdictionBuilder):
             CitationRecord(
                 authority_id="cima",
                 source_name="Cayman Islands Mutual Funds Act (2021 Revision)",
-                source_url=None,
+                source_url="https://www.cima.ky/legislation/mutual-funds-act-2021",
                 authority=SourceAuthority.PRIMARY,
                 authority_level=2,
                 publication_date=datetime(2021, 1, 1),
@@ -57,7 +57,7 @@ class CaymanIslandsBuilder(JurisdictionBuilder):
             CitationRecord(
                 authority_id="cima",
                 source_name="Cayman Islands Private Funds Act (2021 Revision)",
-                source_url=None,
+                source_url="https://www.cima.ky/legislation/private-funds-act-2021",
                 authority=SourceAuthority.PRIMARY,
                 authority_level=2,
                 publication_date=datetime(2021, 1, 1),
@@ -68,6 +68,7 @@ class CaymanIslandsBuilder(JurisdictionBuilder):
                 last_verified_timestamp=datetime.utcnow(),
             )
         )
+        assert cima.base_url is not None
         manager.add_citation(
             CitationRecord(
                 authority_id="cima",
@@ -83,6 +84,7 @@ class CaymanIslandsBuilder(JurisdictionBuilder):
                 last_verified_timestamp=datetime.utcnow(),
             )
         )
+        assert walkers.base_url is not None
         manager.add_citation(
             CitationRecord(
                 authority_id="walkers",
@@ -95,6 +97,21 @@ class CaymanIslandsBuilder(JurisdictionBuilder):
                 reliability_score=walkers.reliability_score,
                 raw_excerpt=None,
                 regulatory_relevance_tag="Fund Structure",
+                last_verified_timestamp=datetime.utcnow(),
+            )
+        )
+        manager.add_citation(
+            CitationRecord(
+                authority_id="cima",
+                source_name="Cayman Islands Monetary Authority – Tax Framework",
+                source_url=cima.base_url,
+                authority=SourceAuthority.PRIMARY,
+                authority_level=cima.level.value,
+                publication_date=datetime(2024, 3, 1),
+                section_reference="Regulatory Handbook – Tax Information and Exemption Provisions",
+                reliability_score=cima.reliability_score,
+                raw_excerpt=None,
+                regulatory_relevance_tag="Tax Framework",
                 last_verified_timestamp=datetime.utcnow(),
             )
         )
@@ -351,6 +368,9 @@ class CaymanIslandsBuilder(JurisdictionBuilder):
             aml_kyc_framework="CIMA AML/CFT Guidance Notes (2023); Proceeds of Crime Act (2021 Revision)",
             passporting_available=False,
             passporting_notes="No EU passporting; Cayman Islands is a third-country jurisdiction",
+            tax_not_applicable_reason=None,
+            aml_kyc_not_applicable_reason=None,
+            passporting_not_applicable_reason=None,
             source_governance=governance,
             confidence=self._placeholder_confidence(),
             version=VersionRecord(
@@ -359,4 +379,5 @@ class CaymanIslandsBuilder(JurisdictionBuilder):
                 change_summary="Initial Cayman Islands regulatory entry",
             ),
         )
+        self._check_citation_tag_coverage(entry)
         return entry

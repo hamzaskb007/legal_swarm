@@ -21,19 +21,26 @@ class TestSourceGovernanceManager:
         governance = manager.build()
         assert len(governance.secondary_citations) == 1
 
-    def test_deduplication_by_url(self):
+    def test_duplicate_url_allowed(self):
+        """Same source URL may be cited for different regulatory aspects."""
         manager = SourceGovernanceManager()
-        c1 = make_citation(source_url="https://www.sec.gov/rules/fund-management")
-        c2 = make_citation(source_url="https://www.sec.gov/rules/fund-management")
+        c1 = make_citation(
+            source_url="https://www.sec.gov/rules/fund-management",
+            regulatory_relevance_tag="Fund Registration",
+        )
+        c2 = make_citation(
+            source_url="https://www.sec.gov/rules/fund-management",
+            regulatory_relevance_tag="Capital Requirements",
+        )
         manager.add_citation(c1)
         result = manager.add_citation(c2)
-        assert result is False
-        assert manager.citation_count() == 1
+        assert result is True
+        assert manager.citation_count() == 2
 
     def test_no_url_not_deduplicated(self):
         manager = SourceGovernanceManager()
-        c1 = make_citation(source_url=None)
-        c2 = make_citation(source_url=None)
+        c1 = make_citation(source_url="https://example.gov/a")
+        c2 = make_citation(source_url="https://example.gov/b")
         manager.add_citation(c1)
         manager.add_citation(c2)
         assert manager.citation_count() == 2

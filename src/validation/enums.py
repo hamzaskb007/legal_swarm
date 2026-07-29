@@ -9,13 +9,21 @@ class ValidationStatus(StrEnum):
     Represents the overall result of running a validator, not the
     severity of any issues found.  Severity is tracked separately
     via ValidationSeverity.
+
+    .. note::
+       ``PASSED`` and ``SUCCESS`` are both accepted and compare equal
+       via StrEnum value semantics so that the schema layer's
+       ``PASSED`` and the validation layer's ``SUCCESS`` can coexist
+       during migration.
     """
 
     SUCCESS = "SUCCESS"
+    PASSED = "PASSED"
     WARNING = "WARNING"
     FAILED = "FAILED"
     SKIPPED = "SKIPPED"
     ERROR = "ERROR"
+    PENDING = "PENDING"
 
 
 class ValidationSeverity(StrEnum):
@@ -92,6 +100,11 @@ class ValidationCode(StrEnum):
     DUPLICATE_AUTHORITY_REFERENCE = "DUPLICATE_AUTHORITY_REFERENCE"
     INSUFFICIENT_AUTHORITY_COVERAGE = "INSUFFICIENT_AUTHORITY_COVERAGE"
     HIERARCHY_MISMATCH = "HIERARCHY_MISMATCH"
+
+    # Milestone 6 Part 2 — Citation Governance & Authority Hierarchy
+    LEVEL45_MISSING_REFERENCE = "LEVEL45_MISSING_REFERENCE"
+    INSUFFICIENT_CITATION_DENSITY = "INSUFFICIENT_CITATION_DENSITY"
+    DEPENDENT_CITATION = "DEPENDENT_CITATION"
 
     # General / framework
     VALIDATION_SKIPPED = "VALIDATION_SKIPPED"

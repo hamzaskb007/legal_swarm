@@ -64,19 +64,28 @@ class AuthorityResolver:
     ) -> CitationRecord:
         authority = self._registry.get_by_id(authority_id)
 
+        resolved_url = source_url or authority.get_endpoint_url("homepage") or authority.base_url
+        if not resolved_url:
+            raise ValueError(
+                f"Cannot create citation for authority {authority_id}: "
+                "no source_url and no authority base_url"
+            )
+
+        if not regulatory_relevance_tag:
+            raise ValueError(
+                f"regulatory_relevance_tag is required for citation (authority_id={authority_id})"
+            )
+
         return CitationRecord(
             authority_id=authority_id,
             source_name=source_name or authority.name,
-            source_url=source_url
-            or authority.get_endpoint_url("homepage")
-            or authority.base_url
-            or "",
+            source_url=resolved_url,
             authority=authority.to_source_authority(),
             authority_level=authority_level or authority.level.value,
             reliability_score=reliability_score or authority.reliability_score,
             publication_date=publication_date or datetime.utcnow(),
-            section_reference=section_reference or "",
+            section_reference=section_reference,
             raw_excerpt=raw_excerpt,
-            regulatory_relevance_tag=regulatory_relevance_tag or "",
+            regulatory_relevance_tag=regulatory_relevance_tag,
             last_verified_timestamp=datetime.utcnow(),
         )

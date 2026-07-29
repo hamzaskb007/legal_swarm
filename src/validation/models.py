@@ -4,7 +4,7 @@ from datetime import datetime
 from typing import Any
 from uuid import UUID, uuid4
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, model_validator
 
 from src.validation.enums import ValidationCode, ValidationSeverity, ValidationStatus
 
@@ -45,6 +45,10 @@ class ValidationContext(BaseModel, frozen=True):
 class ValidationResult(BaseModel, frozen=True):
     """Immutable result envelope produced by a single validation run.
 
+    This is the **canonical** ``ValidationResult`` for the entire system.
+    The schema-layer version in ``src.schema.schema`` is a lazy forwarder
+    to this class.
+
     Expected usage::
 
         result = ValidationResult(
@@ -58,12 +62,19 @@ class ValidationResult(BaseModel, frozen=True):
 
     report_id: UUID = Field(default_factory=uuid4)
     status: ValidationStatus
-    validator_name: str
+    validator_name: str = "ValidationEngine"
     issues: list[ValidationIssue] = Field(default_factory=list)
     context: ValidationContext = Field(default_factory=ValidationContext)
     started_at: datetime | None = None
     completed_at: datetime | None = None
     metadata: dict[str, Any] = Field(default_factory=dict)
+
+    # Schema-layer fields (added for canonical consolidation)
+    rule_id: str | None = None
+    rule_description: str | None = None
+    field_path: str | None = None
+    message: str | None = None
+    checked_at: datetime | None = None
 
     # ------------------------------------------------------------------
     # Convenience properties
@@ -116,3 +127,33 @@ class ValidationResult(BaseModel, frozen=True):
             return None
         delta = self.completed_at - self.started_at
         return delta.total_seconds() * 1000.0
+
+
+class ValidationReport(BaseModel):
+    """Aggregated validation report for a regulatory entry.
+
+    This is the **canonical** ``ValidationReport`` for the entire system.
+    The schema-layer version in ``src.schema.schema`` is a lazy forwarder
+    to this class.
+    """
+
+    report_id: UUID = Field(default_factory=uuid4)
+    entry_id: UUID
+    jurisdiction_code: str
+    generated_at: datetime = Field(default_factory=datetime.utcnow)
+    results: list[ValidationResult] = Field(default_factory=list)
+    overall_status: ValidationStatus = ValidationStatus.PENDING
+    schema_version: str = Field(..., description="Schema version this report was validated against")
+
+    @model_validator(mode="after")
+    def compute_overall_status(self) -> ValidationReport:
+        if not self.results:
+            return self
+        statuses = {r.status for r in self.results}
+        if ValidationStatus.FAILED in statuses:
+            self.overall_status = ValidationStatus.FAILED
+        elif ValidationStatus.WARNING in statuses:
+            self.overall_status = ValidationStatus.WARNING
+        else:
+            self.overall_status = ValidationStatus.PASSED
+        return self

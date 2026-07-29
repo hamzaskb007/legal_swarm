@@ -49,18 +49,31 @@ class ChangeType(StrEnum):
     UNCHANGED = "UNCHANGED"
 
 
-class ValidationStatus(StrEnum):
-    PASSED = "PASSED"
-    FAILED = "FAILED"
-    WARNING = "WARNING"
-    PENDING = "PENDING"
-
-
 class NotApplicableReason(StrEnum):
     NO_REGULATORY_REQUIREMENT = "NO_REGULATORY_REQUIREMENT"
     JURISDICTION_EXEMPT = "JURISDICTION_EXEMPT"
     NOT_YET_VERIFIED = "NOT_YET_VERIFIED"
     OUTSIDE_CURRENT_SCOPE = "OUTSIDE_CURRENT_SCOPE"
+
+
+class RegulatoryRelevanceTag(StrEnum):
+    """Canonical tag values for ``CitationRecord.regulatory_relevance_tag``.
+
+    Every jurisdiction builder must assign one of these tags to each
+    citation so that validation rules (VAL_016, VAL_017, …) can match
+    tagged citations against populated fields.
+
+    Using this enum instead of raw strings prevents silent typo/diverge
+    across jurisdiction files.
+    """
+
+    FUND_REGISTRATION = "Fund Registration"
+    FUND_STRUCTURE = "Fund Structure"
+    LICENSING = "Licensing"
+    TAX_FRAMEWORK = "Tax Framework"
+    CAPITAL_REQUIREMENTS = "Capital Requirements"
+    COMPLIANCE_OBLIGATIONS = "Compliance Obligations"
+    AML_CFT = "AML/CFT"
 
 
 class AuditEventType(StrEnum):
@@ -79,7 +92,16 @@ class AuditEventType(StrEnum):
 
 
 class CitationRecord(BaseModel):
-    """Single authoritative citation backing a regulatory claim."""
+    """Single authoritative citation backing a regulatory claim.
+
+    Enforces the SRS §5.2 requirements:
+    - Non-empty source name and URL
+    - Valid URL scheme (http/https)
+    - Known publication date
+    - Mandatory last-verified timestamp
+    - Mandatory regulatory relevance tag
+    - Normalised reliability score (0.0–1.0, no NaN/Infinity)
+    """
 
     citation_id: UUID = Field(default_factory=uuid4)
     authority_id: str | None = Field(
@@ -88,7 +110,7 @@ class CitationRecord(BaseModel):
     source_name: str = Field(
         ..., min_length=1, description="Name of the source document or publication"
     )
-    source_url: str | None = Field(None, description="Direct URL to the source if available")
+    source_url: str = Field(..., min_length=1, description="Direct URL to the source (SRS §5.2.2)")
     authority: SourceAuthority
     authority_level: int = Field(
         default=2,
@@ -103,31 +125,60 @@ class CitationRecord(BaseModel):
             "5=Professional advisory firm"
         ),
     )
-    publication_date: datetime | None = None
+    publication_date: datetime = Field(
+        ..., description="Publication date of the source (SRS §5.2.3)"
+    )
     retrieved_at: datetime = Field(default_factory=datetime.utcnow)
     section_reference: str | None = Field(
         None, description="Section, article, or clause reference within the source"
     )
     reliability_score: float = Field(
-        ..., ge=0.0, le=1.0, description="Reliability score between 0 and 1"
+        ..., ge=0.0, le=1.0, description="Reliability score between 0 and 1 (SRS §5.2.4)"
     )
     raw_excerpt: str | None = Field(
         None, description="Verbatim excerpt from source (max 2000 chars)"
     )
-    regulatory_relevance_tag: str | None = Field(
-        None,
-        description="Regulatory area this citation covers e.g. 'Fund Registration', 'AML/CFT', 'Capital Requirements'",
+    regulatory_relevance_tag: str = Field(
+        ...,
+        min_length=1,
+        description="Regulatory area this citation covers, e.g. 'Fund Registration', 'AML/CFT', 'Capital Requirements' (SRS §5.2.6)",
     )
-    last_verified_timestamp: datetime | None = Field(
-        None,
-        description="Timestamp when this citation was last verified as current and accurate",
+    last_verified_timestamp: datetime = Field(
+        ...,
+        description="Timestamp when this citation was last verified as current and accurate (SRS §5.2.5)",
     )
+    references_citation_id: UUID | None = Field(
+        None,
+        description=(
+            "Optional reference to a Level 1-3 CitationRecord that this Level 4 or 5 "
+            "citation derives from.  Set when a secondary/tertiary source explicitly "
+            "cites a primary source document."
+        ),
+    )
+
+    model_config = {"frozen": True}
+
+    @field_validator("source_url")
+    @classmethod
+    def validate_source_url(cls, v: str) -> str:
+        if not v.startswith(("http://", "https://")):
+            raise ValueError(f"source_url must start with http:// or https://, got {v!r}")
+        return v
 
     @field_validator("raw_excerpt")
     @classmethod
     def cap_excerpt_length(cls, v: str | None) -> str | None:
         if v and len(v) > 2000:
             raise ValueError("raw_excerpt must not exceed 2000 characters")
+        return v
+
+    @field_validator("reliability_score")
+    @classmethod
+    def reject_nan_infinity(cls, v: float) -> float:
+        import math
+
+        if math.isnan(v) or math.isinf(v):
+            raise ValueError(f"reliability_score must be a finite number, got {v}")
         return v
 
 
@@ -218,47 +269,6 @@ class ContradictionRecord(BaseModel):
         None, description="Resolution note if contradiction was resolved"
     )
     resolved: bool = False
-
-
-# ---------------------------------------------------------------------------
-# Validation Framework
-# ---------------------------------------------------------------------------
-
-
-class ValidationResult(BaseModel):
-    """Result of a single validation check against the schema."""
-
-    rule_id: str = Field(..., description="Unique identifier for the validation rule")
-    rule_description: str
-    status: ValidationStatus
-    field_path: str | None = None
-    message: str | None = None
-    checked_at: datetime = Field(default_factory=datetime.utcnow)
-
-
-class ValidationReport(BaseModel):
-    """Aggregated validation report for a regulatory entry."""
-
-    report_id: UUID = Field(default_factory=uuid4)
-    entry_id: UUID
-    jurisdiction_code: str
-    generated_at: datetime = Field(default_factory=datetime.utcnow)
-    results: list[ValidationResult] = Field(default_factory=list)
-    overall_status: ValidationStatus = ValidationStatus.PENDING
-    schema_version: str = Field(..., description="Schema version this report was validated against")
-
-    @model_validator(mode="after")
-    def compute_overall_status(self) -> ValidationReport:
-        if not self.results:
-            return self
-        statuses = {r.status for r in self.results}
-        if ValidationStatus.FAILED in statuses:
-            self.overall_status = ValidationStatus.FAILED
-        elif ValidationStatus.WARNING in statuses:
-            self.overall_status = ValidationStatus.WARNING
-        else:
-            self.overall_status = ValidationStatus.PASSED
-        return self
 
 
 # ---------------------------------------------------------------------------
@@ -578,15 +588,39 @@ class RegulatoryEntry(BaseModel):
     record_retention_policies: list[RecordRetentionPolicy] | None = None
 
     # Taxation summary
-    tax_summary: str | None = Field(None, description="High-level tax treatment narrative")
+    tax_summary: str | None = Field(
+        None,
+        description="High-level tax treatment narrative.  Set to None and populate "
+        "``tax_not_applicable_reason`` if this jurisdiction has no tax framework.",
+    )
+    tax_not_applicable_reason: NotApplicableReason | None = Field(
+        None,
+        description="Explicit reason when ``tax_summary`` is not applicable.",
+    )
     withholding_tax_rate: Decimal | None = Field(None, ge=Decimal("0"), le=Decimal("100"))
 
     # AML / KYC
-    aml_kyc_framework: str | None = None
+    aml_kyc_framework: str | None = Field(
+        None,
+        description="AML/KYC framework narrative.  Set to None and populate "
+        "``aml_kyc_not_applicable_reason`` if this jurisdiction has no AML/KYC regime.",
+    )
+    aml_kyc_not_applicable_reason: NotApplicableReason | None = Field(
+        None,
+        description="Explicit reason when ``aml_kyc_framework`` is not applicable.",
+    )
 
     # Passporting / equivalence
     passporting_available: bool = False
-    passporting_notes: str | None = None
+    passporting_notes: str | None = Field(
+        None,
+        description="Passporting narrative.  Set to None and populate "
+        "``passporting_not_applicable_reason`` if passporting does not apply.",
+    )
+    passporting_not_applicable_reason: NotApplicableReason | None = Field(
+        None,
+        description="Explicit reason when ``passporting_notes`` is not applicable.",
+    )
 
     # Governance
     source_governance: SourceGovernanceRecord
@@ -623,6 +657,34 @@ class RegulatoryEntry(BaseModel):
             )
         return self
 
+    @model_validator(mode="after")
+    def prohibit_silent_nulls(self) -> RegulatoryEntry:
+        """Prohibit silent nulls on critical regulatory fields (SRS §5.4.2).
+
+        A critical field must be either:
+        - Populated with a value (applicable), or
+        - Explicitly marked as not applicable via a ``NotApplicableReason``.
+        """
+        pairs = (
+            ("tax_summary", "tax_not_applicable_reason"),
+            ("aml_kyc_framework", "aml_kyc_not_applicable_reason"),
+            ("passporting_notes", "passporting_not_applicable_reason"),
+        )
+        for value_field, reason_field in pairs:
+            value = getattr(self, value_field)
+            reason = getattr(self, reason_field)
+            if value is None and reason is None:
+                raise ValueError(
+                    f"'{value_field}' is None — must either provide a value or set "
+                    f"'{reason_field}' to a NotApplicableReason"
+                )
+            if value is not None and reason is not None:
+                raise ValueError(
+                    f"'{value_field}' and '{reason_field}' are mutually exclusive — "
+                    f"provide a value or a reason, not both"
+                )
+        return self
+
 
 # ---------------------------------------------------------------------------
 # Cross-Jurisdiction Comparison
@@ -650,3 +712,33 @@ class CrossJurisdictionComparison(BaseModel):
     results: list[JurisdictionComparisonField] = Field(default_factory=list)
     contradictions_detected: list[ContradictionRecord] = Field(default_factory=list)
     summary: str | None = None
+
+
+# ---------------------------------------------------------------------------
+# Lazy forwarders — canonical validation types live in src.validation
+# ---------------------------------------------------------------------------
+# These are here so that existing ``from src.schema.schema import
+# ValidationStatus`` (and friends) continue to work.  New code should
+# import directly from ``src.validation``.
+
+
+def __getattr__(name: str) -> object:
+    if name == "ValidationStatus":
+        from src.validation.enums import ValidationStatus
+
+        return ValidationStatus
+    if name == "ValidationResult":
+        from src.validation.models import ValidationResult
+
+        return ValidationResult
+    if name == "ValidationReport":
+        from src.validation.models import ValidationReport
+
+        return ValidationReport
+    msg = f"module {__name__!r} has no attribute {name!r}"
+    raise AttributeError(msg)
+
+
+def __dir__() -> list[str]:
+    names = {"ValidationStatus", "ValidationResult", "ValidationReport"}
+    return sorted(names)

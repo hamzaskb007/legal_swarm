@@ -25,9 +25,9 @@ from src.schema.schema import (
     SubstanceRequirement,
     AuditEventType,
     VersionRecord,
-    ValidationStatus,
     WindDownProcedure,
 )
+from src.validation import ValidationStatus
 from src.governance.source_governance import SourceGovernanceManager
 from src.validation.validators import ValidationEngine
 from src.confidence.scorer import ConfidenceScorer
@@ -54,7 +54,7 @@ def full_entry():
     manager.add_citation(
         CitationRecord(
             source_name="UAE Federal Law No. 4 of 2000",
-            source_url=None,
+            source_url="https://www.sca.gov.ae/legislation/federal-law-no-4-2000",
             authority=SourceAuthority.PRIMARY,
             authority_level=2,
             publication_date=datetime(2000, 1, 1),
@@ -70,6 +70,7 @@ def full_entry():
             source_url="https://legal.example.com",
             authority=SourceAuthority.SECONDARY,
             authority_level=4,
+            publication_date=datetime(2024, 6, 1),
             reliability_score=0.75,
             regulatory_relevance_tag="Tax Framework",
             last_verified_timestamp=datetime.utcnow(),

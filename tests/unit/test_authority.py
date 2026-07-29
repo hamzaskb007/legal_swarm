@@ -534,12 +534,15 @@ class TestAuthorityResolver:
         _write_yaml(tmp, _authority(id="cit", name="Citation Source"), "reg.yaml")
         registry = AuthorityRegistry(yaml_dir=tmp)
         resolver = AuthorityResolver(registry)
-        cit = resolver.create_citation("cit", section_reference="Sec 1")
+        cit = resolver.create_citation(
+            "cit", section_reference="Sec 1", regulatory_relevance_tag="Test"
+        )
         assert cit.authority_id == "cit"
         assert cit.authority == SourceAuthority.PRIMARY
         assert cit.authority_level == 1
         assert cit.reliability_score == 0.95
         assert cit.section_reference == "Sec 1"
+        assert cit.regulatory_relevance_tag == "Test"
 
     def test_create_citation_overrides(self, tmpdir: Path):
         tmp = Path(tmpdir)

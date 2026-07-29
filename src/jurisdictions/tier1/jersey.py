@@ -42,7 +42,7 @@ class JerseyBuilder(JurisdictionBuilder):
             CitationRecord(
                 authority_id="jfsc",
                 source_name="Collective Investment Funds (Jersey) Law 1988",
-                source_url=None,
+                source_url="https://www.jerseyfsc.org/legislation/collective-investment-funds-law-1988",
                 authority=SourceAuthority.PRIMARY,
                 authority_level=2,
                 publication_date=datetime(1988, 1, 1),
@@ -57,7 +57,7 @@ class JerseyBuilder(JurisdictionBuilder):
             CitationRecord(
                 authority_id="jfsc",
                 source_name="Alternative Investment Funds (Jersey) Regulations 2012",
-                source_url=None,
+                source_url="https://www.jerseyfsc.org/legislation/alternative-investment-funds-regulations-2012",
                 authority=SourceAuthority.PRIMARY,
                 authority_level=2,
                 publication_date=datetime(2012, 1, 1),
@@ -68,6 +68,7 @@ class JerseyBuilder(JurisdictionBuilder):
                 last_verified_timestamp=datetime.utcnow(),
             )
         )
+        assert jfsc.base_url is not None
         manager.add_citation(
             CitationRecord(
                 authority_id="jfsc",
@@ -83,6 +84,7 @@ class JerseyBuilder(JurisdictionBuilder):
                 last_verified_timestamp=datetime.utcnow(),
             )
         )
+        assert ogier.base_url is not None
         manager.add_citation(
             CitationRecord(
                 authority_id="ogier",
@@ -95,6 +97,36 @@ class JerseyBuilder(JurisdictionBuilder):
                 reliability_score=ogier.reliability_score,
                 raw_excerpt=None,
                 regulatory_relevance_tag="Fund Structure",
+                last_verified_timestamp=datetime.utcnow(),
+            )
+        )
+        manager.add_citation(
+            CitationRecord(
+                authority_id="jfsc",
+                source_name="Collective Investment Funds (Jersey) Law 1988",
+                source_url="https://www.jerseyfsc.org/legislation/collective-investment-funds-law-1988",
+                authority=SourceAuthority.PRIMARY,
+                authority_level=2,
+                publication_date=datetime(1988, 1, 1),
+                section_reference="Articles 2–15 – Minimum capital and financial resource requirements",
+                reliability_score=0.95,
+                raw_excerpt=None,
+                regulatory_relevance_tag="Capital Requirements",
+                last_verified_timestamp=datetime.utcnow(),
+            )
+        )
+        manager.add_citation(
+            CitationRecord(
+                authority_id="jfsc",
+                source_name="Jersey Financial Services Commission – Fund Tax Framework",
+                source_url=jfsc.base_url,
+                authority=SourceAuthority.PRIMARY,
+                authority_level=jfsc.level.value,
+                publication_date=datetime(2024, 1, 1),
+                section_reference="Jersey zero-ten tax regime and fund income tax treatment",
+                reliability_score=jfsc.reliability_score,
+                raw_excerpt=None,
+                regulatory_relevance_tag="Tax Framework",
                 last_verified_timestamp=datetime.utcnow(),
             )
         )
@@ -366,6 +398,9 @@ class JerseyBuilder(JurisdictionBuilder):
             aml_kyc_framework="Proceeds of Crime (Jersey) Law 1999; Money Laundering (Jersey) Order 2008; JFSC AML Handbook 2023",
             passporting_available=False,
             passporting_notes="No EU passporting; Jersey is a third-country jurisdiction; deemed equivalent under AIFMD for non-EU AIFs",
+            tax_not_applicable_reason=None,
+            aml_kyc_not_applicable_reason=None,
+            passporting_not_applicable_reason=None,
             source_governance=governance,
             confidence=self._placeholder_confidence(),
             version=VersionRecord(
@@ -374,4 +409,5 @@ class JerseyBuilder(JurisdictionBuilder):
                 change_summary="Initial Jersey regulatory entry",
             ),
         )
+        self._check_citation_tag_coverage(entry)
         return entry

@@ -2,16 +2,20 @@ from __future__ import annotations
 
 import logging
 from datetime import datetime
+from typing import TYPE_CHECKING
 from urllib.parse import urlparse
 from uuid import UUID
 
 from src.authority.registry import AuthorityRegistry
-from src.schema.schema import CitationRecord, SourceAuthority
+from src.schema.schema import SourceAuthority
 from src.validation.enums import ValidationCode, ValidationSeverity, ValidationStatus
 from src.validation.exceptions import (
     ValidationConfigurationError,
 )
 from src.validation.models import ValidationContext, ValidationIssue, ValidationResult
+
+if TYPE_CHECKING:
+    from src.schema.schema import CitationRecord
 
 logger = logging.getLogger(__name__)
 

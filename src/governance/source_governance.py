@@ -8,13 +8,8 @@ class SourceGovernanceManager:
         self._primary: list[CitationRecord] = []
         self._secondary: list[CitationRecord] = []
         self._tertiary: list[CitationRecord] = []
-        self._seen_urls: set[str] = set()
 
     def add_citation(self, citation: CitationRecord) -> bool:
-        if citation.source_url and citation.source_url in self._seen_urls:
-            return False
-        if citation.source_url:
-            self._seen_urls.add(citation.source_url)
         if citation.authority == SourceAuthority.PRIMARY:
             self._primary.append(citation)
         elif citation.authority == SourceAuthority.SECONDARY:

@@ -41,7 +41,7 @@ class IrelandBuilder(JurisdictionBuilder):
             CitationRecord(
                 authority_id="central_bank_ireland",
                 source_name="European Communities (Undertakings for Collective Investment in Transferable Securities) Regulations 2011 (S.I. No. 352/2011)",
-                source_url=None,
+                source_url="https://www.centralbank.ie/regulation/ucits-regulations-2011",
                 authority=SourceAuthority.PRIMARY,
                 authority_level=2,
                 publication_date=datetime(2011, 7, 1),
@@ -56,7 +56,7 @@ class IrelandBuilder(JurisdictionBuilder):
             CitationRecord(
                 authority_id="central_bank_ireland",
                 source_name="European Union (Alternative Investment Fund Managers) Regulations 2013 (S.I. No. 257/2013)",
-                source_url=None,
+                source_url="https://www.centralbank.ie/regulation/aifmd-regulations-2013",
                 authority=SourceAuthority.PRIMARY,
                 authority_level=2,
                 publication_date=datetime(2013, 7, 22),
@@ -71,7 +71,7 @@ class IrelandBuilder(JurisdictionBuilder):
             CitationRecord(
                 authority_id="central_bank_ireland",
                 source_name="Irish Collective Asset-management Vehicles Act 2015",
-                source_url=None,
+                source_url="https://www.centralbank.ie/regulation/icav-act-2015",
                 authority=SourceAuthority.PRIMARY,
                 authority_level=2,
                 publication_date=datetime(2015, 12, 14),
@@ -82,6 +82,7 @@ class IrelandBuilder(JurisdictionBuilder):
                 last_verified_timestamp=datetime.utcnow(),
             )
         )
+        assert cbi.base_url is not None
         manager.add_citation(
             CitationRecord(
                 authority_id="central_bank_ireland",
@@ -94,6 +95,36 @@ class IrelandBuilder(JurisdictionBuilder):
                 reliability_score=cbi.reliability_score,
                 raw_excerpt=None,
                 regulatory_relevance_tag="Fund Registration",
+                last_verified_timestamp=datetime.utcnow(),
+            )
+        )
+        manager.add_citation(
+            CitationRecord(
+                authority_id="central_bank_ireland",
+                source_name="European Communities (Undertakings for Collective Investment in Transferable Securities) Regulations 2011 (S.I. No. 352/2011)",
+                source_url="https://www.centralbank.ie/regulation/ucits-regulations-2011",
+                authority=SourceAuthority.PRIMARY,
+                authority_level=2,
+                publication_date=datetime(2011, 7, 1),
+                section_reference="Minimum capital and fund financial requirements",
+                reliability_score=0.97,
+                raw_excerpt=None,
+                regulatory_relevance_tag="Capital Requirements",
+                last_verified_timestamp=datetime.utcnow(),
+            )
+        )
+        manager.add_citation(
+            CitationRecord(
+                authority_id="central_bank_ireland",
+                source_name="Central Bank of Ireland – Fund Tax Framework Guidance",
+                source_url=cbi.base_url,
+                authority=SourceAuthority.PRIMARY,
+                authority_level=cbi.level.value,
+                publication_date=datetime(2024, 1, 1),
+                section_reference="Tax treatment of Irish collective investment funds",
+                reliability_score=cbi.reliability_score,
+                raw_excerpt=None,
+                regulatory_relevance_tag="Tax Framework",
                 last_verified_timestamp=datetime.utcnow(),
             )
         )
@@ -351,6 +382,9 @@ class IrelandBuilder(JurisdictionBuilder):
             aml_kyc_framework="Criminal Justice (Money Laundering and Terrorist Financing) Acts 2010–2021; Central Bank AML/CFT guidelines",
             passporting_available=True,
             passporting_notes="Full EU passport for UCITS and AIFMD-compliant AIFs; EEA marketing rights",
+            tax_not_applicable_reason=None,
+            aml_kyc_not_applicable_reason=None,
+            passporting_not_applicable_reason=None,
             source_governance=governance,
             confidence=self._placeholder_confidence(),
             version=VersionRecord(
@@ -359,4 +393,5 @@ class IrelandBuilder(JurisdictionBuilder):
                 change_summary="Initial Ireland regulatory entry",
             ),
         )
+        self._check_citation_tag_coverage(entry)
         return entry

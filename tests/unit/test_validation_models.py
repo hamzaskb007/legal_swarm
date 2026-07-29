@@ -46,7 +46,7 @@ class TestValidationStatus:
         assert issubclass(ValidationStatus, str)
 
     def test_members_count(self):
-        assert len(ValidationStatus) == 5
+        assert len(ValidationStatus) == 7
 
     def test_from_string_success(self):
         assert ValidationStatus("SUCCESS") == ValidationStatus.SUCCESS
@@ -190,7 +190,7 @@ class TestValidationCode:
         assert ValidationCode.UNKNOWN_ISSUE.value == "UNKNOWN_ISSUE"
 
     def test_all_codes_count(self):
-        assert len(ValidationCode) == 28
+        assert len(ValidationCode) == 31
 
     def test_from_string_duplicate(self):
         assert ValidationCode("DUPLICATE_CITATION") == ValidationCode.DUPLICATE_CITATION
@@ -1058,6 +1058,7 @@ class TestPackageImports:
             "ValidationIssue",
             "ValidationContext",
             "ValidationResult",
+            "ValidationReport",
             "CitationValidator",
             "AuthorityGovernanceValidator",
             "ValidationError",

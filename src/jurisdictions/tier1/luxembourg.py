@@ -41,7 +41,7 @@ class LuxembourgBuilder(JurisdictionBuilder):
             CitationRecord(
                 authority_id="cssf",
                 source_name="Luxembourg Law of 17 December 2010 on Undertakings for Collective Investment (UCITS)",
-                source_url=None,
+                source_url="https://www.cssf.lu/en/legislation/ucits-2010",
                 authority=SourceAuthority.PRIMARY,
                 authority_level=2,
                 publication_date=datetime(2010, 12, 17),
@@ -56,7 +56,7 @@ class LuxembourgBuilder(JurisdictionBuilder):
             CitationRecord(
                 authority_id="cssf",
                 source_name="Luxembourg Law of 23 July 2016 on Reserved Alternative Investment Funds (RAIF)",
-                source_url=None,
+                source_url="https://www.cssf.lu/en/legislation/raif-2016",
                 authority=SourceAuthority.PRIMARY,
                 authority_level=2,
                 publication_date=datetime(2016, 7, 23),
@@ -71,7 +71,7 @@ class LuxembourgBuilder(JurisdictionBuilder):
             CitationRecord(
                 authority_id="cssf",
                 source_name="Luxembourg Law of 13 February 2007 on Specialised Investment Funds (SIF)",
-                source_url=None,
+                source_url="https://www.cssf.lu/en/legislation/sif-2007",
                 authority=SourceAuthority.PRIMARY,
                 authority_level=2,
                 publication_date=datetime(2007, 2, 13),
@@ -82,6 +82,7 @@ class LuxembourgBuilder(JurisdictionBuilder):
                 last_verified_timestamp=datetime.utcnow(),
             )
         )
+        assert cssf.base_url is not None
         manager.add_citation(
             CitationRecord(
                 authority_id="cssf",
@@ -94,6 +95,36 @@ class LuxembourgBuilder(JurisdictionBuilder):
                 reliability_score=cssf.reliability_score,
                 raw_excerpt=None,
                 regulatory_relevance_tag="Fund Registration",
+                last_verified_timestamp=datetime.utcnow(),
+            )
+        )
+        manager.add_citation(
+            CitationRecord(
+                authority_id="cssf",
+                source_name="Luxembourg Law of 17 December 2010 on Undertakings for Collective Investment (UCITS)",
+                source_url="https://www.cssf.lu/en/legislation/ucits-2010",
+                authority=SourceAuthority.PRIMARY,
+                authority_level=2,
+                publication_date=datetime(2010, 12, 17),
+                section_reference="Minimum capital and subscription tax provisions",
+                reliability_score=0.97,
+                raw_excerpt=None,
+                regulatory_relevance_tag="Capital Requirements",
+                last_verified_timestamp=datetime.utcnow(),
+            )
+        )
+        manager.add_citation(
+            CitationRecord(
+                authority_id="cssf",
+                source_name="Luxembourg Law of 17 December 2010 on Undertakings for Collective Investment (UCITS)",
+                source_url="https://www.cssf.lu/en/legislation/ucits-2010",
+                authority=SourceAuthority.PRIMARY,
+                authority_level=2,
+                publication_date=datetime(2010, 12, 17),
+                section_reference="Subscription tax (taxe d'abonnement) regime for UCITS, SIF and RAIF",
+                reliability_score=0.97,
+                raw_excerpt=None,
+                regulatory_relevance_tag="Tax Framework",
                 last_verified_timestamp=datetime.utcnow(),
             )
         )
@@ -365,6 +396,9 @@ class LuxembourgBuilder(JurisdictionBuilder):
             aml_kyc_framework="Luxembourg Law of 12 November 2004 on AML/CFT (as amended); CSSF Regulation 12-02",
             passporting_available=True,
             passporting_notes="Full EU passport for UCITS and AIFMD-compliant AIFs; cross-border marketing within EEA",
+            tax_not_applicable_reason=None,
+            aml_kyc_not_applicable_reason=None,
+            passporting_not_applicable_reason=None,
             source_governance=governance,
             confidence=self._placeholder_confidence(),
             version=VersionRecord(
@@ -373,4 +407,5 @@ class LuxembourgBuilder(JurisdictionBuilder):
                 change_summary="Initial Luxembourg regulatory entry",
             ),
         )
+        self._check_citation_tag_coverage(entry)
         return entry

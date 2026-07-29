@@ -7,8 +7,8 @@ from src.schema.schema import (
     ConfidenceLevel,
     JurisdictionTier,
     SourceAuthority,
-    ValidationStatus,
 )
+from src.validation import ValidationStatus
 from src.jurisdictions.base import JurisdictionBuilder
 from src.jurisdictions.tier1.cayman_islands import CaymanIslandsBuilder
 from src.jurisdictions.tier1.luxembourg import LuxembourgBuilder

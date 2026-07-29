@@ -42,7 +42,7 @@ class UaeBuilder(JurisdictionBuilder):
             CitationRecord(
                 authority_id="sca",
                 source_name="UAE Federal Law No. 4 of 2000 on the Emirates Securities and Commodities Authority",
-                source_url=None,
+                source_url="https://www.sca.gov.ae/legislation/federal-law-no-4-2000",
                 authority=SourceAuthority.PRIMARY,
                 authority_level=2,
                 publication_date=datetime(2000, 1, 1),
@@ -57,7 +57,7 @@ class UaeBuilder(JurisdictionBuilder):
             CitationRecord(
                 authority_id="dfsa",
                 source_name="DIFC Collective Investment Law (DIFC Law No. 2 of 2010)",
-                source_url=None,
+                source_url="https://www.dfsa.ae/legislation/difc-collective-investment-law-2010",
                 authority=SourceAuthority.PRIMARY,
                 authority_level=2,
                 publication_date=datetime(2010, 1, 1),
@@ -72,7 +72,7 @@ class UaeBuilder(JurisdictionBuilder):
             CitationRecord(
                 authority_id="adgm_fsra",
                 source_name="ADGM Collective Investment Rules 2024",
-                source_url=None,
+                source_url="https://www.adgm.com/legislation/collective-investment-rules-2024",
                 authority=SourceAuthority.PRIMARY,
                 authority_level=2,
                 publication_date=datetime(2024, 4, 1),
@@ -83,6 +83,7 @@ class UaeBuilder(JurisdictionBuilder):
                 last_verified_timestamp=datetime.utcnow(),
             )
         )
+        assert sca.base_url is not None
         manager.add_citation(
             CitationRecord(
                 authority_id="sca",
@@ -98,6 +99,7 @@ class UaeBuilder(JurisdictionBuilder):
                 last_verified_timestamp=datetime.utcnow(),
             )
         )
+        assert dfsa.base_url is not None
         manager.add_citation(
             CitationRecord(
                 authority_id="dfsa",
@@ -110,6 +112,36 @@ class UaeBuilder(JurisdictionBuilder):
                 reliability_score=dfsa.reliability_score,
                 raw_excerpt=None,
                 regulatory_relevance_tag="Fund Structure",
+                last_verified_timestamp=datetime.utcnow(),
+            )
+        )
+        manager.add_citation(
+            CitationRecord(
+                authority_id="sca",
+                source_name="UAE Federal Law No. 4 of 2000 on the Emirates Securities and Commodities Authority",
+                source_url="https://www.sca.gov.ae/legislation/federal-law-no-4-2000",
+                authority=SourceAuthority.PRIMARY,
+                authority_level=2,
+                publication_date=datetime(2000, 1, 1),
+                section_reference="Article 12 – Minimum capital and financial requirements for public and private funds",
+                reliability_score=0.95,
+                raw_excerpt=None,
+                regulatory_relevance_tag="Capital Requirements",
+                last_verified_timestamp=datetime.utcnow(),
+            )
+        )
+        manager.add_citation(
+            CitationRecord(
+                authority_id="sca",
+                source_name="Securities and Commodities Authority – UAE Fund Tax Framework",
+                source_url=sca.base_url,
+                authority=SourceAuthority.PRIMARY,
+                authority_level=sca.level.value,
+                publication_date=datetime(2024, 1, 15),
+                section_reference="Tax treatment of funds: corporate tax exemption, VAT, and DIFC/ADGM tax guarantee",
+                reliability_score=sca.reliability_score,
+                raw_excerpt=None,
+                regulatory_relevance_tag="Tax Framework",
                 last_verified_timestamp=datetime.utcnow(),
             )
         )
@@ -391,6 +423,9 @@ class UaeBuilder(JurisdictionBuilder):
             aml_kyc_framework="UAE AML/CFT Law No. 20 of 2018; Cabinet Resolution No. 10 of 2019; SCA AML Rules",
             passporting_available=False,
             passporting_notes="No formal passporting regime; DIFC/ADGM funds recognised under certain equivalence regimes",
+            tax_not_applicable_reason=None,
+            aml_kyc_not_applicable_reason=None,
+            passporting_not_applicable_reason=None,
             source_governance=governance,
             confidence=self._placeholder_confidence(),
             version=VersionRecord(
@@ -399,4 +434,5 @@ class UaeBuilder(JurisdictionBuilder):
                 change_summary="Initial UAE regulatory entry",
             ),
         )
+        self._check_citation_tag_coverage(entry)
         return entry

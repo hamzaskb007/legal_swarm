@@ -1,11 +1,8 @@
 from __future__ import annotations
 
-from src.schema.schema import (
-    RegulatoryEntry,
-    ValidationReport,
-    ValidationResult,
-    ValidationStatus,
-)
+from src.schema.schema import RegulatoryEntry
+from src.validation.models import ValidationReport, ValidationResult
+from src.validation.enums import ValidationStatus
 
 
 class ValidationRule:
@@ -413,30 +410,79 @@ class CapitalCitationForCapitalRequirementsRule(ValidationRule):
         )
 
 
-class SilentNullProhibitionRule(ValidationRule):
+class CitationDensityRule(ValidationRule):
     rule_id = "VAL_018"
-    rule_description = "Critical fields must not be silently None"
+    rule_description = "Entry must have sufficient citations per regulatory category (SRS §5.3)"
+
+    def __init__(
+        self,
+        requirements: dict[str, int] | None = None,
+    ) -> None:
+        self.requirements = dict(requirements or {})
 
     def check(self, entry: RegulatoryEntry) -> ValidationResult:
-        results: list[ValidationResult] = []
-        for field_name in ("tax_summary", "aml_kyc_framework", "passporting_notes"):
-            if getattr(entry, field_name, None) is None:
-                results.append(
-                    ValidationResult(
-                        rule_id=self.rule_id,
-                        rule_description=self.rule_description,
-                        status=ValidationStatus.WARNING,
-                        field_path=field_name,
-                        message="Field is None — populate or use explicit Not Applicable string",
-                    )
+        all_citations = (
+            entry.source_governance.primary_citations
+            + entry.source_governance.secondary_citations
+            + entry.source_governance.tertiary_citations
+        )
+        by_tag: dict[str, int] = {}
+        for c in all_citations:
+            tag = c.regulatory_relevance_tag
+            by_tag[tag] = by_tag.get(tag, 0) + 1
+
+        for tag, required in self.requirements.items():
+            actual = by_tag.get(tag, 0)
+            if actual < required:
+                return ValidationResult(
+                    rule_id=self.rule_id,
+                    rule_description=self.rule_description,
+                    status=ValidationStatus.FAILED,
+                    field_path="source_governance",
+                    message=(
+                        f"Category '{tag}' has {actual} citation(s), minimum {required} required"
+                    ),
                 )
-        if results:
-            return results[0]
+
         return ValidationResult(
             rule_id=self.rule_id,
             rule_description=self.rule_description,
             status=ValidationStatus.PASSED,
-            field_path="tax_summary",
+            field_path="source_governance",
+        )
+
+
+class Level45ReferenceRule(ValidationRule):
+    rule_id = "VAL_019"
+    rule_description = "Level 4/5 citations must reference Level 1-3 sources"
+
+    def check(self, entry: RegulatoryEntry) -> ValidationResult:
+        all_citations = (
+            entry.source_governance.primary_citations
+            + entry.source_governance.secondary_citations
+            + entry.source_governance.tertiary_citations
+        )
+        level_45 = [c for c in all_citations if c.authority_level >= 4]
+
+        for citation in level_45:
+            if citation.references_citation_id is None:
+                return ValidationResult(
+                    rule_id=self.rule_id,
+                    rule_description=self.rule_description,
+                    status=ValidationStatus.FAILED,
+                    field_path="source_governance",
+                    message=(
+                        f"Level {citation.authority_level} citation "
+                        f"'{citation.citation_id}' does not reference "
+                        f"a Level 1-3 source"
+                    ),
+                )
+
+        return ValidationResult(
+            rule_id=self.rule_id,
+            rule_description=self.rule_description,
+            status=ValidationStatus.PASSED,
+            field_path="source_governance",
         )
 
 
@@ -458,7 +504,6 @@ DEFAULT_RULES: list[ValidationRule] = [
     MinimumPrimaryCitationsRule(),
     TaxCitationForTaxSummaryRule(),
     CapitalCitationForCapitalRequirementsRule(),
-    SilentNullProhibitionRule(),
 ]
 
 

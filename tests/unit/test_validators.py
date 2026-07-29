@@ -1,6 +1,12 @@
 """Unit tests for validation engine."""
 
-from src.schema.schema import ConfidenceLevel, JurisdictionTier, SourceAuthority, ValidationStatus
+from src.schema.schema import (
+    ConfidenceLevel,
+    JurisdictionTier,
+    NotApplicableReason,
+    SourceAuthority,
+)
+from src.validation import ValidationStatus
 from src.validation.validators import (
     ValidationEngine,
     HasPrimaryRegulatorRule,
@@ -20,7 +26,6 @@ from src.validation.validators import (
     MinimumPrimaryCitationsRule,
     TaxCitationForTaxSummaryRule,
     CapitalCitationForCapitalRequirementsRule,
-    SilentNullProhibitionRule,
 )
 from tests.unit.test_schema import (
     make_citation,
@@ -55,6 +60,12 @@ class TestHasPrimaryRegulatorRule:
             source_governance=make_governance(),
             confidence=make_confidence(),
             version=make_version(),
+            tax_summary="Tax summary placeholder",
+            aml_kyc_framework="AML/KYC placeholder",
+            passporting_notes="Passporting notes placeholder",
+            tax_not_applicable_reason=None,
+            aml_kyc_not_applicable_reason=None,
+            passporting_not_applicable_reason=None,
         )
         result = HasPrimaryRegulatorRule().check(entry)
         assert result.status == ValidationStatus.FAILED
@@ -109,6 +120,12 @@ class TestHasSourceCitationsRule:
             source_governance=governance,
             confidence=make_confidence(),
             version=make_version(),
+            tax_summary="Tax summary placeholder",
+            aml_kyc_framework="AML/KYC placeholder",
+            passporting_notes="Passporting notes placeholder",
+            tax_not_applicable_reason=None,
+            aml_kyc_not_applicable_reason=None,
+            passporting_not_applicable_reason=None,
         )
         result = HasSourceCitationsRule().check(entry)
         assert result.status == ValidationStatus.FAILED
@@ -329,7 +346,10 @@ class TestTaxCitationForTaxSummaryRule:
         assert result.status == ValidationStatus.PASSED
 
     def test_passes_when_tax_summary_none(self):
-        entry = make_entry(tax_summary=None)
+        entry = make_entry(
+            tax_summary=None,
+            tax_not_applicable_reason=NotApplicableReason.NO_REGULATORY_REQUIREMENT,
+        )
         result = TaxCitationForTaxSummaryRule().check(entry)
         assert result.status == ValidationStatus.PASSED
 
@@ -384,39 +404,17 @@ class TestCapitalCitationForCapitalRequirementsRule:
         assert result.status == ValidationStatus.WARNING
 
 
-class TestSilentNullProhibitionRule:
-    def test_passes_when_all_populated(self):
-        entry = make_entry(tax_summary="N/A", aml_kyc_framework="N/A", passporting_notes="N/A")
-        result = SilentNullProhibitionRule().check(entry)
-        assert result.status == ValidationStatus.PASSED
-
-    def test_warns_when_tax_summary_none(self):
-        entry = make_entry(tax_summary=None, aml_kyc_framework="N/A", passporting_notes="N/A")
-        result = SilentNullProhibitionRule().check(entry)
-        assert result.status == ValidationStatus.WARNING
-
-    def test_warns_when_aml_none(self):
-        entry = make_entry(tax_summary="N/A", aml_kyc_framework=None, passporting_notes="N/A")
-        result = SilentNullProhibitionRule().check(entry)
-        assert result.status == ValidationStatus.WARNING
-
-    def test_warns_when_passporting_none(self):
-        entry = make_entry(tax_summary="N/A", aml_kyc_framework="N/A", passporting_notes=None)
-        result = SilentNullProhibitionRule().check(entry)
-        assert result.status == ValidationStatus.WARNING
-
-
 class TestValidationEngine:
     def test_engine_returns_report(self):
         engine = ValidationEngine()
         entry = make_entry(tax_summary="N/A", aml_kyc_framework="N/A", passporting_notes="N/A")
         report = engine.validate(entry)
         assert report is not None
-        assert len(report.results) == 18
+        assert len(report.results) == 17
 
     def test_engine_add_rule(self):
         from src.validation.validators import ValidationRule
-        from src.schema.schema import ValidationResult, ValidationStatus
+        from src.validation import ValidationResult, ValidationStatus
 
         class DummyRule(ValidationRule):
             rule_id = "VAL_999"
@@ -433,4 +431,4 @@ class TestValidationEngine:
         engine.add_rule(DummyRule())
         entry = make_entry(tax_summary="N/A", aml_kyc_framework="N/A", passporting_notes="N/A")
         report = engine.validate(entry)
-        assert len(report.results) == 19
+        assert len(report.results) == 18

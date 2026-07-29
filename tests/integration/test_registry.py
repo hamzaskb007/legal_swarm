@@ -6,9 +6,9 @@ from pathlib import Path
 from src.jurisdictions.registry import JurisdictionRegistry
 from src.schema.schema import (
     JurisdictionTier,
-    ValidationStatus,
     ConfidenceLevel,
 )
+from src.validation import ValidationStatus
 
 
 class TestJurisdictionRegistry:

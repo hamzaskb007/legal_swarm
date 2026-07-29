@@ -13,22 +13,24 @@ from src.schema.schema import (
     SourceGovernanceRecord,
     CapitalRequirement,
     RecordRetentionPolicy,
-    ValidationResult,
-    ValidationReport,
-    ValidationStatus,
     VersionRecord,
     AuditLogEntry,
     AuditEventType,
     RegulatoryEntry,
     JurisdictionTier,
 )
+from src.validation import ValidationResult, ValidationReport, ValidationStatus
 
 
 def make_citation(**kwargs) -> CitationRecord:
     defaults = dict(
         source_name="Test Source",
+        source_url="https://example.gov/test-source",
         authority=SourceAuthority.PRIMARY,
         reliability_score=0.9,
+        publication_date=datetime(2024, 1, 1),
+        regulatory_relevance_tag="Test Regulatory Area",
+        last_verified_timestamp=datetime.utcnow(),
     )
     defaults.update(kwargs)
     return CitationRecord(**defaults)
@@ -60,6 +62,9 @@ def make_entry(**kwargs) -> RegulatoryEntry:
         source_governance=make_governance(),
         confidence=make_confidence(),
         version=make_version(),
+        tax_summary="Tax summary placeholder",
+        aml_kyc_framework="AML/KYC framework placeholder",
+        passporting_notes="Passporting notes placeholder",
     )
     defaults.update(kwargs)
     return RegulatoryEntry(**defaults)
@@ -108,10 +113,6 @@ class TestCitationRecord:
         with pytest.raises(Exception):
             make_citation(authority_level=6)
 
-    def test_regulatory_relevance_tag_default(self):
-        c = make_citation()
-        assert c.regulatory_relevance_tag is None
-
     def test_regulatory_relevance_tag_custom(self):
         c = make_citation(regulatory_relevance_tag="Fund Registration")
         assert c.regulatory_relevance_tag == "Fund Registration"
@@ -120,14 +121,32 @@ class TestCitationRecord:
         c = make_citation(regulatory_relevance_tag="Some Custom Tag")
         assert c.regulatory_relevance_tag == "Some Custom Tag"
 
-    def test_last_verified_timestamp_default(self):
-        c = make_citation()
-        assert c.last_verified_timestamp is None
+    def test_regulatory_relevance_tag_required(self):
+        with pytest.raises(Exception):
+            CitationRecord(
+                source_name="Test",
+                source_url="https://example.gov/test",
+                authority=SourceAuthority.PRIMARY,
+                reliability_score=0.9,
+                publication_date=datetime(2024, 1, 1),
+                last_verified_timestamp=datetime.utcnow(),
+            )
 
     def test_last_verified_timestamp_custom(self):
         ts = datetime.utcnow()
         c = make_citation(last_verified_timestamp=ts)
         assert c.last_verified_timestamp == ts
+
+    def test_last_verified_timestamp_required(self):
+        with pytest.raises(Exception):
+            CitationRecord(
+                source_name="Test",
+                source_url="https://example.gov/test",
+                authority=SourceAuthority.PRIMARY,
+                reliability_score=0.9,
+                publication_date=datetime(2024, 1, 1),
+                regulatory_relevance_tag="Test",
+            )
 
 
 # ---------------------------------------------------------------------------

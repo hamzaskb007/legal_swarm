@@ -61,7 +61,7 @@ class ConfidenceScorer:
 
         threshold = datetime.utcnow() - timedelta(days=RECENCY_THRESHOLD_DAYS)
         stale = sum(
-            1 for c in all_citations if c.publication_date and c.publication_date < threshold
+            True for c in all_citations if c.publication_date and c.publication_date < threshold
         )
         recency_penalty = stale * RECENCY_PENALTY
         if stale:

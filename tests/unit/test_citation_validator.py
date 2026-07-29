@@ -23,8 +23,12 @@ from src.validation.models import ValidationContext
 def make_citation(**kwargs) -> CitationRecord:
     defaults = dict(
         source_name="Test Source",
+        source_url="https://example.gov/test-source",
         authority=SourceAuthority.PRIMARY,
         reliability_score=0.9,
+        publication_date=datetime(2024, 1, 1),
+        regulatory_relevance_tag="Test Regulatory Area",
+        last_verified_timestamp=datetime.utcnow(),
     )
     defaults.update(kwargs)
     return CitationRecord(**defaults)
@@ -33,8 +37,12 @@ def make_citation(**kwargs) -> CitationRecord:
 def make_unvalidated_citation(**kwargs) -> CitationRecord:
     defaults = dict(
         source_name="Test Source",
+        source_url="https://example.gov/test-source",
         authority=SourceAuthority.PRIMARY,
         reliability_score=0.9,
+        publication_date=datetime(2024, 1, 1),
+        regulatory_relevance_tag="Test Regulatory Area",
+        last_verified_timestamp=datetime.utcnow(),
     )
     defaults.update(kwargs)
     return CitationRecord.model_construct(**defaults)
@@ -111,7 +119,7 @@ class TestRequiredFields:
         assert any("source_name" in i.field_path for i in issues)
 
     def test_missing_source_url(self):
-        c = make_citation(
+        c = make_unvalidated_citation(
             source_name="Test",
             source_url=None,
             authority_id="auth-1",
@@ -122,7 +130,7 @@ class TestRequiredFields:
         assert any("source_url" in i.field_path for i in issues)
 
     def test_empty_source_url(self):
-        c = make_citation(
+        c = make_unvalidated_citation(
             source_name="Test",
             source_url="",
             authority_id="auth-1",
@@ -279,28 +287,28 @@ class TestStructureValidation:
         assert len([i for i in url_issues if i.code == ValidationCode.INVALID_FIELD_VALUE]) == 0
 
     def test_url_missing_scheme(self):
-        c = make_citation(source_url="example.gov/statute")
+        c = make_unvalidated_citation(source_url="example.gov/statute")
         validator = make_validator()
         result = validator.validate_citation(c)
         issues = [i for i in result.issues if i.code == ValidationCode.INVALID_FIELD_VALUE]
         assert any("source_url" in i.field_path for i in issues)
 
     def test_url_unsupported_scheme(self):
-        c = make_citation(source_url="ftp://example.gov/file")
+        c = make_unvalidated_citation(source_url="ftp://example.gov/file")
         validator = make_validator()
         result = validator.validate_citation(c)
         issues = [i for i in result.issues if i.code == ValidationCode.INVALID_FIELD_VALUE]
         assert any("source_url" in i.field_path for i in issues)
 
     def test_url_missing_hostname(self):
-        c = make_citation(source_url="https://")
+        c = make_unvalidated_citation(source_url="https://")
         validator = make_validator()
         result = validator.validate_citation(c)
         issues = [i for i in result.issues if i.code == ValidationCode.INVALID_FIELD_VALUE]
         assert any("source_url" in i.field_path for i in issues)
 
     def test_url_malformed_raises_issue(self):
-        c = make_citation(source_url="://broken")
+        c = make_unvalidated_citation(source_url="://broken")
         validator = make_validator()
         result = validator.validate_citation(c)
         issues = [i for i in result.issues if i.code == ValidationCode.INVALID_FIELD_VALUE]
@@ -621,7 +629,7 @@ class TestCitationConsistency:
         assert len(consistency_issues) == 0
 
     def test_no_publication_date_no_consistency_check(self):
-        c = make_citation(
+        c = make_unvalidated_citation(
             source_url="https://example.gov",
             source_name="Test",
             authority_id="auth-1",
@@ -642,8 +650,8 @@ class TestCitationConsistency:
             source_url="https://example.gov",
             source_name="Test",
             authority_id="auth-1",
-            publication_date=datetime(2024, 6, 1),
-            retrieved_at=datetime(2024, 1, 1),
+            publication_date=datetime(2024, 12, 31),
+            retrieved_at=datetime(2024, 6, 1),
         )
         validator = make_validator()
         result = validator.validate_citation(c)
@@ -847,7 +855,7 @@ class TestExceptions:
 
 class TestEdgeCases:
     def test_citation_with_all_none_optional_fields(self):
-        c = make_citation(
+        c = make_unvalidated_citation(
             source_url="https://example.gov",
             source_name="Test",
             authority_id="auth-1",
@@ -902,6 +910,9 @@ class TestEdgeCases:
             authority=SourceAuthority.PRIMARY,
             authority_level=3,
             reliability_score=0.85,
+            publication_date=datetime(2024, 1, 1),
+            regulatory_relevance_tag="Fund Registration",
+            last_verified_timestamp=datetime.utcnow(),
         )
         registry = make_mock_registry("auth-1")
         validator = make_validator(registry)
@@ -956,7 +967,7 @@ class TestEdgeCases:
         assert result.status == ValidationStatus.SUCCESS
 
     def test_url_none_no_url_validation(self):
-        c = make_citation(
+        c = make_unvalidated_citation(
             source_url=None,
             source_name="Test",
             authority_id="auth-1",

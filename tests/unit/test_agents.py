@@ -17,6 +17,7 @@ from src.schema.schema import (
     CapitalRequirement,
     FundStructure,
     LicensingRequirement,
+    NotApplicableReason,
     RegulatoryEntry,
     RegulatoryFiling,
 )
@@ -125,7 +126,11 @@ class TestTaxFrameworkAgent:
         assert TaxFrameworkAgent().validate(entry) is True
 
     def test_validate_fails_no_tax_summary(self) -> None:
-        entry = make_entry(tax_summary=None, withholding_tax_rate=Decimal("0"))
+        entry = make_entry(
+            tax_summary=None,
+            tax_not_applicable_reason=NotApplicableReason.NO_REGULATORY_REQUIREMENT,
+            withholding_tax_rate=Decimal("0"),
+        )
         assert TaxFrameworkAgent().validate(entry) is False
 
     def test_validate_fails_no_withholding(self) -> None:
@@ -151,7 +156,15 @@ class TestComplianceObligationAgent:
         assert ComplianceObligationAgent().validate(self._entry(filing_obligations=[])) is False
 
     def test_validate_fails_no_aml(self) -> None:
-        assert ComplianceObligationAgent().validate(self._entry(aml_kyc_framework=None)) is False
+        assert (
+            ComplianceObligationAgent().validate(
+                self._entry(
+                    aml_kyc_framework=None,
+                    aml_kyc_not_applicable_reason=NotApplicableReason.NO_REGULATORY_REQUIREMENT,
+                )
+            )
+            is False
+        )
 
 
 class TestBaseAgent:

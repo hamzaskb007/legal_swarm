@@ -1,16 +1,24 @@
 from __future__ import annotations
 
+from datetime import datetime
 from unittest.mock import MagicMock
+from uuid import uuid4
 
 import pytest
 
 from src.authority.models import Authority, AuthorityLevel, Relationship, RelationshipType
 from src.authority.registry import AuthorityRegistry
-from src.schema.schema import CitationRecord, SourceAuthority, SourceGovernanceRecord
+from src.schema.schema import (
+    CitationRecord,
+    RegulatoryEntry,
+    SourceAuthority,
+    SourceGovernanceRecord,
+)
 from src.validation import AuthorityGovernanceValidator, ValidationResult, ValidationStatus
 from src.validation.enums import ValidationCode, ValidationSeverity
 from src.validation.exceptions import ValidationConfigurationError
 from src.validation.models import ValidationContext
+from src.validation.validators import CitationDensityRule, Level45ReferenceRule
 
 
 # ---------------------------------------------------------------------------
@@ -21,8 +29,12 @@ from src.validation.models import ValidationContext
 def make_citation(**kwargs) -> CitationRecord:
     defaults = dict(
         source_name="Test Source",
+        source_url="https://example.gov/test-source",
         authority=SourceAuthority.PRIMARY,
         reliability_score=0.9,
+        publication_date=datetime(2024, 1, 1),
+        regulatory_relevance_tag="Test Regulatory Area",
+        last_verified_timestamp=datetime.utcnow(),
     )
     defaults.update(kwargs)
     return CitationRecord(**defaults)
@@ -82,11 +94,15 @@ def make_validator(
     registry: MagicMock | None = None,
     min_citations: int = 3,
     min_primary: int = 2,
+    category_density_requirements: dict[str, int] | None = None,
+    compliance_requires_authoritative: bool = True,
 ) -> AuthorityGovernanceValidator:
     return AuthorityGovernanceValidator(
         authority_registry=registry,
         min_citations_per_entry=min_citations,
         min_primary_citations=min_primary,
+        category_density_requirements=category_density_requirements,
+        compliance_requires_authoritative=compliance_requires_authoritative,
     )
 
 
@@ -975,3 +991,769 @@ class TestEdgeCases:
         assert v._validator_name == "my_governance"
         assert v._min_citations_per_entry == 5
         assert v._min_primary_citations == 3
+
+
+# ===================================================================
+# Part 8 — Level 4-5 Single Citation Reference Validation
+# ===================================================================
+
+
+class TestLevel45ReferenceSingle:
+    def test_level_3_citation_skipped(self):
+        c = make_citation(authority_level=3, authority=SourceAuthority.PRIMARY)
+        validator = make_validator()
+        result = validator.validate_citation(c)
+        ref_issues = [
+            i for i in result.issues if i.code == ValidationCode.LEVEL45_MISSING_REFERENCE
+        ]
+        assert len(ref_issues) == 0
+
+    def test_level_5_with_references_citation_id_passes(self):
+        level_1_id = uuid4()
+        c = make_citation(
+            authority_level=5,
+            authority=SourceAuthority.TERTIARY,
+            references_citation_id=level_1_id,
+        )
+        validator = make_validator()
+        result = validator.validate_citation(c)
+        ref_issues = [
+            i for i in result.issues if i.code == ValidationCode.LEVEL45_MISSING_REFERENCE
+        ]
+        assert len(ref_issues) == 0
+
+    def test_level_4_without_reference_fails(self):
+        c = make_citation(authority_level=4, authority=SourceAuthority.SECONDARY)
+        validator = make_validator()
+        result = validator.validate_citation(c)
+        ref_issues = [
+            i for i in result.issues if i.code == ValidationCode.LEVEL45_MISSING_REFERENCE
+        ]
+        assert len(ref_issues) == 1
+        assert "Level 4" in ref_issues[0].message
+        assert ref_issues[0].severity == ValidationSeverity.HIGH
+
+    def test_level_5_without_reference_fails(self):
+        c = make_citation(authority_level=5, authority=SourceAuthority.TERTIARY)
+        validator = make_validator()
+        result = validator.validate_citation(c)
+        ref_issues = [
+            i for i in result.issues if i.code == ValidationCode.LEVEL45_MISSING_REFERENCE
+        ]
+        assert len(ref_issues) == 1
+        assert "Level 5" in ref_issues[0].message
+
+    def test_level_4_with_authority_reference_relationship_passes(self):
+        target = make_mock_authority("primary-1", AuthorityLevel.LEVEL_1)
+        rel = Relationship(type=RelationshipType.REFERENCES, target_id="primary-1")
+        level4_auth = make_mock_authority("legal-firm", AuthorityLevel.LEVEL_4, relationships=[rel])
+        registry = make_registry([level4_auth, target])
+        c = make_citation(
+            authority_level=4,
+            authority_id="legal-firm",
+            authority=SourceAuthority.SECONDARY,
+            references_citation_id=None,
+        )
+        validator = make_validator(registry)
+        result = validator.validate_citation(c)
+        ref_issues = [
+            i for i in result.issues if i.code == ValidationCode.LEVEL45_MISSING_REFERENCE
+        ]
+        assert len(ref_issues) == 0
+
+    def test_level_4_authority_reference_to_nonexistent_target_still_fails(self):
+        rel = Relationship(type=RelationshipType.REFERENCES, target_id="nonexistent")
+        level4_auth = make_mock_authority("legal-firm", AuthorityLevel.LEVEL_4, relationships=[rel])
+        registry = make_registry([level4_auth])
+        c = make_citation(
+            authority_level=4,
+            authority_id="legal-firm",
+            authority=SourceAuthority.SECONDARY,
+        )
+        validator = make_validator(registry)
+        result = validator.validate_citation(c)
+        ref_issues = [
+            i for i in result.issues if i.code == ValidationCode.LEVEL45_MISSING_REFERENCE
+        ]
+        assert len(ref_issues) == 1
+
+    def test_level_4_without_registry_and_without_reference_fails(self):
+        c = make_citation(authority_level=4, authority=SourceAuthority.SECONDARY)
+        validator = make_validator(registry=None)
+        result = validator.validate_citation(c)
+        ref_issues = [
+            i for i in result.issues if i.code == ValidationCode.LEVEL45_MISSING_REFERENCE
+        ]
+        assert len(ref_issues) == 1
+
+    def test_level_4_unknown_authority_id_still_fails(self):
+        registry = make_registry([])
+        c = make_citation(
+            authority_level=4,
+            authority_id="unknown",
+            authority=SourceAuthority.SECONDARY,
+        )
+        validator = make_validator(registry)
+        result = validator.validate_citation(c)
+        ref_issues = [
+            i for i in result.issues if i.code == ValidationCode.LEVEL45_MISSING_REFERENCE
+        ]
+        assert len(ref_issues) == 1
+
+
+# ===================================================================
+# Part 9 — Governance-Level Level 4-5 Reference Validation
+# ===================================================================
+
+
+class TestLevel45ReferenceGovernance:
+    def test_no_level_45_citations_passes(self):
+        primary = make_citation(
+            authority_level=1,
+            authority=SourceAuthority.PRIMARY,
+            regulatory_relevance_tag="Regulatory Framework",
+        )
+        governance = SourceGovernanceRecord(primary_citations=[primary])
+        validator = make_validator()
+        result = validator.validate_governance(governance)
+        ref_issues = [
+            i for i in result.issues if i.code == ValidationCode.LEVEL45_MISSING_REFERENCE
+        ]
+        assert len(ref_issues) == 0
+
+    def test_level_4_references_level_1_in_governance_passes(self):
+        level_1 = make_citation(
+            authority_level=1,
+            authority=SourceAuthority.PRIMARY,
+            regulatory_relevance_tag="Regulatory Framework",
+        )
+        level_4 = make_citation(
+            authority_level=4,
+            authority=SourceAuthority.SECONDARY,
+            references_citation_id=level_1.citation_id,
+            regulatory_relevance_tag="Regulatory Framework",
+            source_url="https://ex.gov/sec",
+            source_name="Legal Commentary",
+        )
+        governance = SourceGovernanceRecord(
+            primary_citations=[level_1],
+            secondary_citations=[level_4],
+        )
+        validator = make_validator()
+        result = validator.validate_governance(governance)
+        ref_issues = [
+            i for i in result.issues if i.code == ValidationCode.LEVEL45_MISSING_REFERENCE
+        ]
+        assert len(ref_issues) == 0
+
+    def test_level_5_without_reference_in_governance_fails(self):
+        primary = make_citation(
+            authority_level=1,
+            authority=SourceAuthority.PRIMARY,
+            regulatory_relevance_tag="Regulatory Framework",
+        )
+        level_5 = make_citation(
+            authority_level=5,
+            authority=SourceAuthority.TERTIARY,
+            regulatory_relevance_tag="Regulatory Framework",
+            source_url="https://ex.gov/ter",
+            source_name="Advisory Report",
+        )
+        governance = SourceGovernanceRecord(
+            primary_citations=[primary],
+            tertiary_citations=[level_5],
+        )
+        validator = make_validator()
+        result = validator.validate_governance(governance)
+        ref_issues = [
+            i for i in result.issues if i.code == ValidationCode.LEVEL45_MISSING_REFERENCE
+        ]
+        assert len(ref_issues) == 1
+
+    def test_references_citation_id_to_nonexistent_citation_fails(self):
+        level_4 = make_citation(
+            authority_level=4,
+            authority=SourceAuthority.SECONDARY,
+            references_citation_id=uuid4(),
+            regulatory_relevance_tag="Regulatory Framework",
+            source_url="https://ex.gov/sec",
+            source_name="Legal Commentary",
+        )
+        governance = SourceGovernanceRecord(secondary_citations=[level_4])
+        validator = make_validator()
+        result = validator.validate_governance(governance)
+        ref_issues = [
+            i for i in result.issues if i.code == ValidationCode.LEVEL45_MISSING_REFERENCE
+        ]
+        assert len(ref_issues) == 1
+
+
+# ===================================================================
+# Part 10 — Citation Density by Category
+# ===================================================================
+
+
+class TestCitationDensityByCategory:
+    def test_no_requirements_passes(self):
+        c = make_citation(regulatory_relevance_tag="Regulatory Framework")
+        governance = SourceGovernanceRecord(primary_citations=[c])
+        validator = make_validator()
+        result = validator.validate_governance(governance)
+        density_issues = [
+            i for i in result.issues if i.code == ValidationCode.INSUFFICIENT_CITATION_DENSITY
+        ]
+        assert len(density_issues) == 0
+
+    def test_all_requirements_met_passes(self):
+        reqs = {"Regulatory Framework": 2, "Capital Requirements": 2}
+        citations = [
+            make_citation(
+                source_url=f"https://ex.gov/rf/{i}",
+                source_name=f"Source RF {i}",
+                regulatory_relevance_tag="Regulatory Framework",
+            )
+            for i in range(2)
+        ] + [
+            make_citation(
+                source_url=f"https://ex.gov/cr/{i}",
+                source_name=f"Source CR {i}",
+                regulatory_relevance_tag="Capital Requirements",
+            )
+            for i in range(2)
+        ]
+        governance = SourceGovernanceRecord(primary_citations=citations)
+        validator = make_validator(category_density_requirements=reqs)
+        result = validator.validate_governance(governance)
+        density_issues = [
+            i for i in result.issues if i.code == ValidationCode.INSUFFICIENT_CITATION_DENSITY
+        ]
+        assert len(density_issues) == 0
+        assert result.status == ValidationStatus.SUCCESS
+
+    def test_category_below_minimum_fails(self):
+        reqs = {"Regulatory Framework": 3}
+        citations = [
+            make_citation(
+                source_url=f"https://ex.gov/rf/{i}",
+                source_name=f"Source RF {i}",
+                regulatory_relevance_tag="Regulatory Framework",
+            )
+            for i in range(1)
+        ]
+        governance = SourceGovernanceRecord(primary_citations=citations)
+        validator = make_validator(category_density_requirements=reqs)
+        result = validator.validate_governance(governance)
+        density_issues = [
+            i for i in result.issues if i.code == ValidationCode.INSUFFICIENT_CITATION_DENSITY
+        ]
+        assert len(density_issues) == 1
+        assert "Regulatory Framework" in density_issues[0].message
+        assert "1" in density_issues[0].message
+        assert "3" in density_issues[0].message
+        assert density_issues[0].severity == ValidationSeverity.HIGH
+
+    def test_multiple_categories_below_minimum(self):
+        reqs = {"Regulatory Framework": 2, "Capital Requirements": 2, "Tax Claims": 2}
+        governance = SourceGovernanceRecord(
+            primary_citations=[
+                make_citation(
+                    source_url="https://ex.gov/rf",
+                    regulatory_relevance_tag="Regulatory Framework",
+                )
+            ]
+        )
+        validator = make_validator(category_density_requirements=reqs)
+        result = validator.validate_governance(governance)
+        density_issues = [
+            i for i in result.issues if i.code == ValidationCode.INSUFFICIENT_CITATION_DENSITY
+        ]
+        assert len(density_issues) == 3
+
+    def test_category_isolation(self):
+        reqs = {"Capital Requirements": 2}
+        citations = [
+            make_citation(
+                source_url=f"https://ex.gov/rf/{i}",
+                source_name=f"Source RF {i}",
+                regulatory_relevance_tag="Regulatory Framework",
+            )
+            for i in range(5)
+        ]
+        governance = SourceGovernanceRecord(primary_citations=citations)
+        validator = make_validator(category_density_requirements=reqs)
+        result = validator.validate_governance(governance)
+        density_issues = [
+            i for i in result.issues if i.code == ValidationCode.INSUFFICIENT_CITATION_DENSITY
+        ]
+        assert len(density_issues) == 1
+        assert "Capital Requirements" in density_issues[0].message
+
+    def test_all_four_standard_categories_with_requirements_met(self):
+        reqs = {
+            "Regulatory Framework": 2,
+            "Capital Requirements": 2,
+            "Tax Claims": 2,
+            "Compliance Obligations": 1,
+        }
+        citations = []
+        for i in range(2):
+            citations.append(
+                make_citation(
+                    source_url=f"https://ex.gov/rf/{i}",
+                    source_name=f"RF {i}",
+                    regulatory_relevance_tag="Regulatory Framework",
+                )
+            )
+            citations.append(
+                make_citation(
+                    source_url=f"https://ex.gov/cr/{i}",
+                    source_name=f"CR {i}",
+                    regulatory_relevance_tag="Capital Requirements",
+                )
+            )
+            citations.append(
+                make_citation(
+                    source_url=f"https://ex.gov/tx/{i}",
+                    source_name=f"TX {i}",
+                    regulatory_relevance_tag="Tax Claims",
+                )
+            )
+        citations.append(
+            make_citation(
+                source_url="https://ex.gov/co",
+                source_name="CO",
+                regulatory_relevance_tag="Compliance Obligations",
+                authority=SourceAuthority.PRIMARY,
+            )
+        )
+        governance = SourceGovernanceRecord(primary_citations=citations)
+        validator = make_validator(category_density_requirements=reqs)
+        result = validator.validate_governance(governance)
+        density_issues = [
+            i for i in result.issues if i.code == ValidationCode.INSUFFICIENT_CITATION_DENSITY
+        ]
+        assert len(density_issues) == 0
+
+
+# ===================================================================
+# Part 11 — Independent Citation Detection
+# ===================================================================
+
+
+class TestIndependentCitations:
+    def test_all_independent_passes(self):
+        reqs = {"Regulatory Framework": 2}
+        citations = [
+            make_citation(
+                source_url="https://ex.gov/rf/1",
+                source_name="Source A",
+                regulatory_relevance_tag="Regulatory Framework",
+            ),
+            make_citation(
+                source_url="https://ex.gov/rf/2",
+                source_name="Source B",
+                regulatory_relevance_tag="Regulatory Framework",
+            ),
+        ]
+        governance = SourceGovernanceRecord(primary_citations=citations)
+        validator = make_validator(category_density_requirements=reqs)
+        result = validator.validate_governance(governance)
+        dep_issues = [i for i in result.issues if i.code == ValidationCode.DEPENDENT_CITATION]
+        assert len(dep_issues) == 0
+
+    def test_no_category_requirements_skips_independence_check(self):
+        citations = [
+            make_citation(
+                source_url="https://ex.gov/rf/1",
+                source_name="Same Source",
+                regulatory_relevance_tag="Regulatory Framework",
+            ),
+            make_citation(
+                source_url="https://ex.gov/rf/2",
+                source_name="Same Source",
+                regulatory_relevance_tag="Regulatory Framework",
+            ),
+        ]
+        governance = SourceGovernanceRecord(primary_citations=citations)
+        validator = make_validator(category_density_requirements={})
+        result = validator.validate_governance(governance)
+        dep_issues = [i for i in result.issues if i.code == ValidationCode.DEPENDENT_CITATION]
+        assert len(dep_issues) == 0
+
+    def test_duplicate_source_name_detected(self):
+        reqs = {"Regulatory Framework": 2}
+        c1 = make_citation(
+            source_url="https://ex.gov/rf/1",
+            source_name="Same Source",
+            regulatory_relevance_tag="Regulatory Framework",
+        )
+        c2 = make_citation(
+            source_url="https://ex.gov/rf/2",
+            source_name="Same Source",
+            regulatory_relevance_tag="Regulatory Framework",
+        )
+        governance = SourceGovernanceRecord(primary_citations=[c1, c2])
+        validator = make_validator(category_density_requirements=reqs)
+        result = validator.validate_governance(governance)
+        dep_issues = [i for i in result.issues if i.code == ValidationCode.DEPENDENT_CITATION]
+        assert len(dep_issues) == 1
+        assert "duplicate source_name" in dep_issues[0].message
+
+    def test_duplicate_source_url_detected(self):
+        reqs = {"Regulatory Framework": 2}
+        c1 = make_citation(
+            source_url="https://ex.gov/rf/1",
+            source_name="Source A",
+            regulatory_relevance_tag="Regulatory Framework",
+        )
+        c2 = make_citation(
+            source_url="https://ex.gov/rf/1",
+            source_name="Source B",
+            regulatory_relevance_tag="Regulatory Framework",
+        )
+        governance = SourceGovernanceRecord(primary_citations=[c1, c2])
+        validator = make_validator(category_density_requirements=reqs)
+        result = validator.validate_governance(governance)
+        dep_issues = [i for i in result.issues if i.code == ValidationCode.DEPENDENT_CITATION]
+        assert len(dep_issues) == 1
+        assert "duplicate source_url" in dep_issues[0].message
+
+    def test_duplicate_ids_across_categories_still_allowed(self):
+        reqs = {"Regulatory Framework": 2}
+        cid = uuid4()
+        c1 = make_citation(
+            citation_id=cid,
+            source_url="https://ex.gov/rf/1",
+            source_name="Source A",
+            regulatory_relevance_tag="Regulatory Framework",
+        )
+        c2 = make_citation(
+            citation_id=cid,
+            source_url="https://ex.gov/rf/2",
+            source_name="Source B",
+            regulatory_relevance_tag="Regulatory Framework",
+        )
+        governance = SourceGovernanceRecord(primary_citations=[c1, c2])
+        validator = make_validator(category_density_requirements=reqs)
+        result = validator.validate_governance(governance)
+        dep_issues = [i for i in result.issues if i.code == ValidationCode.DEPENDENT_CITATION]
+        assert len(dep_issues) == 1
+
+    def test_dependency_severity_is_medium(self):
+        reqs = {"Regulatory Framework": 2}
+        c1 = make_citation(
+            source_url="https://ex.gov/rf/1",
+            source_name="Same",
+            regulatory_relevance_tag="Regulatory Framework",
+        )
+        c2 = make_citation(
+            source_url="https://ex.gov/rf/2",
+            source_name="Same",
+            regulatory_relevance_tag="Regulatory Framework",
+        )
+        governance = SourceGovernanceRecord(primary_citations=[c1, c2])
+        validator = make_validator(category_density_requirements=reqs)
+        result = validator.validate_governance(governance)
+        dep_issues = [i for i in result.issues if i.code == ValidationCode.DEPENDENT_CITATION]
+        assert dep_issues[0].severity == ValidationSeverity.MEDIUM
+
+
+# ===================================================================
+# Part 12 — Authoritative Citation for Compliance Obligations
+# ===================================================================
+
+
+class TestAuthoritativeCompliance:
+    def test_no_compliance_citations_skips_check(self):
+        c = make_citation(
+            regulatory_relevance_tag="Regulatory Framework",
+            authority=SourceAuthority.SECONDARY,
+        )
+        governance = SourceGovernanceRecord(primary_citations=[c])
+        validator = make_validator()
+        result = validator.validate_governance(governance)
+        density_issues = [
+            i for i in result.issues if i.code == ValidationCode.INSUFFICIENT_CITATION_DENSITY
+        ]
+        auth_issues = [i for i in density_issues if "Compliance Obligations" in i.message]
+        assert len(auth_issues) == 0
+
+    def test_compliance_with_primary_passes(self):
+        c = make_citation(
+            regulatory_relevance_tag="Compliance Obligations",
+            authority=SourceAuthority.PRIMARY,
+            source_url="https://ex.gov/co",
+            source_name="Regulator",
+        )
+        governance = SourceGovernanceRecord(primary_citations=[c])
+        validator = make_validator()
+        result = validator.validate_governance(governance)
+        density_issues = [
+            i for i in result.issues if i.code == ValidationCode.INSUFFICIENT_CITATION_DENSITY
+        ]
+        auth_issues = [i for i in density_issues if "Compliance Obligations" in i.message]
+        assert len(auth_issues) == 0
+
+    def test_compliance_with_secondary_only_fails(self):
+        c = make_citation(
+            regulatory_relevance_tag="Compliance Obligations",
+            authority=SourceAuthority.SECONDARY,
+            source_url="https://ex.gov/sec",
+            source_name="Legal Firm",
+            authority_level=4,
+        )
+        governance = SourceGovernanceRecord(secondary_citations=[c])
+        validator = make_validator()
+        result = validator.validate_governance(governance)
+        density_issues = [
+            i for i in result.issues if i.code == ValidationCode.INSUFFICIENT_CITATION_DENSITY
+        ]
+        auth_issues = [i for i in density_issues if "Compliance Obligations" in i.message]
+        assert len(auth_issues) == 1
+        assert "authoritative" in auth_issues[0].message.lower()
+        assert auth_issues[0].severity == ValidationSeverity.HIGH
+
+    def test_compliance_with_tertiary_only_fails(self):
+        c = make_citation(
+            regulatory_relevance_tag="Compliance Obligations",
+            authority=SourceAuthority.TERTIARY,
+            source_url="https://ex.gov/ter",
+            source_name="Advisor",
+            authority_level=5,
+        )
+        governance = SourceGovernanceRecord(tertiary_citations=[c])
+        validator = make_validator()
+        result = validator.validate_governance(governance)
+        density_issues = [
+            i for i in result.issues if i.code == ValidationCode.INSUFFICIENT_CITATION_DENSITY
+        ]
+        auth_issues = [i for i in density_issues if "Compliance Obligations" in i.message]
+        assert len(auth_issues) == 1
+
+    def test_compliance_requires_authoritative_disabled_skips(self):
+        c = make_citation(
+            regulatory_relevance_tag="Compliance Obligations",
+            authority=SourceAuthority.SECONDARY,
+            source_url="https://ex.gov/sec",
+            source_name="Legal Firm",
+        )
+        governance = SourceGovernanceRecord(secondary_citations=[c])
+        validator = make_validator(compliance_requires_authoritative=False)
+        result = validator.validate_governance(governance)
+        density_issues = [
+            i for i in result.issues if i.code == ValidationCode.INSUFFICIENT_CITATION_DENSITY
+        ]
+        auth_issues = [i for i in density_issues if "Compliance Obligations" in i.message]
+        assert len(auth_issues) == 0
+
+    def test_compliance_with_mixed_authorities_passes_when_primary_present(self):
+        co = make_citation(
+            regulatory_relevance_tag="Compliance Obligations",
+            authority=SourceAuthority.PRIMARY,
+            source_url="https://ex.gov/co",
+            source_name="Regulator",
+        )
+        legal = make_citation(
+            regulatory_relevance_tag="Compliance Obligations",
+            authority=SourceAuthority.SECONDARY,
+            source_url="https://ex.gov/sec",
+            source_name="Legal Firm",
+        )
+        governance = SourceGovernanceRecord(primary_citations=[co], secondary_citations=[legal])
+        validator = make_validator()
+        result = validator.validate_governance(governance)
+        density_issues = [
+            i for i in result.issues if i.code == ValidationCode.INSUFFICIENT_CITATION_DENSITY
+        ]
+        auth_issues = [i for i in density_issues if "Compliance Obligations" in i.message]
+        assert len(auth_issues) == 0
+
+
+# ===================================================================
+# Part 13 — Error Paths / Edge Cases
+# ===================================================================
+
+
+class TestCategoryDensityConfig:
+    def test_negative_requirement_raises(self):
+        with pytest.raises(ValidationConfigurationError) as exc:
+            make_validator(category_density_requirements={"Regulatory Framework": -1})
+        assert "-1" in str(exc.value)
+
+    def test_zero_requirement_does_not_fail(self):
+        reqs = {"Regulatory Framework": 0}
+        governance = make_governance_construct(primary_citations=[])
+        validator = make_validator(category_density_requirements=reqs)
+        result = validator.validate_governance(governance)
+        density_issues = [
+            i for i in result.issues if i.code == ValidationCode.INSUFFICIENT_CITATION_DENSITY
+        ]
+        assert len(density_issues) == 0
+
+    def test_empty_requirements_dict_does_nothing(self):
+        governance = SourceGovernanceRecord(
+            primary_citations=[make_citation(regulatory_relevance_tag="Regulatory Framework")]
+        )
+        validator = make_validator(category_density_requirements={})
+        result = validator.validate_governance(governance)
+        density_issues = [
+            i for i in result.issues if i.code == ValidationCode.INSUFFICIENT_CITATION_DENSITY
+        ]
+        assert len(density_issues) == 0
+
+
+# ===================================================================
+# Part 14 — Constructors & Configuration
+# ===================================================================
+
+
+class TestGovernanceValidatorConfig:
+    def test_category_density_default_empty(self):
+        v = make_validator()
+        assert v._category_density_requirements == {}
+
+    def test_category_density_custom(self):
+        reqs = {"Custom Category": 5}
+        v = make_validator(category_density_requirements=reqs)
+        assert v._category_density_requirements == {"Custom Category": 5}
+
+    def test_category_density_prevents_mutation(self):
+        external = {"Regulatory Framework": 2}
+        v = make_validator(category_density_requirements=external)
+        external["Regulatory Framework"] = 99
+        assert v._category_density_requirements["Regulatory Framework"] == 2
+
+
+# ===================================================================
+# Part 15 — Validators.py Rule Tests
+# ===================================================================
+
+
+class TestCitationDensityRule:
+    def test_no_requirements_passes(self):
+        rule = CitationDensityRule()
+        governance = SourceGovernanceRecord(
+            primary_citations=[make_citation(regulatory_relevance_tag="Regulatory Framework")]
+        )
+        entry = MagicMock(spec=RegulatoryEntry)
+        entry.source_governance = governance
+        result = rule.check(entry)
+        assert result.status == ValidationStatus.PASSED
+
+    def test_with_requirements_met_passes(self):
+        rule = CitationDensityRule(requirements={"Regulatory Framework": 2})
+        governance = SourceGovernanceRecord(
+            primary_citations=[
+                make_citation(
+                    source_url="https://ex.gov/1",
+                    source_name="A",
+                    regulatory_relevance_tag="Regulatory Framework",
+                ),
+                make_citation(
+                    source_url="https://ex.gov/2",
+                    source_name="B",
+                    regulatory_relevance_tag="Regulatory Framework",
+                ),
+            ]
+        )
+        entry = MagicMock(spec=RegulatoryEntry)
+        entry.source_governance = governance
+        result = rule.check(entry)
+        assert result.status == ValidationStatus.PASSED
+
+    def test_with_requirement_not_met_fails(self):
+        rule = CitationDensityRule(requirements={"Capital Requirements": 2})
+        governance = SourceGovernanceRecord(
+            primary_citations=[
+                make_citation(
+                    regulatory_relevance_tag="Capital Requirements",
+                )
+            ]
+        )
+        entry = MagicMock(spec=RegulatoryEntry)
+        entry.source_governance = governance
+        result = rule.check(entry)
+        assert result.status == ValidationStatus.FAILED
+
+    def test_default_requirements_is_empty(self):
+        rule = CitationDensityRule()
+        assert rule.requirements == {}
+
+
+class TestLevel45ReferenceRule:
+    def test_no_level_45_citations_passes(self):
+        rule = Level45ReferenceRule()
+        governance = SourceGovernanceRecord(
+            primary_citations=[make_citation(authority_level=1, authority=SourceAuthority.PRIMARY)]
+        )
+        entry = MagicMock(spec=RegulatoryEntry)
+        entry.source_governance = governance
+        result = rule.check(entry)
+        assert result.status == ValidationStatus.PASSED
+
+    def test_level_4_with_reference_passes(self):
+        rule = Level45ReferenceRule()
+        level_1 = make_citation(
+            authority_level=1,
+            authority=SourceAuthority.PRIMARY,
+        )
+        level_4 = make_citation(
+            authority_level=4,
+            authority=SourceAuthority.SECONDARY,
+            references_citation_id=level_1.citation_id,
+        )
+        governance = SourceGovernanceRecord(
+            primary_citations=[level_1],
+            secondary_citations=[level_4],
+        )
+        entry = MagicMock(spec=RegulatoryEntry)
+        entry.source_governance = governance
+        result = rule.check(entry)
+        assert result.status == ValidationStatus.PASSED
+
+    def test_level_4_without_reference_fails(self):
+        rule = Level45ReferenceRule()
+        governance = SourceGovernanceRecord(
+            secondary_citations=[
+                make_citation(
+                    authority_level=4,
+                    authority=SourceAuthority.SECONDARY,
+                )
+            ]
+        )
+        entry = MagicMock(spec=RegulatoryEntry)
+        entry.source_governance = governance
+        result = rule.check(entry)
+        assert result.status == ValidationStatus.FAILED
+
+
+# ===================================================================
+# Part 16 — Hard Validation Blocking
+# ===================================================================
+
+
+class TestHardValidationBlocking:
+    def test_level45_missing_reference_causes_failed(self):
+        c = make_citation(authority_level=4, authority=SourceAuthority.SECONDARY)
+        validator = make_validator()
+        result = validator.validate_citation(c)
+        assert result.status == ValidationStatus.FAILED
+
+    def test_category_density_causes_failed(self):
+        reqs = {"Regulatory Framework": 2}
+        governance = SourceGovernanceRecord(
+            primary_citations=[make_citation(regulatory_relevance_tag="Regulatory Framework")]
+        )
+        validator = make_validator(category_density_requirements=reqs)
+        result = validator.validate_governance(governance)
+        assert result.status == ValidationStatus.FAILED
+
+    def test_compliance_authoritative_missing_causes_failed(self):
+        c = make_citation(
+            regulatory_relevance_tag="Compliance Obligations",
+            authority=SourceAuthority.SECONDARY,
+        )
+        governance = SourceGovernanceRecord(secondary_citations=[c])
+        validator = make_validator()
+        result = validator.validate_governance(governance)
+        assert result.status == ValidationStatus.FAILED

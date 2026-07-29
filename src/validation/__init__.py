@@ -11,7 +11,12 @@ from src.validation.exceptions import (
     ValidationResultError,
 )
 from src.validation.governance_validator import AuthorityGovernanceValidator
-from src.validation.models import ValidationContext, ValidationIssue, ValidationResult
+from src.validation.models import (
+    ValidationContext,
+    ValidationIssue,
+    ValidationReport,
+    ValidationResult,
+)
 
 __all__ = [
     "AuthorityGovernanceValidator",
@@ -27,6 +32,7 @@ __all__ = [
     # Models
     "ValidationIssue",
     "ValidationModelError",
+    "ValidationReport",
     "ValidationResult",
     "ValidationResultError",
     "ValidationSeverity",

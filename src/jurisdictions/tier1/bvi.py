@@ -41,7 +41,7 @@ class BviBuilder(JurisdictionBuilder):
             CitationRecord(
                 authority_id="bvi_fsc",
                 source_name="BVI Securities and Investment Business Act 2010 (SIBA)",
-                source_url=None,
+                source_url="https://www.bvifsc.vg/legislation/securities-and-investment-business-act-2010",
                 authority=SourceAuthority.PRIMARY,
                 authority_level=2,
                 publication_date=datetime(2010, 1, 1),
@@ -56,7 +56,7 @@ class BviBuilder(JurisdictionBuilder):
             CitationRecord(
                 authority_id="bvi_fsc",
                 source_name="BVI Investment Business Regulatory Code 2024",
-                source_url=None,
+                source_url="https://www.bvifsc.vg/legislation/investment-business-regulatory-code-2024",
                 authority=SourceAuthority.PRIMARY,
                 authority_level=2,
                 publication_date=datetime(2024, 3, 1),
@@ -71,7 +71,7 @@ class BviBuilder(JurisdictionBuilder):
             CitationRecord(
                 authority_id="bvi_fsc",
                 source_name="BVI Mutual Funds Regulations 2024",
-                source_url=None,
+                source_url="https://www.bvifsc.vg/legislation/mutual-funds-regulations-2024",
                 authority=SourceAuthority.PRIMARY,
                 authority_level=2,
                 publication_date=datetime(2024, 3, 1),
@@ -82,6 +82,7 @@ class BviBuilder(JurisdictionBuilder):
                 last_verified_timestamp=datetime.utcnow(),
             )
         )
+        assert bvi_fsc.base_url is not None
         manager.add_citation(
             CitationRecord(
                 authority_id="bvi_fsc",
@@ -94,6 +95,36 @@ class BviBuilder(JurisdictionBuilder):
                 reliability_score=bvi_fsc.reliability_score,
                 raw_excerpt=None,
                 regulatory_relevance_tag="Fund Registration",
+                last_verified_timestamp=datetime.utcnow(),
+            )
+        )
+        manager.add_citation(
+            CitationRecord(
+                authority_id="bvi_fsc",
+                source_name="BVI Securities and Investment Business Act 2010 (SIBA)",
+                source_url="https://www.bvifsc.vg/legislation/securities-and-investment-business-act-2010",
+                authority=SourceAuthority.PRIMARY,
+                authority_level=2,
+                publication_date=datetime(2010, 1, 1),
+                section_reference="Part III – Minimum capital and financial resource requirements for recognised funds",
+                reliability_score=0.97,
+                raw_excerpt=None,
+                regulatory_relevance_tag="Capital Requirements",
+                last_verified_timestamp=datetime.utcnow(),
+            )
+        )
+        manager.add_citation(
+            CitationRecord(
+                authority_id="bvi_fsc",
+                source_name="BVI Financial Services Commission – Tax Framework",
+                source_url=bvi_fsc.base_url,
+                authority=SourceAuthority.PRIMARY,
+                authority_level=bvi_fsc.level.value,
+                publication_date=datetime(2024, 5, 1),
+                section_reference="BVI zero-tax regime and International Tax Authority framework",
+                reliability_score=bvi_fsc.reliability_score,
+                raw_excerpt=None,
+                regulatory_relevance_tag="Tax Framework",
                 last_verified_timestamp=datetime.utcnow(),
             )
         )
@@ -368,6 +399,9 @@ class BviBuilder(JurisdictionBuilder):
             aml_kyc_framework="BVI AML/CFT Code of Practice (2023); Proceeds of Criminal Conduct Act; FSC AML Guidelines",
             passporting_available=False,
             passporting_notes="No passporting regime; BVI is an offshore non-EU jurisdiction",
+            tax_not_applicable_reason=None,
+            aml_kyc_not_applicable_reason=None,
+            passporting_not_applicable_reason=None,
             source_governance=governance,
             confidence=self._placeholder_confidence(),
             version=VersionRecord(
@@ -376,4 +410,5 @@ class BviBuilder(JurisdictionBuilder):
                 change_summary="Initial BVI regulatory entry",
             ),
         )
+        self._check_citation_tag_coverage(entry)
         return entry

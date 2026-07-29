@@ -42,7 +42,7 @@ class SingaporeBuilder(JurisdictionBuilder):
             CitationRecord(
                 authority_id="mas",
                 source_name="Securities and Futures Act 2001 (Cap. 289, Singapore)",
-                source_url=None,
+                source_url="https://www.mas.gov.sg/regulation/securities-and-futures-act",
                 authority=SourceAuthority.PRIMARY,
                 authority_level=2,
                 publication_date=datetime(2001, 10, 1),
@@ -57,7 +57,7 @@ class SingaporeBuilder(JurisdictionBuilder):
             CitationRecord(
                 authority_id="mas",
                 source_name="Variable Capital Companies Act 2018 (Singapore)",
-                source_url=None,
+                source_url="https://www.mas.gov.sg/regulation/variable-capital-companies-act",
                 authority=SourceAuthority.PRIMARY,
                 authority_level=2,
                 publication_date=datetime(2018, 10, 1),
@@ -68,6 +68,7 @@ class SingaporeBuilder(JurisdictionBuilder):
                 last_verified_timestamp=datetime.utcnow(),
             )
         )
+        assert mas.base_url is not None
         manager.add_citation(
             CitationRecord(
                 authority_id="mas",
@@ -83,6 +84,7 @@ class SingaporeBuilder(JurisdictionBuilder):
                 last_verified_timestamp=datetime.utcnow(),
             )
         )
+        assert acra.base_url is not None
         manager.add_citation(
             CitationRecord(
                 authority_id="acra",
@@ -95,6 +97,36 @@ class SingaporeBuilder(JurisdictionBuilder):
                 reliability_score=acra.reliability_score,
                 raw_excerpt=None,
                 regulatory_relevance_tag="Fund Registration",
+                last_verified_timestamp=datetime.utcnow(),
+            )
+        )
+        manager.add_citation(
+            CitationRecord(
+                authority_id="mas",
+                source_name="Monetary Authority of Singapore – Capital and Financial Requirements",
+                source_url=mas.base_url,
+                authority=SourceAuthority.PRIMARY,
+                authority_level=mas.level.value,
+                publication_date=datetime(2024, 6, 1),
+                section_reference="Capital requirements for collective investment schemes under SFA and VCC Act",
+                reliability_score=mas.reliability_score,
+                raw_excerpt=None,
+                regulatory_relevance_tag="Capital Requirements",
+                last_verified_timestamp=datetime.utcnow(),
+            )
+        )
+        manager.add_citation(
+            CitationRecord(
+                authority_id="mas",
+                source_name="Monetary Authority of Singapore – Fund Tax Framework",
+                source_url=mas.base_url,
+                authority=SourceAuthority.PRIMARY,
+                authority_level=mas.level.value,
+                publication_date=datetime(2024, 6, 1),
+                section_reference="Section 13R/13X tax exemption regimes for approved VCC and CIS funds",
+                reliability_score=mas.reliability_score,
+                raw_excerpt=None,
+                regulatory_relevance_tag="Tax Framework",
                 last_verified_timestamp=datetime.utcnow(),
             )
         )
@@ -355,6 +387,9 @@ class SingaporeBuilder(JurisdictionBuilder):
             aml_kyc_framework="MAS Notice SFA 04-N02 – AML/CFT Requirements; Corruption, Drug Trafficking and other Serious Crimes Act (CDSA)",
             passporting_available=False,
             passporting_notes="No formal passporting regime; ASEAN cross-border recognition under development",
+            tax_not_applicable_reason=None,
+            aml_kyc_not_applicable_reason=None,
+            passporting_not_applicable_reason=None,
             source_governance=governance,
             confidence=self._placeholder_confidence(),
             version=VersionRecord(
@@ -363,4 +398,5 @@ class SingaporeBuilder(JurisdictionBuilder):
                 change_summary="Initial Singapore regulatory entry",
             ),
         )
+        self._check_citation_tag_coverage(entry)
         return entry

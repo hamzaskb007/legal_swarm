@@ -11,9 +11,27 @@ from src.schema.schema import (
     ConfidenceLevel,
     ConfidenceScore,
     RegulatoryEntry,
-    ValidationReport,
+    RegulatoryRelevanceTag,
 )
+from src.validation.models import ValidationReport
 from src.validation.validators import ValidationEngine
+
+_REQUIRED_TAG_COVERAGE: list[tuple[str, RegulatoryRelevanceTag, str]] = [
+    (
+        "tax_summary",
+        RegulatoryRelevanceTag.TAX_FRAMEWORK,
+        "populated tax_summary requires at least one citation with "
+        "regulatory_relevance_tag='Tax Framework' — tag an existing tax-related "
+        "citation or add a new CitationRecord with the correct tag",
+    ),
+    (
+        "permitted_fund_structures",
+        RegulatoryRelevanceTag.CAPITAL_REQUIREMENTS,
+        "permitted_fund_structures with min_capital.amount > 0 require at least "
+        "one citation with regulatory_relevance_tag='Capital Requirements' — tag "
+        "an existing capital-related citation or add a new CitationRecord",
+    ),
+]
 
 
 class JurisdictionBuilder(ABC):
@@ -35,6 +53,44 @@ class JurisdictionBuilder(ABC):
         :meth:`run_pipeline`.
         """
         ...
+
+    @staticmethod
+    def _check_citation_tag_coverage(entry: RegulatoryEntry) -> None:
+        """Build-time self-check: raise ``ValueError`` if a populated field
+        lacks the required citation tag coverage.
+
+        Mirrors the logic of VAL_016 / VAL_017 but fires early (at
+        construction time) so a developer can't finish writing a new
+        jurisdiction file without realising they missed a required tag.
+
+        Raises
+        ------
+        ValueError
+            Describing the first missing tag requirement found.
+        """
+        all_citations = (
+            list(entry.source_governance.primary_citations)
+            + list(entry.source_governance.secondary_citations)
+            + list(entry.source_governance.tertiary_citations)
+        )
+        tags = {c.regulatory_relevance_tag for c in all_citations}
+
+        for field_name, required_tag, hint in _REQUIRED_TAG_COVERAGE:
+            if field_name == "tax_summary":
+                if entry.tax_summary is None:
+                    continue
+            elif field_name == "permitted_fund_structures":
+                has_capital = any(
+                    fs.min_capital is not None
+                    and fs.min_capital.amount is not None
+                    and fs.min_capital.amount > 0
+                    for fs in entry.permitted_fund_structures
+                )
+                if not has_capital:
+                    continue
+
+            if required_tag.value not in tags:
+                raise ValueError(f"{entry.jurisdiction_code}: {hint} (found tags: {sorted(tags)})")
 
     def run_pipeline(
         self, entry: RegulatoryEntry, *, audit_log_path: Path = Path("logs/audit.jsonl")

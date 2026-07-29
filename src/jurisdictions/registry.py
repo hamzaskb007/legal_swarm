@@ -25,8 +25,8 @@ from src.schema.schema import (
     CrossJurisdictionComparison,
     JurisdictionComparisonField,
     RegulatoryEntry,
-    ValidationReport,
 )
+from src.validation.models import ValidationReport
 from src.validation.validators import ValidationEngine
 
 _TIER1_BUILDERS: list[type[JurisdictionBuilder]] = [
