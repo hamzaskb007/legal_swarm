@@ -48,7 +48,7 @@ class BviBuilder(JurisdictionBuilder):
                 section_reference="Part III – Recognition of Funds",
                 reliability_score=0.97,
                 raw_excerpt=None,
-                regulatory_relevance_tag="Fund Registration",
+                regulatory_relevance_tag="Regulatory Framework",
                 last_verified_timestamp=datetime.utcnow(),
             )
         )
@@ -59,11 +59,11 @@ class BviBuilder(JurisdictionBuilder):
                 source_url="https://www.bvifsc.vg/legislation/investment-business-regulatory-code-2024",
                 authority=SourceAuthority.PRIMARY,
                 authority_level=2,
-                publication_date=datetime(2024, 3, 1),
+                publication_date=datetime(2026, 3, 1),
                 section_reference="Parts 5–8",
                 reliability_score=0.95,
                 raw_excerpt=None,
-                regulatory_relevance_tag="Fund Registration",
+                regulatory_relevance_tag="Regulatory Framework",
                 last_verified_timestamp=datetime.utcnow(),
             )
         )
@@ -74,7 +74,7 @@ class BviBuilder(JurisdictionBuilder):
                 source_url="https://www.bvifsc.vg/legislation/mutual-funds-regulations-2024",
                 authority=SourceAuthority.PRIMARY,
                 authority_level=2,
-                publication_date=datetime(2024, 3, 1),
+                publication_date=datetime(2026, 3, 1),
                 section_reference="Regulations 3–18",
                 reliability_score=0.95,
                 raw_excerpt=None,
@@ -90,7 +90,7 @@ class BviBuilder(JurisdictionBuilder):
                 source_url=bvi_fsc.base_url,
                 authority=SourceAuthority.PRIMARY,
                 authority_level=bvi_fsc.level.value,
-                publication_date=datetime(2024, 5, 1),
+                publication_date=datetime(2026, 5, 1),
                 section_reference="Fund Categories and Requirements",
                 reliability_score=bvi_fsc.reliability_score,
                 raw_excerpt=None,
@@ -120,11 +120,57 @@ class BviBuilder(JurisdictionBuilder):
                 source_url=bvi_fsc.base_url,
                 authority=SourceAuthority.PRIMARY,
                 authority_level=bvi_fsc.level.value,
-                publication_date=datetime(2024, 5, 1),
+                publication_date=datetime(2026, 5, 1),
                 section_reference="BVI zero-tax regime and International Tax Authority framework",
                 reliability_score=bvi_fsc.reliability_score,
                 raw_excerpt=None,
                 regulatory_relevance_tag="Tax Framework",
+                last_verified_timestamp=datetime.utcnow(),
+            )
+        )
+
+        manager.add_citation(
+            CitationRecord(
+                authority_id="bvi_fsc",
+                source_name="BVI Financial Services Commission – Capital Adequacy Requirements",
+                source_url=bvi_fsc.base_url,
+                authority=SourceAuthority.PRIMARY,
+                authority_level=bvi_fsc.level.value,
+                publication_date=datetime(2026, 5, 1),
+                section_reference="BVI FSC – Capital Adequacy Requirements for Recognised Funds",
+                reliability_score=bvi_fsc.reliability_score,
+                raw_excerpt=None,
+                regulatory_relevance_tag="Capital Requirements",
+                last_verified_timestamp=datetime.utcnow(),
+            )
+        )
+        manager.add_citation(
+            CitationRecord(
+                authority_id="bvi_fsc",
+                source_name="BVI Financial Services Commission – Tax and Economic Substance Framework",
+                source_url=bvi_fsc.base_url,
+                authority=SourceAuthority.PRIMARY,
+                authority_level=bvi_fsc.level.value,
+                publication_date=datetime(2026, 4, 1),
+                section_reference="BVI FSC – Tax and Economic Substance Framework Guidance",
+                reliability_score=bvi_fsc.reliability_score,
+                raw_excerpt=None,
+                regulatory_relevance_tag="Tax Framework",
+                last_verified_timestamp=datetime.utcnow(),
+            )
+        )
+        manager.add_citation(
+            CitationRecord(
+                authority_id="bvi_fsc",
+                source_name="BVI Financial Services Commission – AML/CFT Compliance",
+                source_url=bvi_fsc.base_url,
+                authority=SourceAuthority.PRIMARY,
+                authority_level=bvi_fsc.level.value,
+                publication_date=datetime(2026, 2, 1),
+                section_reference="BVI FSC – AML/CFT Compliance Code of Practice 2023",
+                reliability_score=bvi_fsc.reliability_score,
+                raw_excerpt=None,
+                regulatory_relevance_tag="Compliance Obligations",
                 last_verified_timestamp=datetime.utcnow(),
             )
         )

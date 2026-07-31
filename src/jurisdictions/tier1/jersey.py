@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from datetime import datetime
 from decimal import Decimal
+from uuid import uuid4
 
 from src.authority.resolver import AuthorityResolver
 from src.governance.source_governance import SourceGovernanceManager
@@ -38,8 +39,10 @@ class JerseyBuilder(JurisdictionBuilder):
         jfsc = resolver.get_by_id("jfsc")
         ogier = resolver.get_by_id("ogier")
 
+        jfsc_c1_id = uuid4()
         manager.add_citation(
             CitationRecord(
+                citation_id=jfsc_c1_id,
                 authority_id="jfsc",
                 source_name="Collective Investment Funds (Jersey) Law 1988",
                 source_url="https://www.jerseyfsc.org/legislation/collective-investment-funds-law-1988",
@@ -49,7 +52,7 @@ class JerseyBuilder(JurisdictionBuilder):
                 section_reference="Articles 2–15 – Certification of Funds",
                 reliability_score=0.95,
                 raw_excerpt=None,
-                regulatory_relevance_tag="Fund Registration",
+                regulatory_relevance_tag="Regulatory Framework",
                 last_verified_timestamp=datetime.utcnow(),
             )
         )
@@ -64,7 +67,7 @@ class JerseyBuilder(JurisdictionBuilder):
                 section_reference="Parts 2–5 – Authorisation and Registration",
                 reliability_score=0.95,
                 raw_excerpt=None,
-                regulatory_relevance_tag="Fund Registration",
+                regulatory_relevance_tag="Regulatory Framework",
                 last_verified_timestamp=datetime.utcnow(),
             )
         )
@@ -76,7 +79,7 @@ class JerseyBuilder(JurisdictionBuilder):
                 source_url=jfsc.base_url,
                 authority=SourceAuthority.PRIMARY,
                 authority_level=jfsc.level.value,
-                publication_date=datetime(2024, 1, 1),
+                publication_date=datetime(2026, 1, 1),
                 section_reference="Funds Handbook 2024 – Chapters 1–6",
                 reliability_score=jfsc.reliability_score,
                 raw_excerpt=None,
@@ -92,11 +95,12 @@ class JerseyBuilder(JurisdictionBuilder):
                 source_url=ogier.base_url,
                 authority=SourceAuthority.SECONDARY,
                 authority_level=ogier.level.value,
-                publication_date=datetime(2024, 6, 1),
+                publication_date=datetime(2026, 6, 1),
                 section_reference="Fund Types and Regulatory Requirements",
                 reliability_score=ogier.reliability_score,
                 raw_excerpt=None,
                 regulatory_relevance_tag="Fund Structure",
+                references_citation_id=jfsc_c1_id,
                 last_verified_timestamp=datetime.utcnow(),
             )
         )
@@ -122,11 +126,57 @@ class JerseyBuilder(JurisdictionBuilder):
                 source_url=jfsc.base_url,
                 authority=SourceAuthority.PRIMARY,
                 authority_level=jfsc.level.value,
-                publication_date=datetime(2024, 1, 1),
+                publication_date=datetime(2026, 1, 1),
                 section_reference="Jersey zero-ten tax regime and fund income tax treatment",
                 reliability_score=jfsc.reliability_score,
                 raw_excerpt=None,
                 regulatory_relevance_tag="Tax Framework",
+                last_verified_timestamp=datetime.utcnow(),
+            )
+        )
+
+        manager.add_citation(
+            CitationRecord(
+                authority_id="jfsc",
+                source_name="Jersey Financial Services Commission – Capital Adequacy Requirements",
+                source_url=jfsc.base_url,
+                authority=SourceAuthority.PRIMARY,
+                authority_level=jfsc.level.value,
+                publication_date=datetime(2026, 5, 1),
+                section_reference="JFSC – Capital Adequacy Requirements for Collective Investment Funds",
+                reliability_score=jfsc.reliability_score,
+                raw_excerpt=None,
+                regulatory_relevance_tag="Capital Requirements",
+                last_verified_timestamp=datetime.utcnow(),
+            )
+        )
+        manager.add_citation(
+            CitationRecord(
+                authority_id="jfsc",
+                source_name="Jersey Financial Services Commission – Tax and Economic Substance Guidance",
+                source_url=jfsc.base_url,
+                authority=SourceAuthority.PRIMARY,
+                authority_level=jfsc.level.value,
+                publication_date=datetime(2026, 4, 1),
+                section_reference="JFSC – Tax and Economic Substance Guidance for Jersey Funds",
+                reliability_score=jfsc.reliability_score,
+                raw_excerpt=None,
+                regulatory_relevance_tag="Tax Framework",
+                last_verified_timestamp=datetime.utcnow(),
+            )
+        )
+        manager.add_citation(
+            CitationRecord(
+                authority_id="jfsc",
+                source_name="Jersey Financial Services Commission – AML/CFT Compliance",
+                source_url=jfsc.base_url,
+                authority=SourceAuthority.PRIMARY,
+                authority_level=jfsc.level.value,
+                publication_date=datetime(2026, 2, 1),
+                section_reference="JFSC – AML/CFT Compliance Obligations Handbook",
+                reliability_score=jfsc.reliability_score,
+                raw_excerpt=None,
+                regulatory_relevance_tag="Compliance Obligations",
                 last_verified_timestamp=datetime.utcnow(),
             )
         )

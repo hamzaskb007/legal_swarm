@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from datetime import datetime
 from decimal import Decimal
+from uuid import uuid4
 
 from src.authority.resolver import AuthorityResolver
 from src.governance.source_governance import SourceGovernanceManager
@@ -38,8 +39,10 @@ class CaymanIslandsBuilder(JurisdictionBuilder):
         cima = resolver.get_by_id("cima")
         walkers = resolver.get_by_id("walkers")
 
+        cima_c1_id = uuid4()
         manager.add_citation(
             CitationRecord(
+                citation_id=cima_c1_id,
                 authority_id="cima",
                 source_name="Cayman Islands Mutual Funds Act (2021 Revision)",
                 source_url="https://www.cima.ky/legislation/mutual-funds-act-2021",
@@ -49,7 +52,7 @@ class CaymanIslandsBuilder(JurisdictionBuilder):
                 section_reference="Part I, Sections 4–6 – Registration Requirements",
                 reliability_score=0.97,
                 raw_excerpt=None,
-                regulatory_relevance_tag="Fund Registration",
+                regulatory_relevance_tag="Regulatory Framework",
                 last_verified_timestamp=datetime.utcnow(),
             )
         )
@@ -64,7 +67,7 @@ class CaymanIslandsBuilder(JurisdictionBuilder):
                 section_reference="Part II, Section 8 – Registration of Private Funds",
                 reliability_score=0.97,
                 raw_excerpt=None,
-                regulatory_relevance_tag="Fund Registration",
+                regulatory_relevance_tag="Regulatory Framework",
                 last_verified_timestamp=datetime.utcnow(),
             )
         )
@@ -76,7 +79,7 @@ class CaymanIslandsBuilder(JurisdictionBuilder):
                 source_url=cima.base_url,
                 authority=SourceAuthority.PRIMARY,
                 authority_level=cima.level.value,
-                publication_date=datetime(2024, 3, 1),
+                publication_date=datetime(2026, 3, 1),
                 section_reference="Regulatory Handbook – Chapter 2, Fund Registration",
                 reliability_score=cima.reliability_score,
                 raw_excerpt=None,
@@ -92,11 +95,12 @@ class CaymanIslandsBuilder(JurisdictionBuilder):
                 source_url=walkers.base_url,
                 authority=SourceAuthority.SECONDARY,
                 authority_level=walkers.level.value,
-                publication_date=datetime(2024, 6, 15),
+                publication_date=datetime(2026, 6, 15),
                 section_reference="Fund Structures Overview",
                 reliability_score=walkers.reliability_score,
                 raw_excerpt=None,
                 regulatory_relevance_tag="Fund Structure",
+                references_citation_id=cima_c1_id,
                 last_verified_timestamp=datetime.utcnow(),
             )
         )
@@ -107,11 +111,72 @@ class CaymanIslandsBuilder(JurisdictionBuilder):
                 source_url=cima.base_url,
                 authority=SourceAuthority.PRIMARY,
                 authority_level=cima.level.value,
-                publication_date=datetime(2024, 3, 1),
+                publication_date=datetime(2026, 3, 1),
                 section_reference="Regulatory Handbook – Tax Information and Exemption Provisions",
                 reliability_score=cima.reliability_score,
                 raw_excerpt=None,
                 regulatory_relevance_tag="Tax Framework",
+                last_verified_timestamp=datetime.utcnow(),
+            )
+        )
+
+        manager.add_citation(
+            CitationRecord(
+                authority_id="cima",
+                source_name="Cayman Islands Monetary Authority – Capital Adequacy Requirements",
+                source_url=cima.base_url,
+                authority=SourceAuthority.PRIMARY,
+                authority_level=cima.level.value,
+                publication_date=datetime(2026, 5, 1),
+                section_reference="Regulatory Handbook – Capital Adequacy",
+                reliability_score=cima.reliability_score,
+                raw_excerpt=None,
+                regulatory_relevance_tag="Capital Requirements",
+                last_verified_timestamp=datetime.utcnow(),
+            )
+        )
+        manager.add_citation(
+            CitationRecord(
+                authority_id="cima",
+                source_name="Cayman Islands Monetary Authority – Minimum Capital Guidance",
+                source_url=cima.base_url,
+                authority=SourceAuthority.PRIMARY,
+                authority_level=cima.level.value,
+                publication_date=datetime(2026, 6, 1),
+                section_reference="Regulatory Handbook – Capital and Financial Resources",
+                reliability_score=cima.reliability_score,
+                raw_excerpt=None,
+                regulatory_relevance_tag="Capital Requirements",
+                last_verified_timestamp=datetime.utcnow(),
+            )
+        )
+        manager.add_citation(
+            CitationRecord(
+                authority_id="cima",
+                source_name="Cayman Islands Monetary Authority – Tax and Economic Substance",
+                source_url=cima.base_url,
+                authority=SourceAuthority.PRIMARY,
+                authority_level=cima.level.value,
+                publication_date=datetime(2026, 4, 1),
+                section_reference="Regulatory Handbook – Tax and Economic Substance",
+                reliability_score=cima.reliability_score,
+                raw_excerpt=None,
+                regulatory_relevance_tag="Tax Framework",
+                last_verified_timestamp=datetime.utcnow(),
+            )
+        )
+        manager.add_citation(
+            CitationRecord(
+                authority_id="cima",
+                source_name="Cayman Islands Monetary Authority – AML/CFT Compliance",
+                source_url=cima.base_url,
+                authority=SourceAuthority.PRIMARY,
+                authority_level=cima.level.value,
+                publication_date=datetime(2026, 2, 1),
+                section_reference="Regulatory Handbook – AML/CFT Compliance Obligations",
+                reliability_score=cima.reliability_score,
+                raw_excerpt=None,
+                regulatory_relevance_tag="Compliance Obligations",
                 last_verified_timestamp=datetime.utcnow(),
             )
         )

@@ -1,6 +1,9 @@
 from __future__ import annotations
 
-from src.schema.schema import RegulatoryEntry
+from urllib.parse import urlparse
+from uuid import UUID
+
+from src.schema.schema import CitationRecord, RegulatoryEntry, SourceAuthority
 from src.validation.models import ValidationReport, ValidationResult
 from src.validation.enums import ValidationStatus
 
@@ -410,39 +413,133 @@ class CapitalCitationForCapitalRequirementsRule(ValidationRule):
         )
 
 
+def _normalize_url(url: str) -> str:
+    """Normalize a URL for deterministic deduplication.
+
+    Strips trailing slashes from the path and lowercases the scheme+netloc+path.
+    """
+    parsed = urlparse(url)
+    scheme = parsed.scheme.lower()
+    netloc = parsed.netloc.lower()
+    path = parsed.path.lower().rstrip("/")
+    query = parsed.query
+    fragment = parsed.fragment
+    result = f"{scheme}://{netloc}{path}"
+    if query:
+        result += f"?{query}"
+    if fragment:
+        result += f"#{fragment}"
+    return result
+
+
+_DEFAULT_DENSITY_REQUIREMENTS: dict[str, int] = {
+    "Regulatory Framework": 2,
+    "Capital Requirements": 2,
+    "Tax Framework": 2,
+    "Compliance Obligations": 1,
+}
+
+
 class CitationDensityRule(ValidationRule):
     rule_id = "VAL_018"
-    rule_description = "Entry must have sufficient citations per regulatory category (SRS §5.3)"
+    rule_description = (
+        "Entry must meet minimum citation counts per regulatory category (SRS §5.3)"
+    )
 
     def __init__(
         self,
         requirements: dict[str, int] | None = None,
     ) -> None:
-        self.requirements = dict(requirements or {})
+        self.requirements = dict(requirements) if requirements is not None else dict(
+            _DEFAULT_DENSITY_REQUIREMENTS
+        )
+
+    @staticmethod
+    def _independent_count(citations: list[CitationRecord]) -> int:
+        """Count independent citations by deduplicating on citation_id and
+        normalized source_url."""
+        seen_ids: set[UUID] = set()
+        seen_urls: set[str] = set()
+        count = 0
+        for c in citations:
+            if c.citation_id in seen_ids:
+                continue
+            if c.source_url:
+                norm = _normalize_url(c.source_url)
+                if norm in seen_urls:
+                    continue
+                seen_urls.add(norm)
+            seen_ids.add(c.citation_id)
+            count += 1
+        return count
+
+    @staticmethod
+    def _category_is_present(tag: str, entry: RegulatoryEntry) -> bool:
+        """Determine whether a regulatory category is present in the entry.
+
+        A category is considered present when the entry contains a field
+        or structure that gives rise to a requirement in that area.
+        """
+        if tag == "Regulatory Framework":
+            return True
+        if tag == "Capital Requirements":
+            return any(
+                fs.min_capital is not None
+                and fs.min_capital.amount is not None
+                and fs.min_capital.amount > 0
+                for fs in entry.permitted_fund_structures
+            )
+        if tag == "Tax Framework":
+            return entry.tax_summary is not None
+        if tag == "Compliance Obligations":
+            return True
+        return False
 
     def check(self, entry: RegulatoryEntry) -> ValidationResult:
         all_citations = (
-            entry.source_governance.primary_citations
-            + entry.source_governance.secondary_citations
-            + entry.source_governance.tertiary_citations
+            list(entry.source_governance.primary_citations)
+            + list(entry.source_governance.secondary_citations)
+            + list(entry.source_governance.tertiary_citations)
         )
-        by_tag: dict[str, int] = {}
-        for c in all_citations:
-            tag = c.regulatory_relevance_tag
-            by_tag[tag] = by_tag.get(tag, 0) + 1
+
+        failures: list[str] = []
 
         for tag, required in self.requirements.items():
-            actual = by_tag.get(tag, 0)
+            if not self._category_is_present(tag, entry):
+                continue
+
+            tagged = [c for c in all_citations if c.regulatory_relevance_tag == tag]
+
+            if tag == "Regulatory Framework":
+                actual = self._independent_count(tagged)
+            else:
+                actual = len(tagged)
+
             if actual < required:
-                return ValidationResult(
-                    rule_id=self.rule_id,
-                    rule_description=self.rule_description,
-                    status=ValidationStatus.FAILED,
-                    field_path="source_governance",
-                    message=(
-                        f"Category '{tag}' has {actual} citation(s), minimum {required} required"
-                    ),
+                failures.append(
+                    f"Category '{tag}' has {actual} independent citation(s), "
+                    f"minimum {required} required"
                 )
+                continue
+
+            if tag == "Compliance Obligations":
+                authoritative = any(
+                    c.authority == SourceAuthority.PRIMARY for c in tagged
+                )
+                if not authoritative:
+                    failures.append(
+                        "Compliance Obligations citations must include at least "
+                        "one authoritative (PRIMARY) source"
+                    )
+
+        if failures:
+            return ValidationResult(
+                rule_id=self.rule_id,
+                rule_description=self.rule_description,
+                status=ValidationStatus.FAILED,
+                field_path="source_governance",
+                message="; ".join(failures),
+            )
 
         return ValidationResult(
             rule_id=self.rule_id,
@@ -458,14 +555,21 @@ class Level45ReferenceRule(ValidationRule):
 
     def check(self, entry: RegulatoryEntry) -> ValidationResult:
         all_citations = (
-            entry.source_governance.primary_citations
-            + entry.source_governance.secondary_citations
-            + entry.source_governance.tertiary_citations
+            list(entry.source_governance.primary_citations)
+            + list(entry.source_governance.secondary_citations)
+            + list(entry.source_governance.tertiary_citations)
         )
-        level_45 = [c for c in all_citations if c.authority_level >= 4]
 
-        for citation in level_45:
-            if citation.references_citation_id is None:
+        level_by_id: dict[UUID, int] = {}
+        for c in all_citations:
+            level_by_id[c.citation_id] = c.authority_level
+
+        for citation in all_citations:
+            if citation.authority_level < 4:
+                continue
+
+            ref_id = citation.references_citation_id
+            if ref_id is None:
                 return ValidationResult(
                     rule_id=self.rule_id,
                     rule_description=self.rule_description,
@@ -478,6 +582,77 @@ class Level45ReferenceRule(ValidationRule):
                     ),
                 )
 
+            target_level = level_by_id.get(ref_id)
+            if target_level is None:
+                return ValidationResult(
+                    rule_id=self.rule_id,
+                    rule_description=self.rule_description,
+                    status=ValidationStatus.FAILED,
+                    field_path="source_governance",
+                    message=(
+                        f"Level {citation.authority_level} citation "
+                        f"'{citation.citation_id}' references nonexistent "
+                        f"citation '{ref_id}'"
+                    ),
+                )
+
+            if target_level > 3:
+                return ValidationResult(
+                    rule_id=self.rule_id,
+                    rule_description=self.rule_description,
+                    status=ValidationStatus.FAILED,
+                    field_path="source_governance",
+                    message=(
+                        f"Level {citation.authority_level} citation "
+                        f"'{citation.citation_id}' references Level {target_level} "
+                        f"citation '{ref_id}' — must reference Level 1-3"
+                    ),
+                )
+
+        return ValidationResult(
+            rule_id=self.rule_id,
+            rule_description=self.rule_description,
+            status=ValidationStatus.PASSED,
+            field_path="source_governance",
+        )
+
+
+class AuthorityConsistencyRule(ValidationRule):
+    rule_id = "VAL_020"
+    rule_description = "Citation authority and authority_level must be consistent"
+
+    def check(self, entry: RegulatoryEntry) -> ValidationResult:
+        all_citations = (
+            list(entry.source_governance.primary_citations)
+            + list(entry.source_governance.secondary_citations)
+            + list(entry.source_governance.tertiary_citations)
+        )
+
+        level_to_authority = {
+            1: SourceAuthority.PRIMARY,
+            2: SourceAuthority.PRIMARY,
+            3: SourceAuthority.PRIMARY,
+            4: SourceAuthority.SECONDARY,
+            5: SourceAuthority.TERTIARY,
+        }
+
+        messages: list[str] = []
+        for c in all_citations:
+            expected = level_to_authority.get(c.authority_level)
+            if expected is not None and c.authority != expected:
+                messages.append(
+                    f"Citation '{c.citation_id}' has authority={c.authority.value} "
+                    f"and authority_level={c.authority_level}"
+                )
+
+        if messages:
+            return ValidationResult(
+                rule_id=self.rule_id,
+                rule_description=self.rule_description,
+                status=ValidationStatus.FAILED,
+                field_path="source_governance",
+                message="; ".join(messages),
+            )
         return ValidationResult(
             rule_id=self.rule_id,
             rule_description=self.rule_description,
@@ -504,6 +679,9 @@ DEFAULT_RULES: list[ValidationRule] = [
     MinimumPrimaryCitationsRule(),
     TaxCitationForTaxSummaryRule(),
     CapitalCitationForCapitalRequirementsRule(),
+    CitationDensityRule(),
+    Level45ReferenceRule(),
+    AuthorityConsistencyRule(),
 ]
 
 

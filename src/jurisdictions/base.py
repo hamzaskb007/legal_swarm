@@ -13,6 +13,7 @@ from src.schema.schema import (
     RegulatoryEntry,
     RegulatoryRelevanceTag,
 )
+from src.validation.enums import ValidationStatus
 from src.validation.models import ValidationReport
 from src.validation.validators import ValidationEngine
 
@@ -21,15 +22,19 @@ _REQUIRED_TAG_COVERAGE: list[tuple[str, RegulatoryRelevanceTag, str]] = [
         "tax_summary",
         RegulatoryRelevanceTag.TAX_FRAMEWORK,
         "populated tax_summary requires at least one citation with "
-        "regulatory_relevance_tag='Tax Framework' — tag an existing tax-related "
-        "citation or add a new CitationRecord with the correct tag",
+        "regulatory_relevance_tag='Tax Framework'",
     ),
     (
         "permitted_fund_structures",
         RegulatoryRelevanceTag.CAPITAL_REQUIREMENTS,
         "permitted_fund_structures with min_capital.amount > 0 require at least "
-        "one citation with regulatory_relevance_tag='Capital Requirements' — tag "
-        "an existing capital-related citation or add a new CitationRecord",
+        "one citation with regulatory_relevance_tag='Capital Requirements'",
+    ),
+    (
+        "all_entries",
+        RegulatoryRelevanceTag.REGULATORY_FRAMEWORK,
+        "every entry requires at least one citation with "
+        "regulatory_relevance_tag='Regulatory Framework'",
     ),
 ]
 
@@ -88,6 +93,8 @@ class JurisdictionBuilder(ABC):
                 )
                 if not has_capital:
                     continue
+            elif field_name == "all_entries":
+                pass
 
             if required_tag.value not in tags:
                 raise ValueError(f"{entry.jurisdiction_code}: {hint} (found tags: {sorted(tags)})")
@@ -101,6 +108,15 @@ class JurisdictionBuilder(ABC):
 
         engine = ValidationEngine()
         report = engine.validate(entry)
+
+        if report.overall_status == ValidationStatus.FAILED:
+            failed_rules = [
+                r.rule_id for r in report.results if r.status == ValidationStatus.FAILED
+            ]
+            raise ValueError(
+                f"{entry.jurisdiction_code}: validation FAILED — "
+                f"blocking output. Failed rules: {failed_rules}"
+            )
 
         detector = CitationContradictionDetector()
         contradictions = detector.detect(entry)

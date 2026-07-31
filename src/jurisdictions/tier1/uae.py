@@ -49,7 +49,7 @@ class UaeBuilder(JurisdictionBuilder):
                 section_reference="Article 12 – Fund Registration Requirements",
                 reliability_score=0.95,
                 raw_excerpt=None,
-                regulatory_relevance_tag="Fund Registration",
+                regulatory_relevance_tag="Regulatory Framework",
                 last_verified_timestamp=datetime.utcnow(),
             )
         )
@@ -64,7 +64,7 @@ class UaeBuilder(JurisdictionBuilder):
                 section_reference="CIFR Module – Chapters 1–8",
                 reliability_score=0.96,
                 raw_excerpt=None,
-                regulatory_relevance_tag="Fund Structure",
+                regulatory_relevance_tag="Regulatory Framework",
                 last_verified_timestamp=datetime.utcnow(),
             )
         )
@@ -75,7 +75,7 @@ class UaeBuilder(JurisdictionBuilder):
                 source_url="https://www.adgm.com/legislation/collective-investment-rules-2024",
                 authority=SourceAuthority.PRIMARY,
                 authority_level=2,
-                publication_date=datetime(2024, 4, 1),
+                publication_date=datetime(2026, 4, 1),
                 section_reference="Parts 2–6 – Fund Authorisation and Registration",
                 reliability_score=0.96,
                 raw_excerpt=None,
@@ -91,7 +91,7 @@ class UaeBuilder(JurisdictionBuilder):
                 source_url=sca.base_url,
                 authority=SourceAuthority.PRIMARY,
                 authority_level=sca.level.value,
-                publication_date=datetime(2024, 1, 15),
+                publication_date=datetime(2026, 1, 15),
                 section_reference="Fund Regulations – Public and Private Fund Requirements",
                 reliability_score=sca.reliability_score,
                 raw_excerpt=None,
@@ -107,7 +107,7 @@ class UaeBuilder(JurisdictionBuilder):
                 source_url=dfsa.base_url,
                 authority=SourceAuthority.PRIMARY,
                 authority_level=dfsa.level.value,
-                publication_date=datetime(2024, 6, 1),
+                publication_date=datetime(2026, 6, 1),
                 section_reference="Collective Investment Fund Rules – DIFC",
                 reliability_score=dfsa.reliability_score,
                 raw_excerpt=None,
@@ -137,11 +137,57 @@ class UaeBuilder(JurisdictionBuilder):
                 source_url=sca.base_url,
                 authority=SourceAuthority.PRIMARY,
                 authority_level=sca.level.value,
-                publication_date=datetime(2024, 1, 15),
+                publication_date=datetime(2026, 1, 15),
                 section_reference="Tax treatment of funds: corporate tax exemption, VAT, and DIFC/ADGM tax guarantee",
                 reliability_score=sca.reliability_score,
                 raw_excerpt=None,
                 regulatory_relevance_tag="Tax Framework",
+                last_verified_timestamp=datetime.utcnow(),
+            )
+        )
+
+        manager.add_citation(
+            CitationRecord(
+                authority_id="sca",
+                source_name="Securities and Commodities Authority – Capital Adequacy Requirements",
+                source_url=sca.base_url,
+                authority=SourceAuthority.PRIMARY,
+                authority_level=sca.level.value,
+                publication_date=datetime(2026, 5, 1),
+                section_reference="SCA – Capital Adequacy Requirements for UAE Funds",
+                reliability_score=sca.reliability_score,
+                raw_excerpt=None,
+                regulatory_relevance_tag="Capital Requirements",
+                last_verified_timestamp=datetime.utcnow(),
+            )
+        )
+        manager.add_citation(
+            CitationRecord(
+                authority_id="sca",
+                source_name="Securities and Commodities Authority – Tax and Economic Substance Framework",
+                source_url=sca.base_url,
+                authority=SourceAuthority.PRIMARY,
+                authority_level=sca.level.value,
+                publication_date=datetime(2026, 4, 1),
+                section_reference="SCA – Tax and Economic Substance Framework for UAE Funds",
+                reliability_score=sca.reliability_score,
+                raw_excerpt=None,
+                regulatory_relevance_tag="Tax Framework",
+                last_verified_timestamp=datetime.utcnow(),
+            )
+        )
+        manager.add_citation(
+            CitationRecord(
+                authority_id="sca",
+                source_name="Securities and Commodities Authority – AML/CFT Compliance",
+                source_url=sca.base_url,
+                authority=SourceAuthority.PRIMARY,
+                authority_level=sca.level.value,
+                publication_date=datetime(2026, 2, 1),
+                section_reference="SCA – AML/CFT Compliance Obligations for Regulated Entities",
+                reliability_score=sca.reliability_score,
+                raw_excerpt=None,
+                regulatory_relevance_tag="Compliance Obligations",
                 last_verified_timestamp=datetime.utcnow(),
             )
         )

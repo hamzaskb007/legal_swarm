@@ -3,6 +3,7 @@
 import pytest
 from decimal import Decimal
 from datetime import datetime
+from uuid import uuid4
 
 from src.schema.schema import (
     BeneficialOwnershipRule,
@@ -39,20 +40,28 @@ from src.versioning.delta_tracker import DeltaTracker
 @pytest.fixture
 def full_entry():
     manager = SourceGovernanceManager()
+
+    # Regulatory Framework citation 1
+    c1_citation_id = uuid4()
     manager.add_citation(
         CitationRecord(
-            source_name="UAE SCA",
+            citation_id=c1_citation_id,
+            source_name="UAE SCA Regulatory Framework",
             source_url="https://sca.gov.ae",
             authority=SourceAuthority.PRIMARY,
             authority_level=1,
             publication_date=datetime(2024, 1, 1),
             reliability_score=0.95,
-            regulatory_relevance_tag="Fund Registration",
+            regulatory_relevance_tag="Regulatory Framework",
             last_verified_timestamp=datetime.utcnow(),
         )
     )
+
+    # Regulatory Framework citation 2
+    c2_citation_id = uuid4()
     manager.add_citation(
         CitationRecord(
+            citation_id=c2_citation_id,
             source_name="UAE Federal Law No. 4 of 2000",
             source_url="https://www.sca.gov.ae/legislation/federal-law-no-4-2000",
             authority=SourceAuthority.PRIMARY,
@@ -60,22 +69,86 @@ def full_entry():
             publication_date=datetime(2000, 1, 1),
             section_reference="Article 12",
             reliability_score=0.95,
+            regulatory_relevance_tag="Regulatory Framework",
+            last_verified_timestamp=datetime.utcnow(),
+        )
+    )
+
+    # Capital Requirements citation 1
+    manager.add_citation(
+        CitationRecord(
+            source_name="UAE Fund Capital Rules",
+            source_url="https://www.sca.gov.ae/legislation/capital-rules",
+            authority=SourceAuthority.PRIMARY,
+            authority_level=2,
+            publication_date=datetime(2023, 1, 1),
+            section_reference="Chapter 4",
+            reliability_score=0.95,
             regulatory_relevance_tag="Capital Requirements",
             last_verified_timestamp=datetime.utcnow(),
         )
     )
+
+    # Capital Requirements citation 2
     manager.add_citation(
         CitationRecord(
-            source_name="Legal Commentary",
-            source_url="https://legal.example.com",
+            source_name="UAE Minimum Capital Requirements",
+            source_url="https://www.sca.gov.ae/legislation/minimum-capital",
+            authority=SourceAuthority.PRIMARY,
+            authority_level=2,
+            publication_date=datetime(2023, 6, 1),
+            section_reference="Section 8",
+            reliability_score=0.94,
+            regulatory_relevance_tag="Capital Requirements",
+            last_verified_timestamp=datetime.utcnow(),
+        )
+    )
+
+    # Tax Framework citation 1
+    manager.add_citation(
+        CitationRecord(
+            source_name="UAE Tax Law",
+            source_url="https://www.sca.gov.ae/legislation/tax-law",
+            authority=SourceAuthority.PRIMARY,
+            authority_level=2,
+            publication_date=datetime(2022, 1, 1),
+            section_reference="Article 15",
+            reliability_score=0.95,
+            regulatory_relevance_tag="Tax Framework",
+            last_verified_timestamp=datetime.utcnow(),
+        )
+    )
+
+    # Tax Framework citation 2 (Level 4 referencing c1)
+    manager.add_citation(
+        CitationRecord(
+            source_name="Legal Commentary on UAE Tax",
+            source_url="https://www.legal500.com/guides/chapter/uae-tax/",
             authority=SourceAuthority.SECONDARY,
             authority_level=4,
             publication_date=datetime(2024, 6, 1),
             reliability_score=0.75,
             regulatory_relevance_tag="Tax Framework",
+            references_citation_id=c1_citation_id,
             last_verified_timestamp=datetime.utcnow(),
         )
     )
+
+    # Compliance Obligations citation (authoritative)
+    manager.add_citation(
+        CitationRecord(
+            source_name="UAE AML Compliance Requirements",
+            source_url="https://www.sca.gov.ae/legislation/aml-rules",
+            authority=SourceAuthority.PRIMARY,
+            authority_level=2,
+            publication_date=datetime(2023, 3, 1),
+            section_reference="Part 2",
+            reliability_score=0.95,
+            regulatory_relevance_tag="Compliance Obligations",
+            last_verified_timestamp=datetime.utcnow(),
+        )
+    )
+
     governance = manager.build()
 
     return RegulatoryEntry(
@@ -194,3 +267,70 @@ class TestFullPipeline:
         s2 = scorer.score(full_entry)
         assert r1.overall_status == r2.overall_status
         assert s1.score == s2.score
+
+    def test_hard_gate_accepts_valid_entry(self, full_entry):
+        from src.jurisdictions.base import JurisdictionBuilder
+
+        class PassthroughBuilder(JurisdictionBuilder):
+            def build_entry(self):
+                return full_entry
+
+        builder = PassthroughBuilder()
+        entry, report = builder.run_pipeline(full_entry)
+        assert report.overall_status != ValidationStatus.FAILED
+
+    def test_hard_gate_rejects_failed_entry(self):
+        from src.jurisdictions.base import JurisdictionBuilder
+        from src.governance.source_governance import SourceGovernanceManager
+        from src.schema.schema import (
+            CitationRecord, ConfidenceScore, ConfidenceLevel,
+            FundStructure, InvestorRequirements, JurisdictionTier,
+            RegulatoryEntry, SourceAuthority, VersionRecord,
+        )
+
+        manager = SourceGovernanceManager()
+        manager.add_citation(
+            CitationRecord(
+                source_name="Test Source",
+                source_url="https://test.gov/rule",
+                authority=SourceAuthority.SECONDARY,
+                authority_level=4,
+                publication_date=datetime(2026, 1, 1),
+                reliability_score=0.5,
+                regulatory_relevance_tag="Regulatory Framework",
+                last_verified_timestamp=datetime.utcnow(),
+            )
+        )
+        governance = manager.build()
+
+        bad_entry = RegulatoryEntry(
+            jurisdiction_code="XX",
+            jurisdiction_name="Test",
+            tier=JurisdictionTier.TIER_1,
+            primary_regulator="Test Regulator",
+            permitted_fund_structures=[
+                FundStructure(
+                    structure_type="Test Fund",
+                    is_permitted=True,
+                    min_capital=CapitalRequirement(amount=Decimal("1000000"), currency="USD"),
+                )
+            ],
+            investor_requirements=InvestorRequirements(qualified_investor_required=True),
+            tax_summary="N/A",
+            aml_kyc_framework="N/A",
+            passporting_notes="N/A",
+            source_governance=governance,
+            confidence=ConfidenceScore(
+                level=ConfidenceLevel.UNVERIFIED, score=0.0,
+                rationale="Test placeholder",
+            ),
+            version=VersionRecord(version_id="1.0.0", author="test"),
+        )
+
+        class FailingBuilder(JurisdictionBuilder):
+            def build_entry(self):
+                return bad_entry
+
+        builder = FailingBuilder()
+        with pytest.raises(ValueError, match="validation FAILED"):
+            builder.run_pipeline(bad_entry)

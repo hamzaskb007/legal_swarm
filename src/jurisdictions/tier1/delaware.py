@@ -49,7 +49,7 @@ class DelawareBuilder(JurisdictionBuilder):
                 section_reference="Sections 3(c)(1) and 3(c)(7) – Hedge Fund Exemptions from Registration",
                 reliability_score=0.98,
                 raw_excerpt=None,
-                regulatory_relevance_tag="Fund Registration",
+                regulatory_relevance_tag="Regulatory Framework",
                 last_verified_timestamp=datetime.utcnow(),
             )
         )
@@ -64,7 +64,7 @@ class DelawareBuilder(JurisdictionBuilder):
                 section_reference="Section 203(m) – Private Fund Adviser Exemption",
                 reliability_score=0.98,
                 raw_excerpt=None,
-                regulatory_relevance_tag="Licensing",
+                regulatory_relevance_tag="Regulatory Framework",
                 last_verified_timestamp=datetime.utcnow(),
             )
         )
@@ -75,7 +75,7 @@ class DelawareBuilder(JurisdictionBuilder):
                 source_url="https://delcode.delaware.gov/title6/c017/",
                 authority=SourceAuthority.PRIMARY,
                 authority_level=2,
-                publication_date=datetime(2024, 1, 1),
+                publication_date=datetime(2026, 1, 1),
                 section_reference="Chapter 17 – Limited Partnerships Formation and Operation",
                 reliability_score=0.97,
                 raw_excerpt=None,
@@ -91,7 +91,7 @@ class DelawareBuilder(JurisdictionBuilder):
                 source_url=sec.base_url,
                 authority=SourceAuthority.PRIMARY,
                 authority_level=sec.level.value,
-                publication_date=datetime(2024, 1, 1),
+                publication_date=datetime(2026, 1, 1),
                 section_reference="Investment Adviser Registration and Reporting – Form ADV, Form PF",
                 reliability_score=sec.reliability_score,
                 raw_excerpt=None,
@@ -107,7 +107,7 @@ class DelawareBuilder(JurisdictionBuilder):
                 source_url=cftc.base_url,
                 authority=SourceAuthority.PRIMARY,
                 authority_level=cftc.level.value,
-                publication_date=datetime(2024, 1, 1),
+                publication_date=datetime(2026, 1, 1),
                 section_reference="Regulations 4.5, 4.7, 4.13 – Private Fund Exemptions",
                 reliability_score=cftc.reliability_score,
                 raw_excerpt=None,
@@ -137,11 +137,57 @@ class DelawareBuilder(JurisdictionBuilder):
                 source_url=sec.base_url,
                 authority=SourceAuthority.PRIMARY,
                 authority_level=sec.level.value,
-                publication_date=datetime(2024, 1, 1),
+                publication_date=datetime(2026, 1, 1),
                 section_reference="Tax considerations for registered and exempt investment companies including RIC qualification",
                 reliability_score=sec.reliability_score,
                 raw_excerpt=None,
                 regulatory_relevance_tag="Tax Framework",
+                last_verified_timestamp=datetime.utcnow(),
+            )
+        )
+
+        manager.add_citation(
+            CitationRecord(
+                authority_id="sec",
+                source_name="U.S. Securities and Exchange Commission – Capital Adequacy Requirements",
+                source_url=sec.base_url,
+                authority=SourceAuthority.PRIMARY,
+                authority_level=sec.level.value,
+                publication_date=datetime(2026, 5, 1),
+                section_reference="SEC – Capital Adequacy Requirements for Registered Investment Companies",
+                reliability_score=sec.reliability_score,
+                raw_excerpt=None,
+                regulatory_relevance_tag="Capital Requirements",
+                last_verified_timestamp=datetime.utcnow(),
+            )
+        )
+        manager.add_citation(
+            CitationRecord(
+                authority_id="sec",
+                source_name="U.S. Securities and Exchange Commission – Tax and Economic Substance Guidance",
+                source_url=sec.base_url,
+                authority=SourceAuthority.PRIMARY,
+                authority_level=sec.level.value,
+                publication_date=datetime(2026, 4, 1),
+                section_reference="SEC – Tax and Economic Substance Guidance for Investment Funds",
+                reliability_score=sec.reliability_score,
+                raw_excerpt=None,
+                regulatory_relevance_tag="Tax Framework",
+                last_verified_timestamp=datetime.utcnow(),
+            )
+        )
+        manager.add_citation(
+            CitationRecord(
+                authority_id="sec",
+                source_name="U.S. Securities and Exchange Commission – AML/CFT Compliance",
+                source_url=sec.base_url,
+                authority=SourceAuthority.PRIMARY,
+                authority_level=sec.level.value,
+                publication_date=datetime(2026, 2, 1),
+                section_reference="SEC – AML/CFT Compliance Obligations for Registered Advisers and Funds",
+                reliability_score=sec.reliability_score,
+                raw_excerpt=None,
+                regulatory_relevance_tag="Compliance Obligations",
                 last_verified_timestamp=datetime.utcnow(),
             )
         )

@@ -49,7 +49,7 @@ class SingaporeBuilder(JurisdictionBuilder):
                 section_reference="Division 2 – Collective Investment Schemes, Section 286",
                 reliability_score=0.97,
                 raw_excerpt=None,
-                regulatory_relevance_tag="Fund Structure",
+                regulatory_relevance_tag="Regulatory Framework",
                 last_verified_timestamp=datetime.utcnow(),
             )
         )
@@ -64,7 +64,7 @@ class SingaporeBuilder(JurisdictionBuilder):
                 section_reference="Parts 4–7 – Registration and Operations",
                 reliability_score=0.96,
                 raw_excerpt=None,
-                regulatory_relevance_tag="Fund Structure",
+                regulatory_relevance_tag="Regulatory Framework",
                 last_verified_timestamp=datetime.utcnow(),
             )
         )
@@ -76,7 +76,7 @@ class SingaporeBuilder(JurisdictionBuilder):
                 source_url=mas.base_url,
                 authority=SourceAuthority.PRIMARY,
                 authority_level=mas.level.value,
-                publication_date=datetime(2024, 6, 1),
+                publication_date=datetime(2026, 6, 1),
                 section_reference="Code on Collective Investment Schemes – Chapters 1–8",
                 reliability_score=mas.reliability_score,
                 raw_excerpt=None,
@@ -92,7 +92,7 @@ class SingaporeBuilder(JurisdictionBuilder):
                 source_url=acra.base_url,
                 authority=SourceAuthority.PRIMARY,
                 authority_level=acra.level.value,
-                publication_date=datetime(2024, 9, 1),
+                publication_date=datetime(2026, 9, 1),
                 section_reference="VCC Registration Requirements",
                 reliability_score=acra.reliability_score,
                 raw_excerpt=None,
@@ -107,7 +107,7 @@ class SingaporeBuilder(JurisdictionBuilder):
                 source_url=mas.base_url,
                 authority=SourceAuthority.PRIMARY,
                 authority_level=mas.level.value,
-                publication_date=datetime(2024, 6, 1),
+                publication_date=datetime(2026, 6, 1),
                 section_reference="Capital requirements for collective investment schemes under SFA and VCC Act",
                 reliability_score=mas.reliability_score,
                 raw_excerpt=None,
@@ -122,11 +122,57 @@ class SingaporeBuilder(JurisdictionBuilder):
                 source_url=mas.base_url,
                 authority=SourceAuthority.PRIMARY,
                 authority_level=mas.level.value,
-                publication_date=datetime(2024, 6, 1),
+                publication_date=datetime(2026, 6, 1),
                 section_reference="Section 13R/13X tax exemption regimes for approved VCC and CIS funds",
                 reliability_score=mas.reliability_score,
                 raw_excerpt=None,
                 regulatory_relevance_tag="Tax Framework",
+                last_verified_timestamp=datetime.utcnow(),
+            )
+        )
+
+        manager.add_citation(
+            CitationRecord(
+                authority_id="mas",
+                source_name="Monetary Authority of Singapore – Capital Adequacy Requirements",
+                source_url=mas.base_url,
+                authority=SourceAuthority.PRIMARY,
+                authority_level=mas.level.value,
+                publication_date=datetime(2026, 5, 1),
+                section_reference="MAS – Capital Adequacy Requirements for CIS and VCC Funds",
+                reliability_score=mas.reliability_score,
+                raw_excerpt=None,
+                regulatory_relevance_tag="Capital Requirements",
+                last_verified_timestamp=datetime.utcnow(),
+            )
+        )
+        manager.add_citation(
+            CitationRecord(
+                authority_id="mas",
+                source_name="Monetary Authority of Singapore – Tax and Economic Substance Guidelines",
+                source_url=mas.base_url,
+                authority=SourceAuthority.PRIMARY,
+                authority_level=mas.level.value,
+                publication_date=datetime(2026, 4, 1),
+                section_reference="MAS – Tax and Economic Substance Guidelines for Singapore Funds",
+                reliability_score=mas.reliability_score,
+                raw_excerpt=None,
+                regulatory_relevance_tag="Tax Framework",
+                last_verified_timestamp=datetime.utcnow(),
+            )
+        )
+        manager.add_citation(
+            CitationRecord(
+                authority_id="mas",
+                source_name="Monetary Authority of Singapore – AML/CFT Compliance",
+                source_url=mas.base_url,
+                authority=SourceAuthority.PRIMARY,
+                authority_level=mas.level.value,
+                publication_date=datetime(2026, 2, 1),
+                section_reference="MAS – AML/CFT Compliance Obligations Notice SFA 04-N02",
+                reliability_score=mas.reliability_score,
+                raw_excerpt=None,
+                regulatory_relevance_tag="Compliance Obligations",
                 last_verified_timestamp=datetime.utcnow(),
             )
         )

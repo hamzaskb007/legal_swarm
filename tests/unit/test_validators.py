@@ -1,5 +1,7 @@
 """Unit tests for validation engine."""
 
+from uuid import uuid4
+
 from src.schema.schema import (
     ConfidenceLevel,
     JurisdictionTier,
@@ -410,7 +412,7 @@ class TestValidationEngine:
         entry = make_entry(tax_summary="N/A", aml_kyc_framework="N/A", passporting_notes="N/A")
         report = engine.validate(entry)
         assert report is not None
-        assert len(report.results) == 17
+        assert len(report.results) == 20
 
     def test_engine_add_rule(self):
         from src.validation.validators import ValidationRule
@@ -431,4 +433,117 @@ class TestValidationEngine:
         engine.add_rule(DummyRule())
         entry = make_entry(tax_summary="N/A", aml_kyc_framework="N/A", passporting_notes="N/A")
         report = engine.validate(entry)
-        assert len(report.results) == 18
+        assert len(report.results) == 21
+
+
+class TestValidationEngineGovernance:
+    def _make_entry_with_citations(
+        self, primary_citations=None, secondary_citations=None, tertiary_citations=None
+    ):
+        from src.schema.schema import SourceGovernanceRecord
+        governance = SourceGovernanceRecord(
+            primary_citations=primary_citations or [],
+            secondary_citations=secondary_citations or [],
+            tertiary_citations=tertiary_citations or [],
+        )
+        return make_entry(source_governance=governance)
+
+    def test_invalid_level_5_reference_detected(self):
+        """Level 5 citation referencing nonexistent UUID must fail through ValidationEngine."""
+        l5 = make_citation(
+            authority_level=5,
+            authority=SourceAuthority.TERTIARY,
+            references_citation_id=uuid4(),
+            regulatory_relevance_tag="Regulatory Framework",
+            source_url="https://ex.gov/ter",
+            source_name="Bad Ref",
+        )
+        entry = self._make_entry_with_citations(tertiary_citations=[l5])
+        engine = ValidationEngine()
+        report = engine.validate(entry)
+        assert report.overall_status == ValidationStatus.FAILED
+
+    def test_valid_level_5_reference_passes(self):
+        """Level 5 citation referencing a real Level 1 citation must pass."""
+        l1 = make_citation(
+            authority_level=1,
+            authority=SourceAuthority.PRIMARY,
+            regulatory_relevance_tag="Regulatory Framework",
+            source_url="https://ex.gov/primary/1",
+            source_name="Primary Source",
+        )
+        l5 = make_citation(
+            authority_level=5,
+            authority=SourceAuthority.TERTIARY,
+            references_citation_id=l1.citation_id,
+            regulatory_relevance_tag="Regulatory Framework",
+            source_url="https://ex.gov/ter/1",
+            source_name="Tertiary Source",
+        )
+        l1b = make_citation(
+            authority_level=1,
+            authority=SourceAuthority.PRIMARY,
+            regulatory_relevance_tag="Regulatory Framework",
+            source_url="https://ex.gov/primary/2",
+            source_name="Primary Source 2",
+        )
+        entry = self._make_entry_with_citations(
+            primary_citations=[l1, l1b],
+            tertiary_citations=[l5],
+        )
+        engine = ValidationEngine()
+        report = engine.validate(entry)
+        level45_results = [r for r in report.results if r.rule_id == "VAL_019"]
+        assert all(r.status == ValidationStatus.PASSED for r in level45_results)
+
+    def test_inconsistent_authority_detected(self):
+        """Citation with contradictory authority/authority_level must fail."""
+        c = make_citation(
+            authority=SourceAuthority.PRIMARY,
+            authority_level=5,
+            regulatory_relevance_tag="Regulatory Framework",
+            source_url="https://ex.gov/bad",
+            source_name="Bad Authority",
+        )
+        entry = self._make_entry_with_citations(primary_citations=[c])
+        engine = ValidationEngine()
+        report = engine.validate(entry)
+        consistency_results = [r for r in report.results if r.rule_id == "VAL_020"]
+        assert any(r.status == ValidationStatus.FAILED for r in consistency_results)
+
+    def test_consistent_authority_passes(self):
+        """Citation with consistent authority/authority_level must pass."""
+        c = make_citation(
+            authority=SourceAuthority.PRIMARY,
+            authority_level=1,
+            regulatory_relevance_tag="Regulatory Framework",
+            source_url="https://ex.gov/good",
+            source_name="Good Authority",
+        )
+        c2 = make_citation(
+            authority=SourceAuthority.PRIMARY,
+            authority_level=2,
+            regulatory_relevance_tag="Regulatory Framework",
+            source_url="https://ex.gov/good/2",
+            source_name="Good Authority 2",
+        )
+        entry = self._make_entry_with_citations(primary_citations=[c, c2])
+        engine = ValidationEngine()
+        report = engine.validate(entry)
+        consistency_results = [r for r in report.results if r.rule_id == "VAL_020"]
+        assert all(r.status == ValidationStatus.PASSED for r in consistency_results)
+
+    def test_insufficient_citation_density_detected(self):
+        """Entry with insufficient Regulatory Framework density must fail."""
+        c = make_citation(
+            authority=SourceAuthority.PRIMARY,
+            authority_level=1,
+            regulatory_relevance_tag="Regulatory Framework",
+            source_url="https://ex.gov/rf/1",
+            source_name="RF 1",
+        )
+        entry = self._make_entry_with_citations(primary_citations=[c])
+        engine = ValidationEngine()
+        report = engine.validate(entry)
+        density_results = [r for r in report.results if r.rule_id == "VAL_018"]
+        assert any(r.status == ValidationStatus.FAILED for r in density_results)

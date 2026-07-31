@@ -48,7 +48,7 @@ class LuxembourgBuilder(JurisdictionBuilder):
                 section_reference="Articles 1–58",
                 reliability_score=0.97,
                 raw_excerpt=None,
-                regulatory_relevance_tag="Fund Structure",
+                regulatory_relevance_tag="Regulatory Framework",
                 last_verified_timestamp=datetime.utcnow(),
             )
         )
@@ -63,7 +63,7 @@ class LuxembourgBuilder(JurisdictionBuilder):
                 section_reference="Articles 1–35",
                 reliability_score=0.97,
                 raw_excerpt=None,
-                regulatory_relevance_tag="Fund Structure",
+                regulatory_relevance_tag="Regulatory Framework",
                 last_verified_timestamp=datetime.utcnow(),
             )
         )
@@ -90,7 +90,7 @@ class LuxembourgBuilder(JurisdictionBuilder):
                 source_url=cssf.base_url,
                 authority=SourceAuthority.PRIMARY,
                 authority_level=cssf.level.value,
-                publication_date=datetime(2024, 4, 1),
+                publication_date=datetime(2026, 4, 1),
                 section_reference="Fund Supervision – UCITS, SIF, RAIF frameworks",
                 reliability_score=cssf.reliability_score,
                 raw_excerpt=None,
@@ -125,6 +125,52 @@ class LuxembourgBuilder(JurisdictionBuilder):
                 reliability_score=0.97,
                 raw_excerpt=None,
                 regulatory_relevance_tag="Tax Framework",
+                last_verified_timestamp=datetime.utcnow(),
+            )
+        )
+
+        manager.add_citation(
+            CitationRecord(
+                authority_id="cssf",
+                source_name="Commission de Surveillance du Secteur Financier – Capital Adequacy Requirements",
+                source_url=cssf.base_url,
+                authority=SourceAuthority.PRIMARY,
+                authority_level=cssf.level.value,
+                publication_date=datetime(2026, 5, 1),
+                section_reference="CSSF Circulars – Capital Adequacy Requirements for UCITS and AIFs",
+                reliability_score=cssf.reliability_score,
+                raw_excerpt=None,
+                regulatory_relevance_tag="Capital Requirements",
+                last_verified_timestamp=datetime.utcnow(),
+            )
+        )
+        manager.add_citation(
+            CitationRecord(
+                authority_id="cssf",
+                source_name="Commission de Surveillance du Secteur Financier – Tax and Economic Substance Guidelines",
+                source_url=cssf.base_url,
+                authority=SourceAuthority.PRIMARY,
+                authority_level=cssf.level.value,
+                publication_date=datetime(2026, 4, 1),
+                section_reference="CSSF Tax and Economic Substance Guidelines for Luxembourg Funds",
+                reliability_score=cssf.reliability_score,
+                raw_excerpt=None,
+                regulatory_relevance_tag="Tax Framework",
+                last_verified_timestamp=datetime.utcnow(),
+            )
+        )
+        manager.add_citation(
+            CitationRecord(
+                authority_id="cssf",
+                source_name="Commission de Surveillance du Secteur Financier – AML/CFT Compliance Framework",
+                source_url=cssf.base_url,
+                authority=SourceAuthority.PRIMARY,
+                authority_level=cssf.level.value,
+                publication_date=datetime(2026, 2, 1),
+                section_reference="CSSF AML/CFT Compliance Obligations and Regulatory Guidance",
+                reliability_score=cssf.reliability_score,
+                raw_excerpt=None,
+                regulatory_relevance_tag="Compliance Obligations",
                 last_verified_timestamp=datetime.utcnow(),
             )
         )

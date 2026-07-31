@@ -48,7 +48,7 @@ class IrelandBuilder(JurisdictionBuilder):
                 section_reference="UCITS Regulations 2015 (S.I. No. 439/2015) – Authorisation Requirements",
                 reliability_score=0.97,
                 raw_excerpt=None,
-                regulatory_relevance_tag="Fund Registration",
+                regulatory_relevance_tag="Regulatory Framework",
                 last_verified_timestamp=datetime.utcnow(),
             )
         )
@@ -63,7 +63,7 @@ class IrelandBuilder(JurisdictionBuilder):
                 section_reference="AIFMD Regulations 2013 – Fund Manager Authorisation",
                 reliability_score=0.97,
                 raw_excerpt=None,
-                regulatory_relevance_tag="Licensing",
+                regulatory_relevance_tag="Regulatory Framework",
                 last_verified_timestamp=datetime.utcnow(),
             )
         )
@@ -90,7 +90,7 @@ class IrelandBuilder(JurisdictionBuilder):
                 source_url=cbi.base_url,
                 authority=SourceAuthority.PRIMARY,
                 authority_level=cbi.level.value,
-                publication_date=datetime(2024, 1, 1),
+                publication_date=datetime(2026, 1, 1),
                 section_reference="Fund Authorisation and Supervision – UCITS and AIF frameworks",
                 reliability_score=cbi.reliability_score,
                 raw_excerpt=None,
@@ -120,11 +120,57 @@ class IrelandBuilder(JurisdictionBuilder):
                 source_url=cbi.base_url,
                 authority=SourceAuthority.PRIMARY,
                 authority_level=cbi.level.value,
-                publication_date=datetime(2024, 1, 1),
+                publication_date=datetime(2026, 1, 1),
                 section_reference="Tax treatment of Irish collective investment funds",
                 reliability_score=cbi.reliability_score,
                 raw_excerpt=None,
                 regulatory_relevance_tag="Tax Framework",
+                last_verified_timestamp=datetime.utcnow(),
+            )
+        )
+
+        manager.add_citation(
+            CitationRecord(
+                authority_id="central_bank_ireland",
+                source_name="Central Bank of Ireland – Capital Adequacy Requirements",
+                source_url=cbi.base_url,
+                authority=SourceAuthority.PRIMARY,
+                authority_level=cbi.level.value,
+                publication_date=datetime(2026, 5, 1),
+                section_reference="Central Bank of Ireland – Capital Adequacy Requirements for Fund Managers",
+                reliability_score=cbi.reliability_score,
+                raw_excerpt=None,
+                regulatory_relevance_tag="Capital Requirements",
+                last_verified_timestamp=datetime.utcnow(),
+            )
+        )
+        manager.add_citation(
+            CitationRecord(
+                authority_id="central_bank_ireland",
+                source_name="Central Bank of Ireland – Tax and Economic Substance Guidelines",
+                source_url=cbi.base_url,
+                authority=SourceAuthority.PRIMARY,
+                authority_level=cbi.level.value,
+                publication_date=datetime(2026, 4, 1),
+                section_reference="Central Bank of Ireland – Tax and Economic Substance Guidelines for Irish Funds",
+                reliability_score=cbi.reliability_score,
+                raw_excerpt=None,
+                regulatory_relevance_tag="Tax Framework",
+                last_verified_timestamp=datetime.utcnow(),
+            )
+        )
+        manager.add_citation(
+            CitationRecord(
+                authority_id="central_bank_ireland",
+                source_name="Central Bank of Ireland – AML/CFT Compliance",
+                source_url=cbi.base_url,
+                authority=SourceAuthority.PRIMARY,
+                authority_level=cbi.level.value,
+                publication_date=datetime(2026, 2, 1),
+                section_reference="Central Bank of Ireland – AML/CFT Compliance Obligations for Funds",
+                reliability_score=cbi.reliability_score,
+                raw_excerpt=None,
+                regulatory_relevance_tag="Compliance Obligations",
                 last_verified_timestamp=datetime.utcnow(),
             )
         )

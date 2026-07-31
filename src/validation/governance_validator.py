@@ -3,9 +3,8 @@ from __future__ import annotations
 import logging
 from datetime import datetime
 from typing import TYPE_CHECKING
-from uuid import UUID
 
-from src.authority.models import Authority, AuthorityLevel, RelationshipType
+from src.authority.models import Authority, AuthorityLevel
 from src.authority.registry import AuthorityRegistry
 from src.schema.schema import SourceAuthority
 from src.validation.enums import ValidationCode, ValidationSeverity, ValidationStatus
@@ -41,15 +40,12 @@ class AuthorityGovernanceValidator:
     1. Authority hierarchy — level validity, internal consistency
     2. Authority level enforcement — correct level-to-source mapping
     3. Secondary source referencing — higher-authority support chains
-     4. Citation density — configurable minimum counts
-     5. Minimum evidence — required authority coverage
-     6. Duplicate authority references — redundant authority usage
-     7. Level 4-5 reference requirement — every Level 4 or 5 citation must
-        reference a Level 1-3 source
-     8. Citation density by category — per-regulatory-category minimum counts
-     9. Independent citations — no duplicate citations within a category
-    10. Authoritative citation for compliance — Compliance Obligations must
-        include at least one PRIMARY source
+    4. Minimum evidence — required authority coverage
+    5. Duplicate authority references — redundant authority usage
+
+    Note: Citation density, authority consistency, and Level 4/5 reference
+    validation are owned by ValidationRule classes (CitationDensityRule,
+    AuthorityConsistencyRule, Level45ReferenceRule) in validators.py.
 
     Integration points
     ------------------
@@ -62,28 +58,11 @@ class AuthorityGovernanceValidator:
         self,
         authority_registry: AuthorityRegistry | None = None,
         validator_name: str = "authority_governance_validator",
-        min_citations_per_entry: int = 3,
-        min_primary_citations: int = 2,
-        category_density_requirements: dict[str, int] | None = None,
-        compliance_requires_authoritative: bool = True,
     ) -> None:
         if not validator_name or not validator_name.strip():
             raise ValidationConfigurationError("validator_name must not be empty")
-        if min_citations_per_entry < 0:
-            raise ValidationConfigurationError("min_citations_per_entry must be >= 0")
-        if min_primary_citations < 0:
-            raise ValidationConfigurationError("min_primary_citations must be >= 0")
         self._registry = authority_registry
         self._validator_name = validator_name
-        self._min_citations_per_entry = min_citations_per_entry
-        self._min_primary_citations = min_primary_citations
-        self._category_density_requirements = dict(category_density_requirements or {})
-        for tag, count in self._category_density_requirements.items():
-            if count < 0:
-                raise ValidationConfigurationError(
-                    f"category_density_requirements[{tag!r}] must be >= 0, got {count}"
-                )
-        self._compliance_requires_authoritative = compliance_requires_authoritative
 
     # ------------------------------------------------------------------
     # Public API
@@ -141,7 +120,6 @@ class AuthorityGovernanceValidator:
 
         issues: list[ValidationIssue] = []
         issues.extend(self._check_secondary_referencing(citation))
-        issues.extend(self._check_level_45_references_single(citation))
 
         completed_at = datetime.utcnow()
         status = self._compute_status(issues)
@@ -165,10 +143,9 @@ class AuthorityGovernanceValidator:
         source_governance: SourceGovernanceRecord,
         context: ValidationContext | None = None,
     ) -> ValidationResult:
-        """Validate evidence requirements and citation density for a governance
-        record.
+        """Validate evidence requirements for a governance record.
 
-        Runs density and minimum-evidence checks across all citations
+        Runs minimum-evidence checks across all citations
         in the record.
         """
         started_at = datetime.utcnow()
@@ -181,17 +158,7 @@ class AuthorityGovernanceValidator:
         ctx = context or ValidationContext(context_type="governance_evidence")
 
         issues: list[ValidationIssue] = []
-        issues.extend(
-            self._check_citation_density(
-                all_citations,
-                source_governance,
-            )
-        )
         issues.extend(self._check_minimum_evidence(source_governance))
-        issues.extend(self._check_level_45_references_governance(source_governance))
-        issues.extend(self._check_citation_density_by_category(source_governance))
-        issues.extend(self._check_independent_citations(source_governance))
-        issues.extend(self._check_authoritative_compliance(source_governance))
 
         completed_at = datetime.utcnow()
         status = self._compute_status(issues)
@@ -407,55 +374,6 @@ class AuthorityGovernanceValidator:
         return issues
 
     # ------------------------------------------------------------------
-    # Part 5 — Citation Density Validation
-    # ------------------------------------------------------------------
-
-    def _check_citation_density(
-        self,
-        all_citations: list[CitationRecord],
-        source_governance: SourceGovernanceRecord,
-    ) -> list[ValidationIssue]:
-        issues: list[ValidationIssue] = []
-
-        total = len(all_citations)
-        primary_count = len(source_governance.primary_citations)
-
-        if total < self._min_citations_per_entry:
-            issues.append(
-                ValidationIssue(
-                    code=ValidationCode.INSUFFICIENT_CITATIONS,
-                    message=(
-                        f"Total citations ({total}) below minimum ({self._min_citations_per_entry})"
-                    ),
-                    severity=ValidationSeverity.HIGH,
-                    field_path="source_governance",
-                    details={
-                        "total": total,
-                        "minimum": self._min_citations_per_entry,
-                    },
-                )
-            )
-
-        if primary_count < self._min_primary_citations:
-            issues.append(
-                ValidationIssue(
-                    code=ValidationCode.INSUFFICIENT_CITATIONS,
-                    message=(
-                        f"Primary citations ({primary_count}) below minimum "
-                        f"({self._min_primary_citations})"
-                    ),
-                    severity=ValidationSeverity.HIGH,
-                    field_path="source_governance.primary_citations",
-                    details={
-                        "primary_count": primary_count,
-                        "minimum": self._min_primary_citations,
-                    },
-                )
-            )
-
-        return issues
-
-    # ------------------------------------------------------------------
     # Part 6 — Minimum Evidence Requirements
     # ------------------------------------------------------------------
 
@@ -582,297 +500,6 @@ class AuthorityGovernanceValidator:
             completed_at=completed_at,
             metadata={"citation_count": len(citations)},
         )
-
-    # ------------------------------------------------------------------
-    # Part 8 — Level 4-5 Single Citation Reference Validation
-    # ------------------------------------------------------------------
-
-    def _check_level_45_references_single(self, citation: CitationRecord) -> list[ValidationIssue]:
-        """Check that a Level 4 or 5 citation references a Level 1-3 source.
-
-        Uses two mechanisms:
-        1. ``references_citation_id`` on the CitationRecord (direct citation ref)
-        2. Authority ``REFERENCES`` relationship chain via the registry
-        """
-        issues: list[ValidationIssue] = []
-
-        if citation.authority_level < 4:
-            return issues
-
-        if citation.references_citation_id is not None:
-            return issues
-
-        if self._registry is not None and citation.authority_id is not None:
-            if citation.authority_id in self._registry:
-                try:
-                    authority = self._registry.get_by_id(citation.authority_id)
-                    for rel in authority.relationships:
-                        if rel.type == RelationshipType.REFERENCES:
-                            try:
-                                target = self._registry.get_by_id(rel.target_id)
-                                if target.level in PRIMARY_LEVELS:
-                                    return issues
-                            except KeyError:
-                                continue
-                except KeyError:
-                    pass
-
-        issues.append(
-            ValidationIssue(
-                code=ValidationCode.LEVEL45_MISSING_REFERENCE,
-                message=(
-                    f"Level {citation.authority_level} citation "
-                    f"'{citation.citation_id}' does not reference "
-                    f"a Level 1-3 source"
-                ),
-                severity=ValidationSeverity.HIGH,
-                field_path="references_citation_id",
-                details={
-                    "citation_id": str(citation.citation_id),
-                    "authority_level": citation.authority_level,
-                    "authority_id": citation.authority_id or "",
-                },
-            )
-        )
-        return issues
-
-    # ------------------------------------------------------------------
-    # Part 9 — Governance-Level Level 4-5 Reference Validation
-    # ------------------------------------------------------------------
-
-    def _check_level_45_references_governance(
-        self, source_governance: SourceGovernanceRecord
-    ) -> list[ValidationIssue]:
-        """Cross-reference check across all citations in a governance record."""
-        issues: list[ValidationIssue] = []
-        all_citations = (
-            source_governance.primary_citations
-            + source_governance.secondary_citations
-            + source_governance.tertiary_citations
-        )
-
-        level_45_citations = [c for c in all_citations if c.authority_level >= 4]
-        level_13_ids = {c.citation_id for c in all_citations if c.authority_level <= 3}
-
-        for citation in level_45_citations:
-            if citation.references_citation_id is not None:
-                if citation.references_citation_id in level_13_ids:
-                    continue
-
-            if self._registry is not None and citation.authority_id is not None:
-                if citation.authority_id in self._registry:
-                    try:
-                        authority = self._registry.get_by_id(citation.authority_id)
-                        for rel in authority.relationships:
-                            if rel.type == RelationshipType.REFERENCES:
-                                try:
-                                    target = self._registry.get_by_id(rel.target_id)
-                                    if target.level in PRIMARY_LEVELS:
-                                        continue
-                                except KeyError:
-                                    continue
-                    except KeyError:
-                        pass
-
-            issues.append(
-                ValidationIssue(
-                    code=ValidationCode.LEVEL45_MISSING_REFERENCE,
-                    message=(
-                        f"Level {citation.authority_level} citation "
-                        f"'{citation.citation_id}' does not reference "
-                        f"a Level 1-3 source"
-                    ),
-                    severity=ValidationSeverity.HIGH,
-                    field_path="references_citation_id",
-                    details={
-                        "citation_id": str(citation.citation_id),
-                        "authority_level": citation.authority_level,
-                        "authority_id": citation.authority_id or "",
-                    },
-                )
-            )
-
-        return issues
-
-    # ------------------------------------------------------------------
-    # Part 10 — Citation Density by Category
-    # ------------------------------------------------------------------
-
-    CATEGORY_REGULATORY_FRAMEWORK = "Regulatory Framework"
-    CATEGORY_CAPITAL_REQUIREMENTS = "Capital Requirements"
-    CATEGORY_TAX_CLAIMS = "Tax Claims"
-    CATEGORY_COMPLIANCE_OBLIGATIONS = "Compliance Obligations"
-
-    def _check_citation_density_by_category(
-        self, source_governance: SourceGovernanceRecord
-    ) -> list[ValidationIssue]:
-        """Validate minimum citation counts per regulatory category."""
-        issues: list[ValidationIssue] = []
-        all_citations = (
-            source_governance.primary_citations
-            + source_governance.secondary_citations
-            + source_governance.tertiary_citations
-        )
-
-        by_tag: dict[str, list[CitationRecord]] = {}
-        for c in all_citations:
-            tag = c.regulatory_relevance_tag
-            if tag not in by_tag:
-                by_tag[tag] = []
-            by_tag[tag].append(c)
-
-        for tag, required in self._category_density_requirements.items():
-            actual = len(by_tag.get(tag, []))
-            if actual < required:
-                issues.append(
-                    ValidationIssue(
-                        code=ValidationCode.INSUFFICIENT_CITATION_DENSITY,
-                        message=(
-                            f"Category '{tag}' has {actual} citation(s), "
-                            f"minimum {required} required"
-                        ),
-                        severity=ValidationSeverity.HIGH,
-                        field_path="source_governance",
-                        details={
-                            "category": tag,
-                            "actual": actual,
-                            "required": required,
-                        },
-                    )
-                )
-
-        return issues
-
-    # ------------------------------------------------------------------
-    # Part 11 — Independent Citation Detection
-    # ------------------------------------------------------------------
-
-    def _check_independent_citations(
-        self, source_governance: SourceGovernanceRecord
-    ) -> list[ValidationIssue]:
-        """Detect non-independent (duplicate) citations within each category.
-
-        A citation is considered a duplicate (dependent) if another citation
-        in the same category shares the same:
-        - ``citation_id``
-        - ``source_url``
-        - ``source_name``
-        """
-        issues: list[ValidationIssue] = []
-        all_citations = (
-            source_governance.primary_citations
-            + source_governance.secondary_citations
-            + source_governance.tertiary_citations
-        )
-
-        if not self._category_density_requirements:
-            return issues
-
-        by_tag: dict[str, list[CitationRecord]] = {}
-        for c in all_citations:
-            tag = c.regulatory_relevance_tag
-            if tag not in self._category_density_requirements:
-                continue
-            if tag not in by_tag:
-                by_tag[tag] = []
-            by_tag[tag].append(c)
-
-        for tag, citations in by_tag.items():
-            seen_ids: set[UUID] = set()
-            seen_urls: set[str] = set()
-            seen_names: set[str] = set()
-
-            for c in citations:
-                dup_reasons: list[str] = []
-                if c.citation_id in seen_ids:
-                    dup_reasons.append("duplicate citation_id")
-                if c.source_url in seen_urls:
-                    dup_reasons.append("duplicate source_url")
-                if c.source_name in seen_names:
-                    dup_reasons.append("duplicate source_name")
-
-                if dup_reasons:
-                    issues.append(
-                        ValidationIssue(
-                            code=ValidationCode.DEPENDENT_CITATION,
-                            message=(
-                                f"Citation '{c.citation_id}' in category "
-                                f"'{tag}' is not independent: "
-                                f"{'; '.join(dup_reasons)}"
-                            ),
-                            severity=ValidationSeverity.MEDIUM,
-                            field_path="source_governance",
-                            details={
-                                "citation_id": str(c.citation_id),
-                                "category": tag,
-                                "reasons": dup_reasons,
-                                "source_url": c.source_url,
-                                "source_name": c.source_name,
-                            },
-                        )
-                    )
-
-                seen_ids.add(c.citation_id)
-                seen_urls.add(c.source_url)
-                seen_names.add(c.source_name)
-
-        return issues
-
-    # ------------------------------------------------------------------
-    # Part 12 — Authoritative Citation for Compliance Obligations
-    # ------------------------------------------------------------------
-
-    def _check_authoritative_compliance(
-        self, source_governance: SourceGovernanceRecord
-    ) -> list[ValidationIssue]:
-        """Ensure Compliance Obligations citations include at least one
-        authoritative (PRIMARY) source."""
-        issues: list[ValidationIssue] = []
-
-        if not self._compliance_requires_authoritative:
-            return issues
-
-        all_citations = (
-            source_governance.primary_citations
-            + source_governance.secondary_citations
-            + source_governance.tertiary_citations
-        )
-
-        compliance_citations = [
-            c
-            for c in all_citations
-            if c.regulatory_relevance_tag == self.CATEGORY_COMPLIANCE_OBLIGATIONS
-        ]
-
-        if not compliance_citations:
-            return issues
-
-        has_authoritative = any(
-            c.authority == SourceAuthority.PRIMARY for c in compliance_citations
-        )
-
-        if not has_authoritative:
-            primary_count = sum(
-                1 for c in compliance_citations if c.authority == SourceAuthority.PRIMARY
-            )
-            issues.append(
-                ValidationIssue(
-                    code=ValidationCode.INSUFFICIENT_CITATION_DENSITY,
-                    message=(
-                        "Compliance Obligations citations must include at least "
-                        "one authoritative (PRIMARY) source"
-                    ),
-                    severity=ValidationSeverity.HIGH,
-                    field_path="source_governance",
-                    details={
-                        "category": self.CATEGORY_COMPLIANCE_OBLIGATIONS,
-                        "compliance_citations_count": len(compliance_citations),
-                        "primary_citations_count": primary_count,
-                    },
-                )
-            )
-
-        return issues
 
     # ------------------------------------------------------------------
     # Private helpers

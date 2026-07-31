@@ -73,6 +73,7 @@ class RegulatoryRelevanceTag(StrEnum):
     TAX_FRAMEWORK = "Tax Framework"
     CAPITAL_REQUIREMENTS = "Capital Requirements"
     COMPLIANCE_OBLIGATIONS = "Compliance Obligations"
+    REGULATORY_FRAMEWORK = "Regulatory Framework"
     AML_CFT = "AML/CFT"
 
 
